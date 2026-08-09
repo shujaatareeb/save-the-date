@@ -112,15 +112,15 @@
     z-index:1;
   }
 
-  /* blind-embossed border rule */
-  .card::after{
-    content:"";
+  /* The lace frame, in place of the old plain rule. Drawn in JS against the
+     card's pixel box rather than authored as fixed path data: the scallops have
+     to stay circular and divide evenly into each edge at any card width, which
+     a stretched viewBox cannot do. */
+  .lace{
     position:absolute;
-    inset:4.2cqw;
-    border:1px solid rgba(150,140,116,.26);
-    box-shadow:
-      0 1px 0 rgba(255,255,255,.75),
-      0 1px 0 rgba(255,255,255,.75) inset;
+    inset:0;
+    width:100%;
+    height:100%;
     pointer-events:none;
     z-index:2;
   }
@@ -471,6 +471,7 @@
 
 <main class="card" id="card">
   <div class="vignette"></div>
+  <svg class="lace" id="lace" aria-hidden="true"></svg>
 
   <div class="stack">
     <h1 class="names deboss">Misbah &amp; Areeb</h1>
@@ -606,6 +607,93 @@
     for (const id of ['ip-dark', 'ip-light', 'ip-foil'])
       document.getElementById(id).setAttribute('d', d);
   })();
+
+  /* ---------- the lace frame ---------- */
+
+  // Scalloped edging with picot dots and a lozenge at each corner, blind
+  // embossed into the stock. Each edge gets its own scallop count so the arcs
+  // divide it exactly — a fixed count would leave a part-scallop in the corner
+  // on some card widths, which is the one thing that would read as sloppy.
+  const lace = document.getElementById('lace');
+
+  function buildLace(){
+    const w = card.clientWidth, h = card.clientHeight;
+    if (!w || !h) return;
+
+    const inset = w * .050;        // where the lace sits in from the trim
+    const corner = w * .055;       // the span each corner lozenge reserves
+    const target = w * .021;       // scallop radius, before fitting
+    const rule = Math.max(.6, w * .0022);
+
+    const L = inset, R = w - inset, T = inset, B = h - inset;
+
+    // One edge of scallops: half-circles bulging inward, fitted to the span.
+    // Travel is a direction vector, so the two edges that run right-to-left and
+    // bottom-to-top fit exactly like the other two rather than measuring a
+    // negative span. The cusps come back with the path for the picots to use.
+    const edge = (x0, y0, x1, y1) => {
+      const dx = Math.sign(x1 - x0), dy = Math.sign(y1 - y0);
+      const span = Math.abs(x1 - x0) + Math.abs(y1 - y0);
+      if (span <= 0) return null;
+      const n = Math.max(2, Math.round(span / (2 * target)));
+      const r = span / (2 * n);
+      const cusps = [];
+      let d = 'M' + x0.toFixed(2) + ' ' + y0.toFixed(2);
+      for (let i = 1; i <= n; i++){
+        const px = x0 + dx * i * 2 * r, py = y0 + dy * i * 2 * r;
+        d += 'A' + r.toFixed(2) + ' ' + r.toFixed(2) + ' 0 0 1 ' +
+             px.toFixed(2) + ' ' + py.toFixed(2);
+        if (i < n) cusps.push([px, py]);
+      }
+      return { d, cusps };
+    };
+
+    // clockwise, so a single sweep flag bulges every edge inward
+    const edges = [
+      edge(L + corner, T, R - corner, T),
+      edge(R, T + corner, R, B - corner),
+      edge(R - corner, B, L + corner, B),
+      edge(L, B - corner, L, T + corner),
+    ].filter(Boolean);
+
+    let stroke = edges.map(e => e.d).join(' ');
+
+    // the outer hairline, held off the scallops — a double rule, as engraved
+    const o = inset - w * .019;
+    stroke += ' M' + o + ' ' + o + ' H' + (w - o) + ' V' + (h - o) +
+              ' H' + o + ' Z';
+
+    // corner lozenges, the same rotated square as the rule on the card face
+    const lz = w * .013;
+    for (const [cx, cy] of [[L, T], [R, T], [R, B], [L, B]]){
+      stroke += ' M' + cx + ' ' + (cy - lz) + 'L' + (cx + lz) + ' ' + cy +
+                'L' + cx + ' ' + (cy + lz) + 'L' + (cx - lz) + ' ' + cy + 'Z';
+    }
+
+    // picots: a dot in the cusp between neighbouring scallops
+    let dots = '';
+    const dot = (x, y, r) =>
+      'M' + (x - r) + ' ' + y + 'a' + r + ' ' + r + ' 0 1 0 ' + (2 * r) + ' 0' +
+      'a' + r + ' ' + r + ' 0 1 0 ' + (-2 * r) + ' 0Z';
+    const pr = Math.max(.7, w * .0042);
+    for (const e of edges) for (const [x, y] of e.cusps) dots += dot(x, y, pr);
+
+    const path = (d, fill, stroked, dy, colour, alpha) =>
+      '<path d="' + d + '" transform="translate(0 ' + dy + ')" ' +
+      (fill ? 'fill="' + colour + '" fill-opacity="' + alpha + '" stroke="none"'
+            : 'fill="none" stroke="' + colour + '" stroke-opacity="' + alpha +
+              '" stroke-width="' + rule + '" stroke-linejoin="round"') + '/>';
+
+    // pressed into the paper: a dark edge above, a lit edge below
+    lace.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+    lace.innerHTML =
+      path(stroke, false, true, -0.7, '#6f6449', .30) +
+      path(dots,   true,  false, -0.7, '#6f6449', .34) +
+      path(stroke, false, true,  0.9, '#ffffff', .80) +
+      path(dots,   true,  false,  0.9, '#ffffff', .85) +
+      path(stroke, false, true,  0,   '#a89e83', .34) +
+      path(dots,   true,  false,  0,   '#a89e83', .40);
+  }
 
   /* ---------- the foil plate ---------- */
 
@@ -1325,6 +1413,7 @@
 
   /* ---------- boot ---------- */
 
+  new ResizeObserver(buildLace).observe(card);
   new ResizeObserver(resizeFoil).observe(foil);
   new ResizeObserver(resizeFx).observe(document.documentElement);
   addEventListener('resize', resizeFx);
