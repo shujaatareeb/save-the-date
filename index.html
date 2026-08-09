@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Misbah &amp; Areeb — Save the Date</title>
-<meta name="description" content="Misbah &amp; Areeb invite you to celebrate their wedding on 10.10.27. Scratch the gold heart to reveal the date.">
+<meta name="description" content="Misbah &amp; Areeb invite you to celebrate their wedding on 10.10.26. Scratch the gold heart to reveal the date.">
 <meta name="robots" content="noindex,nofollow">
 <meta name="theme-color" content="#e2ded2">
 <meta property="og:type" content="website">
@@ -256,6 +256,9 @@
     100% { opacity:0;   transform:scale(1.16);}
   }
 
+  /* Optically centred, not geometrically. A heart carries its mass in the two
+     lobes up top and tapers to a point, so its centroid sits above the middle
+     of its box — text centred in the box reads noticeably low against it. */
   .secret{
     position:absolute;
     inset:0;
@@ -265,6 +268,7 @@
     justify-content:center;
     gap:2.8cqw;
     padding:0 17cqw;
+    transform:translateY(-7%);
     z-index:2;
   }
 
@@ -298,6 +302,7 @@
 
   .secret .date{
     font-size:5.4cqw;
+    font-weight:600;          /* a shade heavier than the line above it */
     letter-spacing:.16em;
     text-indent:.16em;
     font-variant-numeric:tabular-nums lining-nums;
@@ -509,8 +514,8 @@
 (() => {
   // ---- the one thing to edit -------------------------------------------
   const EVENT = {
-    date:  '2027-10-10',            // ISO, drives the .ics
-    shown: '10 . 10 . 27',          // how it reads on the card
+    date:  '2026-10-10',            // ISO, drives the .ics
+    shown: '10 . 10 . 26',          // how it reads on the card
     title: 'Misbah & Areeb — Wedding',
   };
 
