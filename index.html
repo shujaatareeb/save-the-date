@@ -24,9 +24,11 @@
      script. Without one it is a door with no handle, so it is not shown at all
      and the card is where it always was. -->
 <noscript><style>
-  .envelope{ display:none; }
-  body.sealed .card,
-  body.sealed .below{ opacity:1; }
+  .envelope,
+  .env-fore,
+  .open-hint{ display:none; }
+  body.sealed .below,
+  body.sealed .sound{ opacity:1; }
 </style></noscript>
 
 <style>
@@ -56,6 +58,9 @@
     --hint:         #9d9682;
     --edge:         rgba(93,84,62,.16);
     --ease:         cubic-bezier(.16,.84,.24,1);
+    /* Slower out of the gate and much longer in the tail than --ease, which is
+       tuned for interface moves. Paper has mass; it should not snap. */
+    --ease-paper:   cubic-bezier(.32,.06,.16,1);
   }
 
   *{ box-sizing:border-box; }
@@ -109,13 +114,6 @@
   @keyframes settle{
     from{ opacity:0; transform:translateY(14px) scale(.985); }
     to  { opacity:1; transform:none; }
-  }
-
-  /* A card can be laid down on a table. A full screen cannot — the same rise
-     would open a strip of bare background along the bottom edge. */
-  @keyframes settle-flat{
-    from{ opacity:0; }
-    to  { opacity:1; }
   }
 
   /* The stock, and now the only thing dressing the sheet. Two frequencies, not
@@ -527,159 +525,105 @@
 
   /* ---------- the envelope ---------- */
 
-  /* Everything the page already was now waits behind this. The card keeps its
-     layout while sealed — the foil canvas has to be measured and drawn at its
-     real size before the reveal, and an element that is merely transparent is
-     still measurable, where a `display:none` one is not. */
-  body.sealed .card,
+  /* Edge to edge: the screen is the envelope, rather than a picture of one
+     sitting on a table. Three fixed layers with the card between them —
+
+       .envelope   the back of the envelope, and the whole backdrop   z 78
+       .card       the real one, seated in the pocket by transform    z 79
+       .env-fore   the pocket front, the flap and the seal            z 81
+
+     The card is not a copy and there is no cross-fade. It is the page's own
+     card, transformed down into the pocket while sealed and released to its
+     resting place on opening, so the thing that comes out of the envelope is
+     the thing you then scratch. */
+
   body.sealed .below,
   body.sealed .sound{ opacity:0; pointer-events:none; }
+  body.sealed .card{ position:relative; z-index:79; }
 
-  /* The hand-off used to be a cut: the envelope finished, left, and only then
-     did the card arrive under its own settling animation — a gap, and then a
-     pop. Now the card fades up while the envelope is still moving, and the
-     settle is suppressed for good once it has been handed over. An arrival
-     animation is for something that arrives; this one is already here. */
-  .card,
-  .below{ transition:opacity .8s var(--ease); }
+  /* The settle belongs to a card that arrives on its own. This one is carried
+     out of an envelope, and the journey is the arrival. */
   body.sealed .card,
   body.handed .card{ animation:none; }
+  .below{ transition:opacity .9s var(--ease) .5s; }
 
-  .envelope{
+  .envelope,
+  .env-fore{
     position:fixed;
     inset:0;
-    z-index:80;
-    display:grid;
-    place-items:center;
-    background:radial-gradient(120% 90% at 50% 0%, #e9e5da 0%, #dbd6c8 60%, #cfc9b9 100%);
-    perspective:1500px;
-    transition:opacity .8s var(--ease);
+    transition:transform 1.7s var(--ease-paper);
   }
-  .envelope.done{ opacity:0; pointer-events:none; }
-  .envelope.gone{ display:none; }
-
-  /* preserve-3d does the layering: once the flap swings past upright its own
-     depth puts it behind the envelope, with no z-index to fight over.
-
-     Portrait, and a little larger than what it holds. A landscape envelope is
-     the prettier shape, but the card is 1:1.52 and would stand a head taller
-     than the pocket before the flap had even moved.
-
-     The seal, not the envelope, is what sits on the middle of the screen: it is
-     the thing being aimed at. It rides at 40% of the height, so the whole
-     envelope is dropped by the missing 10% to bring it to the centre line. */
-  .env{
-    position:relative;
-    width:min(94vw, 520px, 58vh);
-    aspect-ratio:1 / 1.42;
-    transform-style:preserve-3d;
-    transform:translateY(10%);
-    animation:settle-env 1s var(--ease) both;
+  .envelope{ z-index:78; }
+  .env-fore{
+    z-index:81;
+    perspective:1600px;
+    background:none;
   }
-  @keyframes settle-env{
-    from{ opacity:0; transform:translateY(calc(10% + 16px)) scale(.985); }
-    to  { opacity:1; transform:translateY(10%); }
-  }
+  .envelope.gone,
+  .env-fore.gone{ display:none; }
 
+  /* Both halves leave downward, together, as one envelope */
+  .envelope.raised,
+  .env-fore.raised{ transform:translateY(104%); }
+
+  /* One sheet of paper, cut into three. Each panel paints the same gradient at
+     the size of the window and anchored to its top-left, so the tones run
+     straight through a seam instead of restarting at it — which is what made
+     the flap look like a different piece of paper: it was compressing the whole
+     gradient into the 46% of the height it happens to occupy. */
   .env-back,
   .env-front,
   .env-flap{
     position:absolute;
-    background:linear-gradient(158deg, var(--paper-hi) 0%, var(--paper) 46%, var(--paper-lo) 100%);
-    transition:transform 1.05s var(--ease);
+    background-image:linear-gradient(158deg, var(--paper-hi) 0%, var(--paper) 46%, var(--paper-lo) 100%);
+    background-size:100vw 100vh;
+    background-position:0 0;
+    background-repeat:no-repeat;
   }
 
-  .env-back{
-    inset:0;
-    border:1px solid var(--edge);
-    transform:translateY(0) translateZ(0);
-    box-shadow:
-      0 1px 2px rgba(70,62,44,.14),
-      0 12px 30px -10px rgba(70,62,44,.34),
-      0 40px 66px -32px rgba(70,62,44,.44);
-  }
+  .env-back{ inset:0; }
 
-  /* the card, sitting down in the pocket */
-  .env-card{
-    position:absolute;
-    left:10%;
-    width:80%;
-    bottom:4%;
-    aspect-ratio:1 / 1.52;
-    container-type:inline-size;
-    background:linear-gradient(158deg, var(--paper-hi) 0%, var(--paper) 46%, var(--paper-lo) 100%);
-    border:1px solid var(--edge);
-    box-shadow:0 -2px 12px -4px rgba(70,62,44,.3);
-    transform:translateY(0) translateZ(1px);
-    transition:transform 1.05s var(--ease);
-    display:grid;
-    place-items:center;
-    overflow:hidden;
-  }
-
-  /* The two motions are opposite on purpose. A card rising out of a stationary
-     envelope has to travel the whole distance itself; when the envelope drops
-     away at the same time, they split it, and neither has to move far enough to
-     leave the screen. */
-  /* `raised` is only ever added on top of `opening`, and both selectors below
-     carry the same weight as the `opening` ones further down the sheet — which
-     would win on source order and pin the flap and the seal in place while the
-     rest of the envelope left. Naming both classes settles it. */
-  .env.raised .env-card{ transform:translateY(-34%) translateZ(1px); }
-  .env.raised .env-back{ transform:translateY(76%) translateZ(0); }
-  .env.raised .env-front{ transform:translateY(76%) translateZ(2px); }
-  .env.opening.raised .env-flap{ transform:translateY(76%) rotateX(-172deg) translateZ(3px); }
-  .env.opening.raised .seal{
-    transform:translate(-50%,-50%) translateY(76%) translateZ(4px) scale(1.22) rotate(9deg);
-  }
-
-  .env-card .names{
-    margin:0;
-    padding:0 12cqw;
-    font-family:'Pinyon Script','Snell Roundhand','Edwardian Script ITC',cursive;
-    font-size:11.4cqw;
-    line-height:1.16;
-    white-space:nowrap;
-    color:var(--relief-deep);
-    text-shadow:0 1px 0 var(--deboss-light), 0 -1px 1px var(--deboss-dark);
-    /* the card is behind the pocket until it rises, so this is the only part of
-       it anyone sees first — it wants to arrive with the rise, not before it */
-    opacity:0;
-    transition:opacity .5s var(--ease) .3s;
-  }
-  .env.raised .env-card .names{ opacity:1; }
-
-  /* the pocket: a rectangle with the two side flaps notched out of its top */
+  /* the pocket, with the two side flaps notched out of its top */
   .env-front{
     inset:0;
-    clip-path:polygon(0 10%, 50% 40%, 100% 10%, 100% 100%, 0 100%);
-    border-left:1px solid var(--edge);
-    border-right:1px solid var(--edge);
-    border-bottom:1px solid var(--edge);
-    transform:translateY(0) translateZ(2px);
-    box-shadow:0 -1px 3px rgba(70,62,44,.10);
+    clip-path:polygon(0 20%, 50% 50%, 100% 20%, 100% 100%, 0 100%);
+    /* the only thing that distinguishes it from the sheet behind: the shadow
+       the fold throws, and a hair of extra light along the crease */
+    filter:drop-shadow(0 -1px 2px rgba(70,62,44,.16));
   }
 
   .env-flap{
     left:0; right:0; top:0;
-    height:42%;
+    height:50%;
     clip-path:polygon(0 0, 100% 0, 50% 100%);
     transform-origin:top center;
-    transform:translateY(0) rotateX(0deg) translateZ(3px);
-    transition:transform .85s var(--ease) .12s;
-    border-top:1px solid var(--edge);
-    filter:drop-shadow(0 2px 3px rgba(70,62,44,.14));
+    transform:rotateX(0deg);
+    transition:transform 1.5s var(--ease-paper) .15s;
+    filter:drop-shadow(0 3px 5px rgba(70,62,44,.16));
   }
-  .env.opening .env-flap{ transform:translateY(0) rotateX(-172deg) translateZ(3px); }
+  .env-fore.opening .env-flap{ transform:rotateX(-176deg); }
 
-  /* wax: an irregular blob, lit from the same place as everything else */
+  /* where the card sits while it is still in the envelope. Never painted — it
+     exists so the script has a box to measure and put the real card into. */
+  .slot{
+    position:absolute;
+    left:50%;
+    bottom:9vh;
+    width:min(74vw, 340px);
+    aspect-ratio:1 / 1.52;
+    transform:translateX(-50%);
+    visibility:hidden;
+  }
+
+  /* wax: an irregular blob, lit from the same place as everything else, sitting
+     on the point of the flap where the fold meets the pocket */
   .seal{
     position:absolute;
     left:50%;
-    top:40%;
-    width:19%;
+    top:50%;
+    width:min(23vw, 108px);
     aspect-ratio:1;
-    transform:translate(-50%,-50%) translateZ(4px);
+    transform:translate(-50%,-50%);
     display:grid;
     place-items:center;
     padding:0;
@@ -693,32 +637,31 @@
       0 1px 0 rgba(255,247,214,.5) inset,
       0 -2px 4px rgba(60,42,4,.45) inset,
       0 2px 5px rgba(70,54,12,.4),
-      0 8px 16px -8px rgba(70,54,12,.55);
+      0 10px 20px -10px rgba(70,54,12,.55);
     font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
-    font-size:clamp(11px, 3.1vw, 15px);
+    font-size:clamp(13px, 4.2vw, 20px);
     letter-spacing:.04em;
     color:#5a4310;
     text-shadow:0 1px 0 rgba(255,240,190,.5), 0 -1px 1px rgba(52,36,2,.5);
-    transition:transform .4s var(--ease), opacity .4s var(--ease), box-shadow .3s var(--ease);
+    transition:transform .8s var(--ease-paper), opacity .8s var(--ease-paper), box-shadow .3s var(--ease);
   }
   .seal:hover{ box-shadow:
       0 1px 0 rgba(255,247,214,.6) inset,
       0 -2px 4px rgba(60,42,4,.45) inset,
       0 3px 7px rgba(70,54,12,.44),
-      0 12px 22px -10px rgba(70,54,12,.6); }
+      0 14px 26px -12px rgba(70,54,12,.6); }
   .seal:focus-visible{ outline:2px solid #8a7a4a; outline-offset:4px; }
-  .env.opening .seal{
-    transform:translate(-50%,-50%) translateZ(4px) scale(1.22) rotate(9deg);
+  .env-fore.opening .seal{
+    transform:translate(-50%,-50%) scale(1.18) rotate(7deg);
     opacity:0;
     pointer-events:none;
   }
 
-  /* out of the grid entirely: the envelope is large enough now that a hint in
-     the same column would be pushed off the foot of a short window */
   .open-hint{
     position:fixed;
     left:0; right:0;
     bottom:calc(26px + env(safe-area-inset-bottom));
+    z-index:82;
     margin:0;
     text-align:center;
     font-size:12px;
@@ -726,11 +669,11 @@
     text-indent:.22em;
     text-transform:uppercase;
     color:var(--hint);
-    animation:breathe-hint 2.6s ease-in-out .9s infinite both;
+    animation:breathe-hint 3.4s ease-in-out 1.2s infinite both;
   }
-  .env.opening ~ .open-hint{ opacity:0; transition:opacity .3s linear; animation:none; }
+  .env-fore.opening ~ .open-hint{ opacity:0; transition:opacity .45s linear; animation:none; }
   @keyframes breathe-hint{
-    0%,100%{ opacity:.45; }
+    0%,100%{ opacity:.42; }
     50%    { opacity:1; }
   }
 
@@ -776,36 +719,11 @@
 
   /* ---------- the phone ---------- */
 
-  /* The sheet stops being an object on a table and becomes the screen. No trim,
-     no shadow, no edge — the paper runs to all four sides and the florals pin to
-     the corners of the phone. Everything below the card moves on top of it,
-     floated clear of the home indicator. */
+  /* The card keeps its trim, its shadow and its 1:1.52 at every size. It went
+     full-bleed on phones for a while; it came back because the envelope is what
+     is edge to edge now, and a card that has to grow into a screen cannot be
+     the same object that was just lifted out of a pocket. */
   @media (max-width:699px){
-    body{
-      padding:0;
-      gap:0;
-      justify-content:flex-start;
-    }
-    .card{
-      width:100%;
-      max-width:none;
-      height:100vh;               /* iOS before 15.4 has no dvh */
-      height:100dvh;
-      aspect-ratio:auto;
-      border:0;
-      box-shadow:none;
-      animation-name:settle-flat;
-      /* room at the foot for the floating controls, so the centred setting
-         clears them instead of sitting behind them */
-      padding-bottom:calc(104px + env(safe-area-inset-bottom));
-    }
-    .below{
-      position:fixed;
-      left:0; right:0;
-      bottom:calc(20px + env(safe-area-inset-bottom));
-      min-height:0;
-      z-index:60;
-    }
     /* a fingertip is not a cursor */
     .again{ padding:13px 18px; }
   }
@@ -817,18 +735,21 @@
   }
 </style>
 
+<!-- The back of the envelope, and the slot the card is seated into. The card
+     itself is not in here — it is the page's own, sandwiched between this and
+     the pocket by stacking order alone, so that what rises out of the envelope
+     is the card and not a picture of one. -->
 <div class="envelope" id="envelope">
-  <div class="env" id="env">
-    <div class="env-back stock"></div>
-    <div class="env-card stock">
-      <p class="names">Misbah &amp; Areeb</p>
-    </div>
-    <div class="env-front stock"></div>
-    <div class="env-flap stock"></div>
-    <button class="seal" id="seal" type="button" aria-label="Open the envelope">M &amp; A</button>
-  </div>
-  <p class="open-hint" id="openHint">Tap to open</p>
+  <div class="env-back stock"></div>
+  <div class="slot" id="slot" aria-hidden="true"></div>
 </div>
+
+<div class="env-fore" id="envFore">
+  <div class="env-front stock"></div>
+  <div class="env-flap stock"></div>
+  <button class="seal" id="seal" type="button" aria-label="Open the envelope">M &amp; A</button>
+</div>
+<p class="open-hint" id="openHint">Tap to open</p>
 
 <audio id="music" src="music.m4a" loop preload="auto"></audio>
 
@@ -1001,14 +922,11 @@
 
   /* ---------- the foil plate ---------- */
 
-  // A grey-noise tile, built once and tiled under an overlay blend. This is the
-  // micro-grain: without it the foil is smooth vector shading and reads as paint.
-  let noiseTile = null;
-
-  // The photographed glitter the foil is made of. It arrives late and it is
-  // allowed to: the plate is built from the painted gradient first so the heart
-  // is never missing, and rebuilt once the file lands. A plate already scratched
-  // into is left alone — swapping the surface mid-scratch would refill the holes.
+  // The photographed glitter, clipped to the heart, and nothing else. What used
+  // to be here — a two-scale crumple light-map, brushed grain, micro-grain, a
+  // rolled-metal sweep, catchlights, painted specks, a bevel and a pressed rim —
+  // was all one argument: that drawn gold is metal. A photograph of metal does
+  // not have to make it.
   let foilTex = null;
   (() => {
     const img = new Image();
@@ -1016,114 +934,12 @@
       foilTex = img;
       if (!W || !H) return;
       buildPlate();
+      // a plate already scratched into is left alone: rebuilding it mid-scratch
+      // would fill the holes back in
       if (!touched && !revealed) paintPlate();
     };
     img.src = 'foil.jpg';
   })();
-
-  function makeNoise(){
-    const n = document.createElement('canvas');
-    n.width = n.height = 128;
-    const c = n.getContext('2d');
-    const img = c.createImageData(128, 128);
-    const d = img.data;
-    for (let i = 0; i < d.length; i += 4){
-      const v = 82 + Math.random() * 152;
-      d[i] = d[i + 1] = d[i + 2] = v;
-      d[i + 3] = 255;
-    }
-    c.putImageData(img, 0, 0);
-    return n;
-  }
-
-  // Crumple, as a grey light-map. Mid-grey is the neutral value under `overlay`,
-  // so painting the crinkle in greys and compositing the sheet in one pass bends
-  // light across the foil without touching its hue — bright facets go to pale
-  // gold, dark ones to bronze, which is what crumpled foil actually does.
-  // Painting the facets in gold directly just averages back to a flat plane.
-  function crumple(cell, spread, blur, crease){
-    const map = document.createElement('canvas');
-    map.width = plate.width; map.height = plate.height;
-    const m = map.getContext('2d');
-    m.scale(dpr, dpr);
-    m.fillStyle = '#808080';                 // neutral ground
-    m.fillRect(0, 0, W, H);
-
-    const cols = Math.ceil(W / cell) + 2, rows = Math.ceil(H / cell) + 2;
-    const lat = [];
-    for (let j = 0; j <= rows; j++){
-      const row = [];
-      for (let i = 0; i <= cols; i++){
-        row.push([
-          (i - 1) * cell + (Math.random() - .5) * cell * .66,
-          (j - 1) * cell + (Math.random() - .5) * cell * .66,
-        ]);
-      }
-      lat.push(row);
-    }
-
-    const grey = v => {
-      const n = Math.max(4, Math.min(251, Math.round(v)));
-      return 'rgb(' + n + ',' + n + ',' + n + ')';
-    };
-
-    for (let j = 0; j < rows; j++){
-      for (let i = 0; i < cols; i++){
-        const a = lat[j][i], b = lat[j][i + 1], d = lat[j + 1][i + 1], e = lat[j + 1][i];
-        const t = Math.random() * 6.283;
-        const mid = 128 + (Math.random() - .5) * 2 * spread;   // facet to facet
-        const tilt = spread * (.35 + Math.random() * .5);      // across one facet
-        const face = m.createLinearGradient(
-          a[0], a[1],
-          a[0] + Math.cos(t) * cell * 1.6,
-          a[1] + Math.sin(t) * cell * 1.6
-        );
-        face.addColorStop(0, grey(mid + tilt));
-        face.addColorStop(1, grey(mid - tilt));
-        m.fillStyle = face;
-        m.beginPath();
-        m.moveTo(a[0], a[1]); m.lineTo(b[0], b[1]);
-        m.lineTo(d[0], d[1]); m.lineTo(e[0], e[1]);
-        m.closePath();
-        m.fill();
-      }
-    }
-
-    // soften the polygon edges into bends, then lay the sharp fold lines on top
-    let out = map;
-    if (blur){
-      out = document.createElement('canvas');
-      out.width = map.width; out.height = map.height;
-      const o = out.getContext('2d');
-      o.filter = 'blur(' + (blur * dpr).toFixed(2) + 'px)';
-      o.drawImage(map, 0, 0);
-      o.filter = 'none';
-    }
-
-    const o = out.getContext('2d');
-    o.save();
-    o.scale(dpr, dpr);
-    o.lineWidth = crease;
-    for (let j = 0; j <= rows; j++){
-      for (let i = 0; i < cols; i++){
-        const a = lat[j][i], b = lat[j][i + 1];
-        o.globalAlpha = .18 + Math.random() * .44;
-        o.strokeStyle = Math.random() < .5 ? grey(250) : grey(20);
-        o.beginPath(); o.moveTo(a[0], a[1]); o.lineTo(b[0], b[1]); o.stroke();
-      }
-    }
-    for (let i = 0; i <= cols; i++){
-      for (let j = 0; j < rows; j++){
-        const a = lat[j][i], b = lat[j + 1][i];
-        o.globalAlpha = .15 + Math.random() * .38;
-        o.strokeStyle = Math.random() < .5 ? grey(250) : grey(20);
-        o.beginPath(); o.moveTo(a[0], a[1]); o.lineTo(b[0], b[1]); o.stroke();
-      }
-    }
-    o.restore();
-
-    return out;
-  }
 
   function buildPlate(){
     const g = geom();
@@ -1132,163 +948,26 @@
     const c = plate.getContext('2d');
     c.scale(dpr, dpr);
 
-    if (!noiseTile) noiseTile = makeNoise();
-
     c.save();
     heartPath(c, g.cx, g.cy, g.halfW, g.scale);
     c.clip();
 
-    // Base. The glitter photograph once it has arrived, cover-fitted so it fills
-    // the heart without its grain being stretched out of round; the painted
-    // gradient until then, and for good if the file never loads. Everything
-    // downstream — crumple, sweep, bevel — is composited as light rather than
-    // colour, so it works the same over either.
     if (foilTex){
+      // cover, so the grain keeps its proportions whatever shape it is poured into
       const s = Math.max(W / foilTex.naturalWidth, H / foilTex.naturalHeight);
       const w = foilTex.naturalWidth * s, h = foilTex.naturalHeight * s;
       c.drawImage(foilTex, (W - w) / 2, (H - h) / 2, w, h);
     } else {
-      // Blue is kept off the floor on purpose: `overlay` scales each channel
-      // against the backdrop, so a near-zero blue turns every bright fold lemon.
+      // until the photograph arrives, and for good if it never does
       const base = c.createLinearGradient(0, 0, W, H);
       base.addColorStop(0,   '#eed291');
-      base.addColorStop(.22, '#cda644');
       base.addColorStop(.40, '#ac8730');
       base.addColorStop(.58, '#e2cb8a');
-      base.addColorStop(.78, '#b89136');
       base.addColorStop(1,   '#8e6d26');
       c.fillStyle = base;
       c.fillRect(0, 0, W, H);
     }
 
-    // Two scales of crinkle, bent through the gold as light. Cell sizes are a
-    // fraction of the heart, so the crumple looks the same on any screen; blur
-    // tracks the cell so the folds stay as crisp at one size as another.
-    const fold = Math.max(18, W / 9), crink = Math.max(9, W / 20);
-    c.globalCompositeOperation = 'overlay';
-    c.drawImage(crumple(fold,  66, fold  * .05, Math.max(.8, W / 300)), 0, 0, W, H);
-    c.globalAlpha = .85;
-    c.drawImage(crumple(crink, 30, crink * .06, Math.max(.5, W / 520)), 0, 0, W, H);
-    c.globalAlpha = 1;
-
-    // The crinkle is luminance only. Re-seat the hue over the top so the folds
-    // stay gold where the light map runs hot, kept under full strength so the
-    // warm-highlight / bronze-shadow shift survives.
-    c.globalCompositeOperation = 'color';
-    c.globalAlpha = foilTex ? .22 : .5;      // the photograph brings its own hue
-    c.fillStyle = '#c69c33';
-    c.fillRect(0, 0, W, H);
-    c.globalCompositeOperation = 'source-over';
-    c.globalAlpha = 1;
-
-    // Surface texture, as opposed to lighting: the brushed grain and the
-    // micro-grain exist to stop painted gold reading as paint. A photograph of
-    // real glitter has both already, at a finer pitch than either of these, and
-    // laying them over it only silts up what was picked for its crispness.
-    if (!foilTex){
-      // brushed grain: fine and directional, riding over the facets
-      const span = Math.hypot(W, H);
-      c.save();
-      c.translate(W / 2, H / 2);
-      c.rotate(-0.52);
-      for (let i = 0; i < 210; i++){
-        c.globalAlpha = .025 + Math.random() * .085;
-        c.fillStyle = Math.random() < .5 ? '#fff6d2' : '#4e3906';
-        c.fillRect(-span / 2, (Math.random() - .5) * span, span, .4 + Math.random() * 1.7);
-      }
-      c.restore();
-      c.globalAlpha = 1;
-
-      // micro-grain, counter-scaled so one noise pixel is one device pixel
-      const grain = c.createPattern(noiseTile, 'repeat');
-      try { grain.setTransform(new DOMMatrix([1 / dpr, 0, 0, 1 / dpr, 0, 0])); } catch {}
-      c.globalCompositeOperation = 'overlay';
-      c.globalAlpha = .3;
-      c.fillStyle = grain;
-      c.fillRect(0, 0, W, H);
-      c.globalCompositeOperation = 'source-over';
-      c.globalAlpha = 1;
-    }
-
-    // the anisotropic band rolled metal carries — kept faint so it lights the
-    // crumple instead of flattening it back out
-    const sweep = c.createLinearGradient(0, H, W, 0);
-    sweep.addColorStop(0,   'rgba(255,255,255,0)');
-    sweep.addColorStop(.36, 'rgba(255,251,232,.10)');
-    sweep.addColorStop(.50, 'rgba(255,255,255,.22)');
-    sweep.addColorStop(.64, 'rgba(255,249,222,.08)');
-    sweep.addColorStop(1,   'rgba(255,255,255,0)');
-    c.fillStyle = sweep;
-    c.fillRect(0, 0, W, H);
-
-    // glitter — painted only when there is no photographed glitter to stand on
-    if (!foilTex){
-      const specks = Math.round(W * H * 0.045);
-      for (let i = 0; i < specks; i++){
-        const x = Math.random() * W, y = Math.random() * H;
-        const r = 0.3 + Math.random() * 1.5;
-        c.globalAlpha = .2 + Math.random() * .7;
-        c.fillStyle = GOLD[(Math.random() * GOLD.length) | 0];
-        c.beginPath();
-        c.arc(x, y, r, 0, 6.283);
-        c.fill();
-      }
-      c.globalAlpha = 1;
-    }
-
-    // catchlights
-    c.globalCompositeOperation = 'lighter';
-    for (let i = 0; i < 30; i++){
-      const x = Math.random() * W, y = Math.random() * H, r = 2 + Math.random() * 6;
-      const s = c.createRadialGradient(x, y, 0, x, y, r);
-      s.addColorStop(0, 'rgba(255,253,240,.9)');
-      s.addColorStop(1, 'rgba(255,240,180,0)');
-      c.globalAlpha = .45 + Math.random() * .45;
-      c.fillStyle = s;
-      c.beginPath(); c.arc(x, y, r, 0, 6.283); c.fill();
-    }
-
-    // a few specks that actually throw light, so the surface has hot points
-    for (let i = 0; i < 9; i++){
-      const r = 3 + Math.random() * 7;
-      c.save();
-      c.translate(Math.random() * W, Math.random() * H);
-      c.rotate(Math.random() * 1.57);
-      c.globalAlpha = .35 + Math.random() * .45;
-      c.fillStyle = 'rgba(255,253,242,.95)';
-      c.beginPath();
-      c.moveTo(0, -r);        c.lineTo(r * .16, -r * .16);
-      c.lineTo(r, 0);         c.lineTo(r * .16, r * .16);
-      c.lineTo(0, r);         c.lineTo(-r * .16, r * .16);
-      c.lineTo(-r, 0);        c.lineTo(-r * .16, -r * .16);
-      c.closePath();
-      c.fill();
-      c.restore();
-    }
-    c.globalCompositeOperation = 'source-over';
-    c.globalAlpha = 1;
-
-    // bevel: the heart is stamped into the paper, so the rim falls away and the
-    // face lifts toward the same light that crosses the card
-    const bev = c.createRadialGradient(
-      W * .38, H * .30, 0,
-      W * .50, H * .50, Math.max(W, H) * .58
-    );
-    bev.addColorStop(0,   'rgba(255,250,220,.20)');
-    bev.addColorStop(.46, 'rgba(255,250,220,0)');
-    bev.addColorStop(1,   'rgba(48,32,2,.46)');
-    c.fillStyle = bev;
-    c.fillRect(0, 0, W, H);
-
-    // pressed edge so the foil sits in the paper, not on it
-    c.lineWidth = 2.2;
-    c.strokeStyle = 'rgba(84,60,8,.5)';
-    heartPath(c, g.cx, g.cy, g.halfW, g.scale);
-    c.stroke();
-    c.lineWidth = .9;
-    c.strokeStyle = 'rgba(255,246,206,.34)';
-    heartPath(c, g.cx, g.cy, g.halfW * .975, g.scale);
-    c.stroke();
     c.restore();
   }
 
@@ -1311,11 +990,15 @@
 
   /* ---------- sizing ---------- */
 
+  // offsetWidth, not getBoundingClientRect: while the card is still seated in
+  // the envelope it carries a scale, and the rect reports what that scale makes
+  // it look like. Building the plate at that size and then releasing the card to
+  // full size would hand back a soft, upscaled heart. The layout box is the same
+  // either way, and it is the one the plate has to match.
   function resizeFoil(){
-    const r = foil.getBoundingClientRect();
-    if (!r.width) return;
+    if (!foil.offsetWidth) return;
     dpr = Math.min(devicePixelRatio || 1, 2);
-    W = r.width; H = r.height;
+    W = foil.offsetWidth; H = foil.offsetHeight;
     foil.width  = Math.round(W * dpr);
     foil.height = Math.round(H * dpr);
 
@@ -1859,40 +1542,73 @@
   // the other.
   (() => {
     const wrap = document.getElementById('envelope');
-    const env  = document.getElementById('env');
+    const fore = document.getElementById('envFore');
+    const slot = document.getElementById('slot');
     const seal = document.getElementById('seal');
     let opened = false;
 
-    const handOver = () => {
-      document.body.classList.add('handed');
-      document.body.classList.remove('sealed');
-      setTimeout(() => { if (!touched) hint.classList.add('show'); }, 1000);
-    };
+    // Seat the real card in the pocket. Measure it where it belongs, measure the
+    // slot, and carry it there with one transform. Both boxes are 1:1.52, so the
+    // scale is uniform and nothing inside the card is stretched on the way — the
+    // reason the card went back to being a framed card at every size.
+    function seat(){
+      if (opened) return;
+      card.style.transition = 'none';
+      card.style.transform = 'none';
+      const to = card.getBoundingClientRect();
+      const from = slot.getBoundingClientRect();
+      if (!to.width || !from.width) return;
+      const s = from.width / to.width;
+      const dx = (from.left + from.width / 2) - (to.left + to.width / 2);
+      const dy = (from.top + from.height / 2) - (to.top + to.height / 2);
+      card.style.transform = 'translate(' + dx + 'px, ' + dy + 'px) scale(' + s + ')';
+    }
 
-    // The cross-fade starts while the envelope is still travelling. Waiting for
-    // the motion to finish first is what made it read as two events instead of
-    // one — the eye forgives a change of scale far more readily during movement
-    // than after it has stopped.
+    // Slow, and overlapping. The flap is still settling when the card starts to
+    // move, and the card is still moving when the envelope begins to fall: three
+    // events that share their edges read as one event, where three that queue up
+    // politely read as a list.
     function open(){
       if (opened) return;
       opened = true;
-      env.classList.add('opening');                        // seal breaks, flap swings
-      setTimeout(() => env.classList.add('raised'), 560);   // card up, envelope down
-      setTimeout(() => { handOver(); wrap.classList.add('done'); }, 1150);
-      // out of the layout only once it has finished fading, or the fade is a cut
-      setTimeout(() => wrap.classList.add('gone'), 2050);
+      fore.classList.add('opening');                 // seal breaks, flap swings back
+
+      setTimeout(() => {
+        card.style.transition = 'transform 1.7s var(--ease-paper)';
+        card.style.transform = 'none';
+        wrap.classList.add('raised');                // and the envelope goes down
+        fore.classList.add('raised');
+        document.body.classList.add('handed');
+        document.body.classList.remove('sealed');
+      }, 1100);
+
+      setTimeout(() => { if (!touched) hint.classList.add('show'); }, 3100);
+      setTimeout(() => {
+        wrap.classList.add('gone');
+        fore.classList.add('gone');
+        card.style.transition = '';
+        card.style.transform = '';
+      }, 3000);
     }
 
     // Someone who has asked for less motion has not asked for less invitation,
     // but they should not have to sit through the flap to get to it.
     if (reduce){
-      handOver();
-      wrap.classList.add('done', 'gone');
+      document.body.classList.add('handed');
+      document.body.classList.remove('sealed');
+      wrap.classList.add('gone');
+      fore.classList.add('gone');
+      setTimeout(() => { if (!touched) hint.classList.add('show'); }, 700);
       return;
     }
 
+    seat();
+    addEventListener('resize', seat);
+    document.fonts?.ready.then(seat, () => {});
+
     seal.addEventListener('click', open);
     wrap.addEventListener('click', open);
+    fore.addEventListener('click', open);
   })();
 
   /* ---------- boot ---------- */
