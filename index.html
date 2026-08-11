@@ -583,23 +583,32 @@
 
   .env-back{ inset:0; }
 
-  /* the pocket, with the two side flaps notched out of its top */
+  /* The pocket, with the two side flaps notched out of its top. Its notch and
+     the flap's lower edges are the same two lines — 20% at the sides down to
+     50% at the point — because anything else leaves a wedge of daylight between
+     them, and behind that wedge is the card. */
   .env-front{
     inset:0;
     clip-path:polygon(0 20%, 50% 50%, 100% 20%, 100% 100%, 0 100%);
-    /* the only thing that distinguishes it from the sheet behind: the shadow
-       the fold throws, and a hair of extra light along the crease */
-    filter:drop-shadow(0 -1px 2px rgba(70,62,44,.16));
+    /* A shade under the sheet behind it. The gradient still runs straight
+       through the seam — this is a flat offset on top of it, the way a leaf of
+       paper lying on another leaf is simply a little further from the light. */
+    filter:brightness(.984) drop-shadow(0 -1px 2px rgba(70,62,44,.14));
   }
 
+  /* Not a triangle: a triangle drawn from the two top corners crosses the
+     pocket's notch instead of meeting it. The flap is the full width down to
+     the notch shoulders and only then comes to a point, so the two shapes share
+     an edge and the envelope is closed. */
   .env-flap{
     left:0; right:0; top:0;
     height:50%;
-    clip-path:polygon(0 0, 100% 0, 50% 100%);
+    clip-path:polygon(0 0, 100% 0, 100% 40%, 50% 100%, 0 40%);
     transform-origin:top center;
     transform:rotateX(0deg);
     transition:transform 1.5s var(--ease-paper) .15s;
-    filter:drop-shadow(0 3px 5px rgba(70,62,44,.16));
+    /* and a shade over it, for the same reason in reverse */
+    filter:brightness(1.014) drop-shadow(0 3px 6px rgba(70,62,44,.20));
   }
   .env-fore.opening .env-flap{ transform:rotateX(-176deg); }
 
@@ -629,21 +638,37 @@
     padding:0;
     cursor:pointer;
     border:0;
-    border-radius:47% 53% 51% 49% / 52% 48% 52% 48%;
+    border-radius:46% 54% 50% 50% / 53% 47% 52% 48%;
+    /* Wax, not a bead. The old version put a small bright specular high on the
+       left and ramped a dark bronze to a pale gold across the whole blob, which
+       is how you shade a sphere — and it read as one. Wax is nearly flat on top
+       with the light broad and low in contrast, and it goes dark at the rim
+       where it squeezed out under the stamp. */
     background:
-      radial-gradient(58% 52% at 34% 30%, rgba(255,248,214,.85), rgba(255,248,214,0) 62%),
-      radial-gradient(120% 120% at 62% 78%, #7e5f12 0%, #a8811b 34%, #c9a227 66%, #e0c359 100%);
+      radial-gradient(130% 120% at 50% 8%, rgba(255,246,206,.5), rgba(255,246,206,0) 52%),
+      radial-gradient(96% 96% at 50% 46%, #cba62c 0%, #bd961f 58%, #94711a 88%, #7a5c12 100%);
     box-shadow:
-      0 1px 0 rgba(255,247,214,.5) inset,
-      0 -2px 4px rgba(60,42,4,.45) inset,
-      0 2px 5px rgba(70,54,12,.4),
-      0 10px 20px -10px rgba(70,54,12,.55);
+      0 1px 0 rgba(255,247,214,.3) inset,
+      0 -3px 7px rgba(60,42,4,.34) inset,
+      0 2px 4px rgba(70,54,12,.3),
+      0 12px 22px -14px rgba(70,54,12,.5);
     font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
     font-size:clamp(13px, 4.2vw, 20px);
     letter-spacing:.04em;
     color:#5a4310;
     text-shadow:0 1px 0 rgba(255,240,190,.5), 0 -1px 1px rgba(52,36,2,.5);
     transition:transform .8s var(--ease-paper), opacity .8s var(--ease-paper), box-shadow .3s var(--ease);
+  }
+  /* the ring the die leaves inside the rim — the part that says it was pressed
+     rather than poured */
+  .seal::before{
+    content:"";
+    position:absolute;
+    inset:12%;
+    border-radius:inherit;
+    border:1px solid rgba(92,68,10,.32);
+    box-shadow:0 1px 0 rgba(255,244,198,.26);
+    pointer-events:none;
   }
   .seal:hover{ box-shadow:
       0 1px 0 rgba(255,247,214,.6) inset,
