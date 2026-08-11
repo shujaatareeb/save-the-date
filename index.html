@@ -18,7 +18,16 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2032%2032%22%3E%3Cpath%20d%3D%22M16%2028C6%2021%202%2016%202%2011.5%202%207.9%204.9%205%208.5%205c2.6%200%204.9%201.5%206%203.6C15.6%206.5%2017.9%205%2020.5%205%2024.1%205%2027%207.9%2027%2011.5%2027%2016%2023%2021%2016%2028z%22%20fill%3D%22%23c9a227%22%2F%3E%3C%2Fsvg%3E">
 <style>:root{color-scheme:light}html,body{margin:0;padding:0}img{max-width:100%}</style>
 </head>
-<body>
+<body class="sealed">
+
+<!-- The envelope is a thing you open, which means it is a thing that needs a
+     script. Without one it is a door with no handle, so it is not shown at all
+     and the card is where it always was. -->
+<noscript><style>
+  .envelope{ display:none; }
+  body.sealed .card,
+  body.sealed .below{ opacity:1; }
+</style></noscript>
 
 <style>
   /* Pinyon Script (SIL Open Font License 1.1) — copperplate engraving, the hand
@@ -517,6 +526,179 @@
     .btn{ width:min(300px,78vw); }
   }
 
+  /* ---------- the envelope ---------- */
+
+  /* Everything the page already was now waits behind this. The card keeps its
+     layout while sealed — the foil canvas has to be measured and drawn at its
+     real size before the reveal, and an element that is merely transparent is
+     still measurable, where a `display:none` one is not. */
+  body.sealed .card,
+  body.sealed .below,
+  body.sealed .sound{ opacity:0; pointer-events:none; }
+  body.sealed .card{ animation:none; }
+
+  .envelope{
+    position:fixed;
+    inset:0;
+    z-index:80;
+    display:grid;
+    place-items:center;
+    gap:26px;
+    grid-auto-rows:min-content;
+    align-content:center;
+    background:radial-gradient(120% 90% at 50% 0%, #e9e5da 0%, #dbd6c8 60%, #cfc9b9 100%);
+    perspective:1400px;
+    transition:opacity .55s var(--ease), transform .55s var(--ease);
+  }
+  .envelope.done{ opacity:0; transform:scale(1.05); pointer-events:none; }
+  .envelope.gone{ display:none; }
+
+  /* preserve-3d does the layering: once the flap swings past upright its own
+     depth puts it behind the envelope, with no z-index to fight over */
+  /* Portrait, and a little larger than what it holds. A landscape envelope is
+     the prettier shape, but the card is 1:1.52 and would stand a head taller
+     than the pocket before the flap had even moved. */
+  .env{
+    position:relative;
+    width:min(84vw, 400px);
+    aspect-ratio:1 / 1.42;
+    transform-style:preserve-3d;
+    animation:settle .9s var(--ease) both;
+  }
+
+  .env-back,
+  .env-front,
+  .env-flap{
+    position:absolute;
+    background:linear-gradient(158deg, var(--paper-hi) 0%, var(--paper) 46%, var(--paper-lo) 100%);
+  }
+
+  .env-back{
+    inset:0;
+    border:1px solid var(--edge);
+    box-shadow:
+      0 1px 2px rgba(70,62,44,.14),
+      0 12px 30px -10px rgba(70,62,44,.34),
+      0 40px 66px -32px rgba(70,62,44,.44);
+  }
+
+  /* the card, sitting down in the pocket */
+  .env-card{
+    position:absolute;
+    left:10%;
+    width:80%;
+    bottom:4%;
+    aspect-ratio:1 / 1.52;
+    container-type:inline-size;
+    background:linear-gradient(158deg, var(--paper-hi) 0%, var(--paper) 46%, var(--paper-lo) 100%);
+    border:1px solid var(--edge);
+    box-shadow:0 -2px 12px -4px rgba(70,62,44,.3);
+    transform:translateY(0) translateZ(1px);
+    transition:transform 1s var(--ease);
+    display:grid;
+    place-items:center;
+    overflow:hidden;
+  }
+  /* far enough to read as coming out of it, not so far that the top of it
+     leaves the screen on the way — the real card takes over a moment later */
+  .env.raised .env-card{ transform:translateY(-42%) translateZ(1px); }
+
+  .env-card .lace{ border-width:9cqw; }
+  .env-card .names{
+    margin:0;
+    padding:0 14cqw;
+    font-family:'Pinyon Script','Snell Roundhand','Edwardian Script ITC',cursive;
+    font-size:10.6cqw;
+    line-height:1.16;
+    white-space:nowrap;
+    color:var(--relief-deep);
+    text-shadow:0 1px 0 var(--deboss-light), 0 -1px 1px var(--deboss-dark);
+    /* the card is behind the pocket until it rises, so this is the only part of
+       it anyone sees first — it wants to arrive with the rise, not before it */
+    opacity:0;
+    transition:opacity .5s var(--ease) .35s;
+  }
+  .env.raised .env-card .names{ opacity:1; }
+
+  /* the pocket: a rectangle with the two side flaps notched out of its top */
+  .env-front{
+    inset:0;
+    clip-path:polygon(0 10%, 50% 40%, 100% 10%, 100% 100%, 0 100%);
+    border-left:1px solid var(--edge);
+    border-right:1px solid var(--edge);
+    border-bottom:1px solid var(--edge);
+    transform:translateZ(2px);
+    box-shadow:0 -1px 3px rgba(70,62,44,.10);
+  }
+
+  .env-flap{
+    left:0; right:0; top:0;
+    height:42%;
+    clip-path:polygon(0 0, 100% 0, 50% 100%);
+    transform-origin:top center;
+    transform:rotateX(0deg) translateZ(3px);
+    transition:transform .85s var(--ease) .12s;
+    border-top:1px solid var(--edge);
+    filter:drop-shadow(0 2px 3px rgba(70,62,44,.14));
+  }
+  .env.opening .env-flap{ transform:rotateX(-172deg) translateZ(3px); }
+
+  /* wax: an irregular blob, lit from the same place as everything else */
+  .seal{
+    position:absolute;
+    left:50%;
+    top:40%;
+    width:19%;
+    aspect-ratio:1;
+    transform:translate(-50%,-50%) translateZ(4px);
+    display:grid;
+    place-items:center;
+    padding:0;
+    cursor:pointer;
+    border:0;
+    border-radius:47% 53% 51% 49% / 52% 48% 52% 48%;
+    background:
+      radial-gradient(58% 52% at 34% 30%, rgba(255,248,214,.85), rgba(255,248,214,0) 62%),
+      radial-gradient(120% 120% at 62% 78%, #7e5f12 0%, #a8811b 34%, #c9a227 66%, #e0c359 100%);
+    box-shadow:
+      0 1px 0 rgba(255,247,214,.5) inset,
+      0 -2px 4px rgba(60,42,4,.45) inset,
+      0 2px 5px rgba(70,54,12,.4),
+      0 8px 16px -8px rgba(70,54,12,.55);
+    font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+    font-size:clamp(11px, 3.1vw, 15px);
+    letter-spacing:.04em;
+    color:#5a4310;
+    text-shadow:0 1px 0 rgba(255,240,190,.5), 0 -1px 1px rgba(52,36,2,.5);
+    transition:transform .4s var(--ease), opacity .4s var(--ease), box-shadow .3s var(--ease);
+  }
+  .seal:hover{ box-shadow:
+      0 1px 0 rgba(255,247,214,.6) inset,
+      0 -2px 4px rgba(60,42,4,.45) inset,
+      0 3px 7px rgba(70,54,12,.44),
+      0 12px 22px -10px rgba(70,54,12,.6); }
+  .seal:focus-visible{ outline:2px solid #8a7a4a; outline-offset:4px; }
+  .env.opening .seal{
+    transform:translate(-50%,-50%) translateZ(4px) scale(1.22) rotate(9deg);
+    opacity:0;
+    pointer-events:none;
+  }
+
+  .open-hint{
+    margin:0;
+    font-size:12px;
+    letter-spacing:.22em;
+    text-indent:.22em;
+    text-transform:uppercase;
+    color:var(--hint);
+    animation:breathe-hint 2.6s ease-in-out .9s infinite both;
+  }
+  .env.opening ~ .open-hint{ opacity:0; transition:opacity .3s linear; animation:none; }
+  @keyframes breathe-hint{
+    0%,100%{ opacity:.45; }
+    50%    { opacity:1; }
+  }
+
   /* ---------- the sound chip ---------- */
 
   /* Top-left, which is the one corner the florals leave empty. Present from the
@@ -599,6 +781,20 @@
     *{ transition-duration:.01ms !important; }
   }
 </style>
+
+<div class="envelope" id="envelope">
+  <div class="env" id="env">
+    <div class="env-back"></div>
+    <div class="env-card">
+      <div class="lace" aria-hidden="true"></div>
+      <p class="names">Misbah &amp; Areeb</p>
+    </div>
+    <div class="env-front"></div>
+    <div class="env-flap"></div>
+    <button class="seal" id="seal" type="button" aria-label="Open the envelope">M &amp; A</button>
+  </div>
+  <p class="open-hint" id="openHint">Tap to open</p>
+</div>
 
 <audio id="music" src="music.m4a" loop preload="auto"></audio>
 
@@ -1624,6 +1820,46 @@
     play();
   })();
 
+  /* ---------- the envelope ---------- */
+
+  // Nothing here talks to the music: the first tap on the seal is a pointerdown
+  // like any other, which is exactly what the audio fallback is already waiting
+  // for. The opening gesture pays for the sound without either knowing about
+  // the other.
+  (() => {
+    const wrap = document.getElementById('envelope');
+    const env  = document.getElementById('env');
+    const seal = document.getElementById('seal');
+    let opened = false;
+
+    const handOver = () => {
+      document.body.classList.remove('sealed');
+      setTimeout(() => { if (!touched) hint.classList.add('show'); }, 900);
+    };
+
+    function open(){
+      if (opened) return;
+      opened = true;
+      env.classList.add('opening');                       // seal breaks, flap swings
+      setTimeout(() => env.classList.add('raised'), 620);  // card rises out
+      setTimeout(() => { handOver(); wrap.classList.add('done'); }, 1700);
+      // taken out of the layout only once it has finished fading, or the fade
+      // would be a cut
+      setTimeout(() => wrap.classList.add('gone'), 2350);
+    }
+
+    // Someone who has asked for less motion has not asked for less invitation,
+    // but they should not have to sit through the flap to get to it.
+    if (reduce){
+      handOver();
+      wrap.classList.add('done', 'gone');
+      return;
+    }
+
+    seal.addEventListener('click', open);
+    wrap.addEventListener('click', open);
+  })();
+
   /* ---------- boot ---------- */
 
   new ResizeObserver(resizeFoil).observe(foil);
@@ -1635,7 +1871,6 @@
   resizeFoil();
 
   if (!reduce) shimmerId = requestAnimationFrame(shimmer);
-  setTimeout(() => { if (!touched) hint.classList.add('show'); }, 1400);
 })();
 </script>
 
