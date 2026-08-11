@@ -502,9 +502,22 @@
 
     <div class="heart">
       <div class="bloom"></div>
+      <!-- Raised, not pressed: the light comes from above, so the wall that
+           faces up is lit and the one that faces down is in shadow — the
+           reverse of the blind deboss on the names and the rule. Shallow on
+           purpose; a real blind emboss is a millimetre of paper, and anything
+           deeper stops reading as stock and starts reading as a graphic. -->
       <svg class="imprint" id="imprint" viewBox="0 0 100 94" aria-hidden="true">
-        <path id="ip-dark"  fill="none" stroke="rgba(122,111,84,.45)" stroke-width="1.5" transform="translate(0,-0.7)"/>
-        <path id="ip-light" fill="none" stroke="rgba(255,255,255,.92)" stroke-width="1.5" transform="translate(0,0.9)"/>
+        <defs>
+          <linearGradient id="ip-lift" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0"   stop-color="#ffffff" stop-opacity=".30"/>
+            <stop offset=".54" stop-color="#ffffff" stop-opacity=".05"/>
+            <stop offset="1"   stop-color="#6f6449" stop-opacity=".09"/>
+          </linearGradient>
+        </defs>
+        <path id="ip-face"  fill="url(#ip-lift)" stroke="none"/>
+        <path id="ip-light" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="1.5" transform="translate(0,-0.8)"/>
+        <path id="ip-dark"  fill="none" stroke="rgba(122,111,84,.45)" stroke-width="1.5" transform="translate(0,0.9)"/>
         <path id="ip-foil"  fill="none" stroke="rgba(201,162,39,.62)" stroke-width=".8"/>
       </svg>
 
@@ -628,7 +641,7 @@
     const d = heartPoints(50, 47, 50, scale, .03)
       .map(([x, y], i) => (i ? 'L' : 'M') + x.toFixed(2) + ' ' + y.toFixed(2))
       .join(' ') + ' Z';
-    for (const id of ['ip-dark', 'ip-light', 'ip-foil'])
+    for (const id of ['ip-face', 'ip-dark', 'ip-light', 'ip-foil'])
       document.getElementById(id).setAttribute('d', d);
   })();
 
