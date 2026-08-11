@@ -547,20 +547,37 @@
   body.handed .card{ animation:none; }
   .below{ transition:opacity .9s var(--ease) .5s; }
 
+  /* The envelope leaves faster than the card arrives, and starts before it. Run
+     them together on the same curve and the card reaches its resting place with
+     a second still to go on the envelope, so it sits there finished underneath
+     a pocket that has not finished leaving — which does not read as a card
+     coming out of an envelope. It reads as a card behind one. */
   .envelope,
   .env-fore{
     position:fixed;
     inset:0;
-    transition:transform 1.7s var(--ease-paper);
+    transition:transform 1.25s cubic-bezier(.4,.16,.24,1);
   }
   .envelope{ z-index:78; }
   .env-fore{
     z-index:81;
-    perspective:1600px;
     background:none;
   }
+
+  /* Fixed, and never given `raised`. Everything else in the envelope leaves
+     downward; this one has already left upward and must be allowed to stay
+     gone. */
+  .env-flap-layer{
+    position:fixed;
+    inset:0;
+    z-index:82;
+    perspective:1600px;
+    pointer-events:none;
+  }
+
   .envelope.gone,
-  .env-fore.gone{ display:none; }
+  .env-fore.gone,
+  .env-flap-layer.gone{ display:none; }
 
   /* Both halves leave downward, together, as one envelope */
   .envelope.raised,
@@ -593,7 +610,7 @@
     /* A shade under the sheet behind it. The gradient still runs straight
        through the seam — this is a flat offset on top of it, the way a leaf of
        paper lying on another leaf is simply a little further from the light. */
-    filter:brightness(.984) drop-shadow(0 -1px 2px rgba(70,62,44,.14));
+    filter:brightness(.955) drop-shadow(0 -2px 3px rgba(70,62,44,.18));
   }
 
   /* Not a triangle: a triangle drawn from the two top corners crosses the
@@ -607,10 +624,17 @@
     transform-origin:top center;
     transform:rotateX(0deg);
     transition:transform 1.5s var(--ease-paper) .15s;
-    /* and a shade over it, for the same reason in reverse */
-    filter:brightness(1.014) drop-shadow(0 3px 6px rgba(70,62,44,.20));
+    /* and a shade over it, for the same reason in reverse. Wider apart than
+       feels right in the abstract: edge to edge there is no silhouette and no
+       trim, so the fold between flap and pocket is the only line telling anyone
+       this is an envelope at all. */
+    filter:brightness(1.035) drop-shadow(0 4px 7px rgba(70,62,44,.26));
   }
-  .env-fore.opening .env-flap{ transform:rotateX(-176deg); }
+  /* Positive, which is away from the viewer. Negative swings the flap's point
+     toward the camera on its way over, and a plane passing near the eye under a
+     1600px perspective does not read as a flap opening — it magnifies until it
+     is a wall of paper across the whole screen, which is exactly what it did. */
+  .env-flap-layer.opening .env-flap{ transform:rotateX(176deg); }
 
   /* where the card sits while it is still in the envelope. Never painted — it
      exists so the script has a box to measure and put the real card into. */
@@ -638,6 +662,7 @@
     padding:0;
     cursor:pointer;
     border:0;
+    pointer-events:auto;        /* its layer does not take pointers; the wax does */
     border-radius:46% 54% 50% 50% / 53% 47% 52% 48%;
     /* Wax, not a bead. The old version put a small bright specular high on the
        left and ramped a dark bronze to a pale gold across the whole blob, which
@@ -676,7 +701,7 @@
       0 3px 7px rgba(70,54,12,.44),
       0 14px 26px -12px rgba(70,54,12,.6); }
   .seal:focus-visible{ outline:2px solid #8a7a4a; outline-offset:4px; }
-  .env-fore.opening .seal{
+  .env-flap-layer.opening .seal{
     transform:translate(-50%,-50%) scale(1.18) rotate(7deg);
     opacity:0;
     pointer-events:none;
@@ -696,7 +721,7 @@
     color:var(--hint);
     animation:breathe-hint 3.4s ease-in-out 1.2s infinite both;
   }
-  .env-fore.opening ~ .open-hint{ opacity:0; transition:opacity .45s linear; animation:none; }
+  .env-flap-layer.opening ~ .open-hint{ opacity:0; transition:opacity .45s linear; animation:none; }
   @keyframes breathe-hint{
     0%,100%{ opacity:.42; }
     50%    { opacity:1; }
@@ -771,7 +796,17 @@
 
 <div class="env-fore" id="envFore">
   <div class="env-front stock"></div>
-  <div class="env-flap stock"></div>
+</div>
+
+<!-- The flap is on its own layer because it is the one part of the envelope
+     that must not travel with the rest. Opened, it lies above the top of the
+     screen; carried down by the envelope's exit it comes straight back across
+     the card, which is precisely what it was doing.
+
+     The seal rides with it, above it, because wax sits on the outside of a flap
+     and not under it. -->
+<div class="env-flap-layer" id="envFlap">
+  <div class="env-flap stock" aria-hidden="true"></div>
   <button class="seal" id="seal" type="button" aria-label="Open the envelope">M &amp; A</button>
 </div>
 <p class="open-hint" id="openHint">Tap to open</p>
@@ -1568,6 +1603,7 @@
   (() => {
     const wrap = document.getElementById('envelope');
     const fore = document.getElementById('envFore');
+    const flap = document.getElementById('envFlap');
     const slot = document.getElementById('slot');
     const seal = document.getElementById('seal');
     let opened = false;
@@ -1596,13 +1632,19 @@
     function open(){
       if (opened) return;
       opened = true;
-      fore.classList.add('opening');                 // seal breaks, flap swings back
+      fore.classList.add('opening');                 // the seal breaks
+      flap.classList.add('opening');                 // and the flap swings back
+
+      // the envelope starts down first and moves quicker, so it is out of the
+      // way by the time the card is still settling rather than the other way round
+      setTimeout(() => {
+        wrap.classList.add('raised');
+        fore.classList.add('raised');
+      }, 950);
 
       setTimeout(() => {
         card.style.transition = 'transform 1.7s var(--ease-paper)';
         card.style.transform = 'none';
-        wrap.classList.add('raised');                // and the envelope goes down
-        fore.classList.add('raised');
         document.body.classList.add('handed');
         document.body.classList.remove('sealed');
       }, 1100);
@@ -1611,6 +1653,7 @@
       setTimeout(() => {
         wrap.classList.add('gone');
         fore.classList.add('gone');
+        flap.classList.add('gone');
         card.style.transition = '';
         card.style.transform = '';
       }, 3000);
@@ -1623,6 +1666,7 @@
       document.body.classList.remove('sealed');
       wrap.classList.add('gone');
       fore.classList.add('gone');
+      flap.classList.add('gone');
       setTimeout(() => { if (!touched) hint.classList.add('show'); }, 700);
       return;
     }
