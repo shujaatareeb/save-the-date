@@ -118,26 +118,38 @@
     to  { opacity:1; }
   }
 
-  /* cotton-rag fibre */
-  .card::before{
+  /* The stock, and now the only thing dressing the sheet. Two frequencies, not
+     one: the fine layer is cotton-rag fibre, and the slow layer is the cloud
+     left where the pulp settled unevenly in the mould. A single high-frequency
+     noise reads as screen grain — it is the low one that says paper, because
+     nothing manufactured flat has patches.
+
+     Same stock for the envelope and the card inside it, so the whole thing is
+     cut from one sheet. */
+  .stock::before{
     content:"";
-    position:absolute; inset:0;
-    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='220' height='220' filter='url(%23f)' opacity='0.42'/></svg>");
+    position:absolute;
+    inset:0;
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='220' height='220' filter='url(%23f)' opacity='0.42'/></svg>"),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='520' height='520'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='520' height='520' filter='url(%23m)' opacity='0.30'/></svg>");
+    background-size:220px 220px, 520px 520px;
     mix-blend-mode:multiply;
-    opacity:.28;
+    opacity:.34;
     pointer-events:none;
     z-index:1;
   }
 
-  /* Gold florals at two opposite corners, cropped out of the source frame. They
-     are placed on the diagonal the art was drawn on, and pushed past the trim so
-     the flower heads run off the card the way they do on the original sheet —
-     `overflow:hidden` on .card does the cropping.
+  /* Gold florals at two opposite corners, cropped out of the source frame and
+     placed on the diagonal the art was drawn on. They sit inside the trim rather
+     than bleeding off it — they were pulled in when the lace arrived, and they
+     stayed in when it went, because whole flowers at the corners read as placed
+     where cropped ones read as an accident of the crop.
 
      Every value is in cqw, against the card's own inline size, so the ornament
-     holds its proportion from a 320px phone to the 430px cap. Width, and the two
-     offsets past the trim, are the three numbers worth tuning by eye — they were
-     set to clear the script names on the right and the colophon on the left. */
+     holds its proportion from a 320px phone to the 430px cap. Width and the two
+     offsets are the three numbers worth tuning by eye — they were set to clear
+     the script names on the right and the colophon on the left. */
   .corner{
     position:absolute;
     width:var(--w);
@@ -163,21 +175,6 @@
     background-image:url("corner-bl.png");
   }
 
-  /* The cut-paper lace, as a nine-slice. A single stretched image was never an
-     option: the same border has to sit on a 1:1.52 card and a 1:2.16 phone, and
-     stretching one bitmap between those would leave the medallions ovals on the
-     sides. Sliced at 108px, the four corners are drawn once and each edge is
-     repeated `round`, so CSS fits a whole number of medallions to every edge and
-     scales them to close the remainder. */
-  .lace{
-    position:absolute;
-    inset:0;
-    z-index:2;
-    pointer-events:none;
-    border:9cqw solid transparent;
-    border-image:url("lace.png") 108 round;
-  }
-
   /* light falling across the sheet */
   .vignette{
     position:absolute; inset:0;
@@ -201,8 +198,10 @@
     display:grid;
     grid-template-rows:1fr auto 1fr;
     align-items:center;
-    /* clears the 9cqw lace band with a little air to spare, which is what sets
-       every size below it — the setting has 74cqw to live in now, not 84cqw */
+    /* The margin the lace used to occupy, kept after it was taken away. Every
+       size below is measured against the 74cqw this leaves, and giving it back
+       would mean re-tuning all of them for nothing — an invitation is mostly
+       margin anyway. */
     padding:13cqw;
     text-align:center;
   }
@@ -266,8 +265,8 @@
     align-self:end;
     padding-bottom:5cqw;
     font-family:'Pinyon Script','Snell Roundhand','Edwardian Script ITC',cursive;
-    /* the largest that still sets on one line inside the lace — any bigger and
-       the ampersand orphans onto a second line */
+    /* the largest that still sets on one line inside the margin — any bigger
+       and the ampersand orphans onto a second line */
     font-size:10.6cqw;
     font-weight:400;
     line-height:1.16;
@@ -535,7 +534,16 @@
   body.sealed .card,
   body.sealed .below,
   body.sealed .sound{ opacity:0; pointer-events:none; }
-  body.sealed .card{ animation:none; }
+
+  /* The hand-off used to be a cut: the envelope finished, left, and only then
+     did the card arrive under its own settling animation — a gap, and then a
+     pop. Now the card fades up while the envelope is still moving, and the
+     settle is suppressed for good once it has been handed over. An arrival
+     animation is for something that arrives; this one is already here. */
+  .card,
+  .below{ transition:opacity .8s var(--ease); }
+  body.sealed .card,
+  body.handed .card{ animation:none; }
 
   .envelope{
     position:fixed;
@@ -543,27 +551,34 @@
     z-index:80;
     display:grid;
     place-items:center;
-    gap:26px;
-    grid-auto-rows:min-content;
-    align-content:center;
     background:radial-gradient(120% 90% at 50% 0%, #e9e5da 0%, #dbd6c8 60%, #cfc9b9 100%);
-    perspective:1400px;
-    transition:opacity .55s var(--ease), transform .55s var(--ease);
+    perspective:1500px;
+    transition:opacity .8s var(--ease);
   }
-  .envelope.done{ opacity:0; transform:scale(1.05); pointer-events:none; }
+  .envelope.done{ opacity:0; pointer-events:none; }
   .envelope.gone{ display:none; }
 
   /* preserve-3d does the layering: once the flap swings past upright its own
-     depth puts it behind the envelope, with no z-index to fight over */
-  /* Portrait, and a little larger than what it holds. A landscape envelope is
+     depth puts it behind the envelope, with no z-index to fight over.
+
+     Portrait, and a little larger than what it holds. A landscape envelope is
      the prettier shape, but the card is 1:1.52 and would stand a head taller
-     than the pocket before the flap had even moved. */
+     than the pocket before the flap had even moved.
+
+     The seal, not the envelope, is what sits on the middle of the screen: it is
+     the thing being aimed at. It rides at 40% of the height, so the whole
+     envelope is dropped by the missing 10% to bring it to the centre line. */
   .env{
     position:relative;
-    width:min(84vw, 400px);
+    width:min(94vw, 520px, 58vh);
     aspect-ratio:1 / 1.42;
     transform-style:preserve-3d;
-    animation:settle .9s var(--ease) both;
+    transform:translateY(10%);
+    animation:settle-env 1s var(--ease) both;
+  }
+  @keyframes settle-env{
+    from{ opacity:0; transform:translateY(calc(10% + 16px)) scale(.985); }
+    to  { opacity:1; transform:translateY(10%); }
   }
 
   .env-back,
@@ -571,11 +586,13 @@
   .env-flap{
     position:absolute;
     background:linear-gradient(158deg, var(--paper-hi) 0%, var(--paper) 46%, var(--paper-lo) 100%);
+    transition:transform 1.05s var(--ease);
   }
 
   .env-back{
     inset:0;
     border:1px solid var(--edge);
+    transform:translateY(0) translateZ(0);
     box-shadow:
       0 1px 2px rgba(70,62,44,.14),
       0 12px 30px -10px rgba(70,62,44,.34),
@@ -594,21 +611,33 @@
     border:1px solid var(--edge);
     box-shadow:0 -2px 12px -4px rgba(70,62,44,.3);
     transform:translateY(0) translateZ(1px);
-    transition:transform 1s var(--ease);
+    transition:transform 1.05s var(--ease);
     display:grid;
     place-items:center;
     overflow:hidden;
   }
-  /* far enough to read as coming out of it, not so far that the top of it
-     leaves the screen on the way — the real card takes over a moment later */
-  .env.raised .env-card{ transform:translateY(-42%) translateZ(1px); }
 
-  .env-card .lace{ border-width:9cqw; }
+  /* The two motions are opposite on purpose. A card rising out of a stationary
+     envelope has to travel the whole distance itself; when the envelope drops
+     away at the same time, they split it, and neither has to move far enough to
+     leave the screen. */
+  /* `raised` is only ever added on top of `opening`, and both selectors below
+     carry the same weight as the `opening` ones further down the sheet — which
+     would win on source order and pin the flap and the seal in place while the
+     rest of the envelope left. Naming both classes settles it. */
+  .env.raised .env-card{ transform:translateY(-34%) translateZ(1px); }
+  .env.raised .env-back{ transform:translateY(76%) translateZ(0); }
+  .env.raised .env-front{ transform:translateY(76%) translateZ(2px); }
+  .env.opening.raised .env-flap{ transform:translateY(76%) rotateX(-172deg) translateZ(3px); }
+  .env.opening.raised .seal{
+    transform:translate(-50%,-50%) translateY(76%) translateZ(4px) scale(1.22) rotate(9deg);
+  }
+
   .env-card .names{
     margin:0;
-    padding:0 14cqw;
+    padding:0 12cqw;
     font-family:'Pinyon Script','Snell Roundhand','Edwardian Script ITC',cursive;
-    font-size:10.6cqw;
+    font-size:11.4cqw;
     line-height:1.16;
     white-space:nowrap;
     color:var(--relief-deep);
@@ -616,7 +645,7 @@
     /* the card is behind the pocket until it rises, so this is the only part of
        it anyone sees first — it wants to arrive with the rise, not before it */
     opacity:0;
-    transition:opacity .5s var(--ease) .35s;
+    transition:opacity .5s var(--ease) .3s;
   }
   .env.raised .env-card .names{ opacity:1; }
 
@@ -627,7 +656,7 @@
     border-left:1px solid var(--edge);
     border-right:1px solid var(--edge);
     border-bottom:1px solid var(--edge);
-    transform:translateZ(2px);
+    transform:translateY(0) translateZ(2px);
     box-shadow:0 -1px 3px rgba(70,62,44,.10);
   }
 
@@ -636,12 +665,12 @@
     height:42%;
     clip-path:polygon(0 0, 100% 0, 50% 100%);
     transform-origin:top center;
-    transform:rotateX(0deg) translateZ(3px);
+    transform:translateY(0) rotateX(0deg) translateZ(3px);
     transition:transform .85s var(--ease) .12s;
     border-top:1px solid var(--edge);
     filter:drop-shadow(0 2px 3px rgba(70,62,44,.14));
   }
-  .env.opening .env-flap{ transform:rotateX(-172deg) translateZ(3px); }
+  .env.opening .env-flap{ transform:translateY(0) rotateX(-172deg) translateZ(3px); }
 
   /* wax: an irregular blob, lit from the same place as everything else */
   .seal{
@@ -684,8 +713,14 @@
     pointer-events:none;
   }
 
+  /* out of the grid entirely: the envelope is large enough now that a hint in
+     the same column would be pushed off the foot of a short window */
   .open-hint{
+    position:fixed;
+    left:0; right:0;
+    bottom:calc(26px + env(safe-area-inset-bottom));
     margin:0;
+    text-align:center;
     font-size:12px;
     letter-spacing:.22em;
     text-indent:.22em;
@@ -784,13 +819,12 @@
 
 <div class="envelope" id="envelope">
   <div class="env" id="env">
-    <div class="env-back"></div>
-    <div class="env-card">
-      <div class="lace" aria-hidden="true"></div>
+    <div class="env-back stock"></div>
+    <div class="env-card stock">
       <p class="names">Misbah &amp; Areeb</p>
     </div>
-    <div class="env-front"></div>
-    <div class="env-flap"></div>
+    <div class="env-front stock"></div>
+    <div class="env-flap stock"></div>
     <button class="seal" id="seal" type="button" aria-label="Open the envelope">M &amp; A</button>
   </div>
   <p class="open-hint" id="openHint">Tap to open</p>
@@ -810,15 +844,12 @@
   </svg>
 </button>
 
-<main class="card" id="card">
+<main class="card stock" id="card">
   <!-- ornament first, fibre and vignette over it: the same grain and the same
        light fall across the florals as across the rest of the sheet -->
   <div class="corner corner-tr" aria-hidden="true"></div>
   <div class="corner corner-bl" aria-hidden="true"></div>
   <div class="vignette"></div>
-  <!-- the lace sits over the light, not under it: it is a paper mat laid on the
-       sheet and it carries its own shadow, which the vignette would wash out -->
-  <div class="lace" aria-hidden="true"></div>
 
   <div class="stack">
     <h1 class="names deboss">Misbah &amp; Areeb</h1>
@@ -1833,19 +1864,23 @@
     let opened = false;
 
     const handOver = () => {
+      document.body.classList.add('handed');
       document.body.classList.remove('sealed');
-      setTimeout(() => { if (!touched) hint.classList.add('show'); }, 900);
+      setTimeout(() => { if (!touched) hint.classList.add('show'); }, 1000);
     };
 
+    // The cross-fade starts while the envelope is still travelling. Waiting for
+    // the motion to finish first is what made it read as two events instead of
+    // one — the eye forgives a change of scale far more readily during movement
+    // than after it has stopped.
     function open(){
       if (opened) return;
       opened = true;
-      env.classList.add('opening');                       // seal breaks, flap swings
-      setTimeout(() => env.classList.add('raised'), 620);  // card rises out
-      setTimeout(() => { handOver(); wrap.classList.add('done'); }, 1700);
-      // taken out of the layout only once it has finished fading, or the fade
-      // would be a cut
-      setTimeout(() => wrap.classList.add('gone'), 2350);
+      env.classList.add('opening');                        // seal breaks, flap swings
+      setTimeout(() => env.classList.add('raised'), 560);   // card up, envelope down
+      setTimeout(() => { handOver(); wrap.classList.add('done'); }, 1150);
+      // out of the layout only once it has finished fading, or the fade is a cut
+      setTimeout(() => wrap.classList.add('gone'), 2050);
     }
 
     // Someone who has asked for less motion has not asked for less invitation,
