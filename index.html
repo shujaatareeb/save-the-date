@@ -78,6 +78,7 @@
 
   .card{
     container-type:inline-size;
+    display:grid;               /* one in-flow child: the stack, centred in the sheet */
     position:relative;
     /* 100% is the padded body box, so the card can never overflow sideways */
     width:min(100%, calc((100dvh - 215px) / 1.52), 430px);
@@ -99,6 +100,13 @@
   @keyframes settle{
     from{ opacity:0; transform:translateY(14px) scale(.985); }
     to  { opacity:1; transform:none; }
+  }
+
+  /* A card can be laid down on a table. A full screen cannot — the same rise
+     would open a strip of bare background along the bottom edge. */
+  @keyframes settle-flat{
+    from{ opacity:0; }
+    to  { opacity:1; }
   }
 
   /* cotton-rag fibre */
@@ -156,10 +164,16 @@
     z-index:2;
   }
 
+  /* Capped, not stretched. When the sheet goes full-screen on a phone it is far
+     taller than the card it replaces, and letting the setting stretch with it
+     would pull the names, the heart and the colophon apart until they stopped
+     reading as one composition. The cap is the card's own proportion, so this
+     changes nothing on desktop, where the sheet is already that shape. */
   .stack{
     position:relative;
     z-index:3;
-    height:100%;
+    height:min(100%, 168cqw);
+    align-self:center;
     display:grid;
     grid-template-rows:1fr auto 1fr;
     align-items:center;
@@ -248,6 +262,11 @@
     margin:0 auto;
     display:grid;
     place-items:center;
+    /* a drag across the foil is a scratch, not a text selection, and a long
+       press on it is not a request for the iOS callout menu */
+    -webkit-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
   }
 
   /* the pressed heart the foil sat in — surfaces as the foil goes */
@@ -390,14 +409,17 @@
   .hint.show{ opacity:1; }
   .hint.gone{ opacity:0; }
 
+  /* Held back a full second after the reveal, then floated up. The date has to
+     land on its own first — arriving with it would make the calendar button
+     part of the surprise instead of what you do about it. */
   .after{
     display:flex;
     flex-direction:column;
     align-items:center;
     gap:12px;
     opacity:0;
-    transform:translateY(6px);
-    transition:opacity .55s var(--ease) .42s, transform .55s var(--ease) .42s;
+    transform:translateY(22px);
+    transition:opacity .62s var(--ease) 1s, transform .62s var(--ease) 1s;
     pointer-events:none;
   }
   .after.show{ opacity:1; transform:none; pointer-events:auto; }
@@ -478,9 +500,80 @@
     .btn{ width:min(300px,78vw); }
   }
 
+  /* ---------- the sound chip ---------- */
+
+  /* Top-left, which is the one corner the florals leave empty. Present from the
+     moment the page tries to play anything, muted or not: audio that starts on
+     its own without a visible way to stop it is the rudest thing a page can do. */
+  .sound{
+    position:fixed;
+    top:calc(12px + env(safe-area-inset-top));
+    left:calc(12px + env(safe-area-inset-left));
+    z-index:70;
+    width:44px; height:44px;
+    display:grid;
+    place-items:center;
+    padding:0;
+    color:#8a7c58;
+    background:linear-gradient(174deg,#fdfcf8 0%,#f4f0e6 52%,#eae4d5 100%);
+    border:1px solid rgba(150,132,84,.42);
+    border-radius:50%;
+    cursor:pointer;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.9) inset,
+      0 -1px 0 rgba(120,104,68,.10) inset,
+      0 1px 2px rgba(70,62,44,.12);
+    transition:color .25s var(--ease), border-color .25s var(--ease), opacity .5s var(--ease);
+  }
+  .sound[hidden]{ display:none; }
+  .sound:hover{ color:#6d5c2c; border-color:rgba(201,162,39,.7); }
+  .sound:focus-visible{ outline:2px solid #8a7a4a; outline-offset:3px; }
+  .sound svg{ width:20px; height:20px; fill:currentColor; }
+  /* one icon or the other, never both */
+  .sound .off{ display:none; }
+  .sound.muted .on{ display:none; }
+  .sound.muted .off{ display:block; }
+  .sound.muted{ color:#a9a08a; }
+
   .sr{
     position:absolute; width:1px; height:1px;
     overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;
+  }
+
+  /* ---------- the phone ---------- */
+
+  /* The sheet stops being an object on a table and becomes the screen. No trim,
+     no shadow, no edge — the paper runs to all four sides and the florals pin to
+     the corners of the phone. Everything below the card moves on top of it,
+     floated clear of the home indicator. */
+  @media (max-width:699px){
+    body{
+      padding:0;
+      gap:0;
+      justify-content:flex-start;
+    }
+    .card{
+      width:100%;
+      max-width:none;
+      height:100vh;               /* iOS before 15.4 has no dvh */
+      height:100dvh;
+      aspect-ratio:auto;
+      border:0;
+      box-shadow:none;
+      animation-name:settle-flat;
+      /* room at the foot for the floating controls, so the centred setting
+         clears them instead of sitting behind them */
+      padding-bottom:calc(104px + env(safe-area-inset-bottom));
+    }
+    .below{
+      position:fixed;
+      left:0; right:0;
+      bottom:calc(20px + env(safe-area-inset-bottom));
+      min-height:0;
+      z-index:60;
+    }
+    /* a fingertip is not a cursor */
+    .again{ padding:13px 18px; }
   }
 
   @media (prefers-reduced-motion:reduce){
@@ -489,6 +582,20 @@
     *{ transition-duration:.01ms !important; }
   }
 </style>
+
+<audio id="music" src="music.m4a" loop preload="auto"></audio>
+
+<button class="sound" id="sound" type="button" hidden aria-pressed="true" aria-label="Mute the music">
+  <svg class="on" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M4 9v6h4l5 4V5L8 9H4z"/>
+    <path d="M16.4 12a4.4 4.4 0 0 0-2.4-3.9v7.8a4.4 4.4 0 0 0 2.4-3.9z"/>
+    <path d="M14 2.2v2.1a7.8 7.8 0 0 1 0 15.4v2.1a9.9 9.9 0 0 0 0-19.6z"/>
+  </svg>
+  <svg class="off" viewBox="0 0 24 24" aria-hidden="true">
+    <path d="M4 9v6h4l5 4V5L8 9H4z"/>
+    <path d="M15.6 9.4a.9.9 0 0 1 1.3 0l1.3 1.3 1.3-1.3a.9.9 0 1 1 1.3 1.3L19.5 12l1.3 1.3a.9.9 0 1 1-1.3 1.3l-1.3-1.3-1.3 1.3a.9.9 0 1 1-1.3-1.3L16.9 12l-1.3-1.3a.9.9 0 0 1 0-1.3z"/>
+  </svg>
+</button>
 
 <main class="card" id="card">
   <!-- ornament first, fibre and vignette over it: the same grain and the same
@@ -1359,6 +1466,107 @@
 
     const blob = new Blob([buildIcs()], { type: 'text/calendar;charset=utf-8' });
     link.href = URL.createObjectURL(blob);
+  })();
+
+  /* ---------- music ---------- */
+
+  // Asked to start the moment the page opens, which no browser actually allows
+  // on a first visit — an unmuted `play()` without a gesture behind it is
+  // rejected, and iOS rejects it every time. So: try immediately, and if the
+  // promise comes back rejected, wait for the first touch anywhere on the page
+  // and try again. That first touch is nearly always the scratch, so the music
+  // arrives on its own without the visitor ever being asked to press play.
+  (() => {
+    const music = document.getElementById('music');
+    const chip  = document.getElementById('sound');
+    const LEVEL = .62;
+
+    // iOS makes HTMLMediaElement.volume read-only, so a volume fade is silently
+    // ignored on exactly the devices this page is opened on most. Routing the
+    // element through a gain node is the one way to ramp it there; if any of it
+    // is unavailable, fall back to the plain property and let it no-op.
+    let ctx = null, gain = null;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC){
+        ctx  = new AC();
+        gain = ctx.createGain();
+        gain.gain.value = 0;
+        ctx.createMediaElementSource(music).connect(gain).connect(ctx.destination);
+      }
+    } catch { ctx = gain = null; }
+
+    if (!gain) music.volume = 0;
+
+    let wanted = true;                     // what the visitor has asked for
+    let armed = false;                     // gesture fallback listening?
+
+    const ramp = (to, seconds) => {
+      if (gain){
+        const t = ctx.currentTime;
+        gain.gain.cancelScheduledValues(t);
+        gain.gain.setValueAtTime(gain.gain.value, t);
+        gain.gain.linearRampToValueAtTime(to, t + seconds);
+        return;
+      }
+      music.volume = to;                   // no-op on iOS, correct everywhere else
+    };
+
+    const kick = () => { play(); };
+
+    function arm(){
+      if (armed) return;
+      armed = true;
+      for (const type of ['pointerdown', 'touchstart', 'keydown'])
+        addEventListener(type, kick, { passive: true });
+    }
+
+    function disarm(){
+      if (!armed) return;
+      armed = false;
+      for (const type of ['pointerdown', 'touchstart', 'keydown'])
+        removeEventListener(type, kick);
+    }
+
+    // Playing is not the same as audible. A context routed between the element
+    // and the speakers starts suspended under the same autoplay policy, and
+    // Chrome will happily resolve play() while it stays that way — which is
+    // silence with every success signal you could ask for. So the gesture
+    // fallback stays armed until the context is actually running.
+    function settle(){
+      ramp(LEVEL, 1.2);
+      if (!ctx || ctx.state === 'running') disarm();
+      else arm();
+    }
+
+    function play(){
+      if (!wanted) return;
+      ctx?.resume?.().catch(() => {});
+      const p = music.play();
+      if (!p || !p.then){ settle(); return; }
+      p.then(settle).catch(arm);
+    }
+
+    chip.addEventListener('click', () => {
+      wanted = !wanted;
+      chip.classList.toggle('muted', !wanted);
+      chip.setAttribute('aria-pressed', String(wanted));
+      chip.setAttribute('aria-label', wanted ? 'Mute the music' : 'Play the music');
+      if (wanted){ play(); return; }
+      ramp(0, .35);
+      disarm();
+      setTimeout(() => { if (!wanted) music.pause(); }, 380);
+    });
+
+    // A page left open in a background tab should not keep playing into a room
+    // nobody is looking at.
+    addEventListener('visibilitychange', () => {
+      if (document.hidden){ ramp(0, .25); setTimeout(() => music.pause(), 280); }
+      else if (wanted && music.paused) play();
+    });
+
+    chip.hidden = false;
+    play();
   })();
 
   /* ---------- boot ---------- */
