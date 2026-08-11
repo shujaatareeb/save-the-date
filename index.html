@@ -140,18 +140,33 @@
     z-index:0;
   }
   .corner-tr{
-    --w:42cqw;
-    top:-12cqw;
-    right:-8cqw;
+    --w:29cqw;
+    top:6cqw;
+    right:7cqw;
     aspect-ratio:448 / 598;
     background-image:url("corner-tr.png");
   }
   .corner-bl{
-    --w:50cqw;
-    bottom:-10cqw;
-    left:-8cqw;
+    --w:34cqw;
+    bottom:5cqw;
+    left:6cqw;
     aspect-ratio:448 / 466;
     background-image:url("corner-bl.png");
+  }
+
+  /* The cut-paper lace, as a nine-slice. A single stretched image was never an
+     option: the same border has to sit on a 1:1.52 card and a 1:2.16 phone, and
+     stretching one bitmap between those would leave the medallions ovals on the
+     sides. Sliced at 108px, the four corners are drawn once and each edge is
+     repeated `round`, so CSS fits a whole number of medallions to every edge and
+     scales them to close the remainder. */
+  .lace{
+    position:absolute;
+    inset:0;
+    z-index:2;
+    pointer-events:none;
+    border:9cqw solid transparent;
+    border-image:url("lace.png") 108 round;
   }
 
   /* light falling across the sheet */
@@ -177,7 +192,9 @@
     display:grid;
     grid-template-rows:1fr auto 1fr;
     align-items:center;
-    padding:9cqw 8cqw;
+    /* clears the 9cqw lace band with a little air to spare, which is what sets
+       every size below it — the setting has 74cqw to live in now, not 84cqw */
+    padding:13cqw;
     text-align:center;
   }
 
@@ -194,7 +211,7 @@
      tracked slightly so it reads as the colophon it has become. */
   .eyebrow{
     margin:0;
-    font-size:6.2cqw;
+    font-size:5.6cqw;
     font-weight:400;
     line-height:1;
     letter-spacing:.05em;
@@ -204,11 +221,11 @@
 
   .colophon{
     align-self:start;
-    padding-top:6cqw;
+    padding-top:5.4cqw;
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:4.4cqw;
+    gap:4cqw;
   }
 
   /* hairline + lozenge: the only ornament on the sheet */
@@ -216,7 +233,7 @@
     display:flex;
     align-items:center;
     gap:2.6cqw;
-    width:44cqw;
+    width:40cqw;
     color:rgba(150,140,116,.5);
   }
   .rule span{
@@ -226,7 +243,7 @@
     box-shadow:0 1px 0 rgba(255,255,255,.8);
   }
   .rule b{
-    width:3.4cqw; height:3.4cqw;
+    width:3.1cqw; height:3.1cqw;
     border:1px solid currentColor;
     transform:rotate(45deg);
     box-shadow:0 1px 0 rgba(255,255,255,.75);
@@ -240,9 +257,9 @@
     align-self:end;
     padding-bottom:5cqw;
     font-family:'Pinyon Script','Snell Roundhand','Edwardian Script ITC',cursive;
-    /* the largest that still sets on one line inside the embossed rule — any
-       bigger and the ampersand orphans onto a second line */
-    font-size:12.4cqw;
+    /* the largest that still sets on one line inside the lace — any bigger and
+       the ampersand orphans onto a second line */
+    font-size:10.6cqw;
     font-weight:400;
     line-height:1.16;
     white-space:nowrap;
@@ -257,7 +274,7 @@
 
   .heart{
     position:relative;
-    width:74cqw;
+    width:66cqw;
     aspect-ratio:1 / .94;
     margin:0 auto;
     display:grid;
@@ -306,8 +323,8 @@
     flex-direction:column;
     align-items:center;
     justify-content:center;
-    gap:2.8cqw;
-    padding:0 17cqw;
+    gap:2.5cqw;
+    padding:0 15cqw;
     transform:translateY(-7%);
     z-index:2;
   }
@@ -333,7 +350,7 @@
 
   .secret .line{
     font-style:italic;
-    font-size:3.5cqw;
+    font-size:3.1cqw;
     line-height:1.44;
     letter-spacing:.006em;
     text-wrap:balance;
@@ -341,7 +358,7 @@
   }
 
   .secret .date{
-    font-size:5.4cqw;
+    font-size:4.8cqw;
     font-weight:600;          /* a shade heavier than the line above it */
     letter-spacing:.16em;
     text-indent:.16em;
@@ -603,6 +620,9 @@
   <div class="corner corner-tr" aria-hidden="true"></div>
   <div class="corner corner-bl" aria-hidden="true"></div>
   <div class="vignette"></div>
+  <!-- the lace sits over the light, not under it: it is a paper mat laid on the
+       sheet and it carries its own shadow, which the vignette would wash out -->
+  <div class="lace" aria-hidden="true"></div>
 
   <div class="stack">
     <h1 class="names deboss">Misbah &amp; Areeb</h1>
@@ -758,6 +778,22 @@
   // micro-grain: without it the foil is smooth vector shading and reads as paint.
   let noiseTile = null;
 
+  // The photographed glitter the foil is made of. It arrives late and it is
+  // allowed to: the plate is built from the painted gradient first so the heart
+  // is never missing, and rebuilt once the file lands. A plate already scratched
+  // into is left alone — swapping the surface mid-scratch would refill the holes.
+  let foilTex = null;
+  (() => {
+    const img = new Image();
+    img.onload = () => {
+      foilTex = img;
+      if (!W || !H) return;
+      buildPlate();
+      if (!touched && !revealed) paintPlate();
+    };
+    img.src = 'foil.jpg';
+  })();
+
   function makeNoise(){
     const n = document.createElement('canvas');
     n.width = n.height = 128;
@@ -875,17 +911,28 @@
     heartPath(c, g.cx, g.cy, g.halfW, g.scale);
     c.clip();
 
-    // Base. Blue is kept off the floor on purpose: `overlay` scales each channel
-    // against the backdrop, so a near-zero blue turns every bright fold lemon.
-    const base = c.createLinearGradient(0, 0, W, H);
-    base.addColorStop(0,   '#eed291');
-    base.addColorStop(.22, '#cda644');
-    base.addColorStop(.40, '#ac8730');
-    base.addColorStop(.58, '#e2cb8a');
-    base.addColorStop(.78, '#b89136');
-    base.addColorStop(1,   '#8e6d26');
-    c.fillStyle = base;
-    c.fillRect(0, 0, W, H);
+    // Base. The glitter photograph once it has arrived, cover-fitted so it fills
+    // the heart without its grain being stretched out of round; the painted
+    // gradient until then, and for good if the file never loads. Everything
+    // downstream — crumple, sweep, bevel — is composited as light rather than
+    // colour, so it works the same over either.
+    if (foilTex){
+      const s = Math.max(W / foilTex.naturalWidth, H / foilTex.naturalHeight);
+      const w = foilTex.naturalWidth * s, h = foilTex.naturalHeight * s;
+      c.drawImage(foilTex, (W - w) / 2, (H - h) / 2, w, h);
+    } else {
+      // Blue is kept off the floor on purpose: `overlay` scales each channel
+      // against the backdrop, so a near-zero blue turns every bright fold lemon.
+      const base = c.createLinearGradient(0, 0, W, H);
+      base.addColorStop(0,   '#eed291');
+      base.addColorStop(.22, '#cda644');
+      base.addColorStop(.40, '#ac8730');
+      base.addColorStop(.58, '#e2cb8a');
+      base.addColorStop(.78, '#b89136');
+      base.addColorStop(1,   '#8e6d26');
+      c.fillStyle = base;
+      c.fillRect(0, 0, W, H);
+    }
 
     // Two scales of crinkle, bent through the gold as light. Cell sizes are a
     // fraction of the heart, so the crumple looks the same on any screen; blur
@@ -901,34 +948,40 @@
     // stay gold where the light map runs hot, kept under full strength so the
     // warm-highlight / bronze-shadow shift survives.
     c.globalCompositeOperation = 'color';
-    c.globalAlpha = .5;
+    c.globalAlpha = foilTex ? .22 : .5;      // the photograph brings its own hue
     c.fillStyle = '#c69c33';
     c.fillRect(0, 0, W, H);
     c.globalCompositeOperation = 'source-over';
     c.globalAlpha = 1;
 
-    // brushed grain: fine and directional, riding over the facets
-    const span = Math.hypot(W, H);
-    c.save();
-    c.translate(W / 2, H / 2);
-    c.rotate(-0.52);
-    for (let i = 0; i < 210; i++){
-      c.globalAlpha = .025 + Math.random() * .085;
-      c.fillStyle = Math.random() < .5 ? '#fff6d2' : '#4e3906';
-      c.fillRect(-span / 2, (Math.random() - .5) * span, span, .4 + Math.random() * 1.7);
-    }
-    c.restore();
-    c.globalAlpha = 1;
+    // Surface texture, as opposed to lighting: the brushed grain and the
+    // micro-grain exist to stop painted gold reading as paint. A photograph of
+    // real glitter has both already, at a finer pitch than either of these, and
+    // laying them over it only silts up what was picked for its crispness.
+    if (!foilTex){
+      // brushed grain: fine and directional, riding over the facets
+      const span = Math.hypot(W, H);
+      c.save();
+      c.translate(W / 2, H / 2);
+      c.rotate(-0.52);
+      for (let i = 0; i < 210; i++){
+        c.globalAlpha = .025 + Math.random() * .085;
+        c.fillStyle = Math.random() < .5 ? '#fff6d2' : '#4e3906';
+        c.fillRect(-span / 2, (Math.random() - .5) * span, span, .4 + Math.random() * 1.7);
+      }
+      c.restore();
+      c.globalAlpha = 1;
 
-    // micro-grain, counter-scaled so one noise pixel is one device pixel
-    const grain = c.createPattern(noiseTile, 'repeat');
-    try { grain.setTransform(new DOMMatrix([1 / dpr, 0, 0, 1 / dpr, 0, 0])); } catch {}
-    c.globalCompositeOperation = 'overlay';
-    c.globalAlpha = .3;
-    c.fillStyle = grain;
-    c.fillRect(0, 0, W, H);
-    c.globalCompositeOperation = 'source-over';
-    c.globalAlpha = 1;
+      // micro-grain, counter-scaled so one noise pixel is one device pixel
+      const grain = c.createPattern(noiseTile, 'repeat');
+      try { grain.setTransform(new DOMMatrix([1 / dpr, 0, 0, 1 / dpr, 0, 0])); } catch {}
+      c.globalCompositeOperation = 'overlay';
+      c.globalAlpha = .3;
+      c.fillStyle = grain;
+      c.fillRect(0, 0, W, H);
+      c.globalCompositeOperation = 'source-over';
+      c.globalAlpha = 1;
+    }
 
     // the anisotropic band rolled metal carries — kept faint so it lights the
     // crumple instead of flattening it back out
@@ -941,18 +994,20 @@
     c.fillStyle = sweep;
     c.fillRect(0, 0, W, H);
 
-    // glitter
-    const specks = Math.round(W * H * 0.045);
-    for (let i = 0; i < specks; i++){
-      const x = Math.random() * W, y = Math.random() * H;
-      const r = 0.3 + Math.random() * 1.5;
-      c.globalAlpha = .2 + Math.random() * .7;
-      c.fillStyle = GOLD[(Math.random() * GOLD.length) | 0];
-      c.beginPath();
-      c.arc(x, y, r, 0, 6.283);
-      c.fill();
+    // glitter — painted only when there is no photographed glitter to stand on
+    if (!foilTex){
+      const specks = Math.round(W * H * 0.045);
+      for (let i = 0; i < specks; i++){
+        const x = Math.random() * W, y = Math.random() * H;
+        const r = 0.3 + Math.random() * 1.5;
+        c.globalAlpha = .2 + Math.random() * .7;
+        c.fillStyle = GOLD[(Math.random() * GOLD.length) | 0];
+        c.beginPath();
+        c.arc(x, y, r, 0, 6.283);
+        c.fill();
+      }
+      c.globalAlpha = 1;
     }
-    c.globalAlpha = 1;
 
     // catchlights
     c.globalCompositeOperation = 'lighter';
