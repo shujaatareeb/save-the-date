@@ -49,6 +49,13 @@
     --paper:        #f1efe8;
     --paper-hi:     #fbfaf6;
     --paper-lo:     #e2ded2;
+    /* The envelope, which was the card's own three tones exactly. Same stock and
+       the same light, taken down about 5% across all three stops — enough that
+       what comes out of the pocket reads as lighter than what it came out of,
+       and not so much that the two stop being the same paper. */
+    --env:          #e5e2da;
+    --env-hi:       #eeece7;
+    --env-lo:       #d6d2c5;
     --deboss-dark:  rgba(118,107,84,.34);
     --deboss-light: rgba(255,255,255,.92);
     --relief:       #bdb5a3;
@@ -132,7 +139,7 @@
     transition:width 1.6s var(--ease-paper) 1s;
   }
   .card.revealed{
-    width:min(100%, calc((100dvh - 233px) / 1.52), 430px);
+    width:min(100%, calc((100dvh - 209px) / 1.52), 460px);
   }
 
   @keyframes settle{
@@ -362,25 +369,35 @@
   /* Optically centred, not geometrically. A heart carries its mass in the two
      lobes up top and tapers to a point, so its centroid sits above the middle
      of its box — text centred in the box reads noticeably low against it. */
+  /* The clip layer, and nothing else. Untransformed, so the path stays exactly
+     where the plate's own silhouette is.
+
+     The clip is the reason the message can simply be visible: the silhouette
+     narrows at the foot and the date does not wrap, so on a narrow enough screen
+     it would reach past the outline and give the answer away before a finger
+     touched it — which is why this used to be hidden outright. Clipped to the
+     plate's path, nothing can sit outside the gold that is covering it. */
   .secret{
     position:absolute;
     inset:0;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:2.5cqw;
+    display:grid;
+    place-items:center;
     /* was 15cqw, which was set around type a size smaller than this; the date is
        nowrap and would have run out under the lobes */
     padding:0 12cqw;
-    transform:translateY(-7%);
-    /* The reason the message can simply be visible. The silhouette narrows at
-       the foot and the date does not wrap, so on a narrow enough screen it would
-       reach past the outline and give the answer away before a finger touched
-       it — which is why this used to be hidden outright. Clipped to the plate's
-       own path, nothing can sit outside the gold that is covering it. */
     clip-path:url(#heart-clip);
     z-index:2;
+  }
+
+  /* Optically centred, in cqw against the card rather than in per cent against
+     the box, so the lift is a fixed fraction of the sheet and not of whatever
+     the text happens to measure. */
+  .secret-in{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:2.5cqw;
+    transform:translateY(-6.2cqw);
   }
 
   /* Covered, not hidden. These were held at opacity 0 until the 12% threshold,
@@ -447,34 +464,35 @@
 
   /* ---------- below the card ---------- */
 
-  /* Only ever as tall as what is actually being shown in it. Before the reveal
-     that is one line of hint, and the 106px the buttons will eventually need was
-     90px of nothing held open under the card for the whole first half of the
-     page. The card has it until the buttons come to claim it.
+  /* Only ever as tall as what is actually being shown in it — which before the
+     reveal is nothing at all, now that the hint has gone up onto the card. The
+     106px the buttons will eventually need was being held open under the card
+     for the whole first half of the page.
 
      A definite height rather than a floor, because the buttons are hidden with
      opacity and are therefore still in the layout: a floor would be raised to
-     their height immediately and nothing would be freed. At 30px they overflow
+     their height immediately and nothing would be freed. At zero they overflow
      the band instead, which costs nothing — they are invisible and untouchable
      until the class that opens the band arrives with them. */
   .below{
     display:grid;
     place-items:center;
     width:100%;
-    height:30px;
+    height:0;
   }
-  .card.revealed ~ .below{ height:124px; }
+  .card.revealed ~ .below{ height:112px; }
   /* hint and buttons share one centred cell, so nothing shifts on reveal */
   .below > *{ grid-area:1 / 1; }
 
-  /* Darker than --hint, which is the colour the other hint uses. That one sits
-     on the envelope, which is paper and nearly white; this one sits on the
-     backdrop behind the card, which is two shades of the same stone as the type
-     was. It is the only instruction on the page and it was disappearing into
-     the thing it was printed on. */
+  /* On the card now, under the colophon, so it is printed on the same sheet as
+     the line it follows rather than floating on the backdrop below it. Darker
+     than --hint either way: it is the only instruction on the page and it was
+     disappearing into whatever it sat on. */
   .hint{
     margin:0;
-    font-size:12px;
+    /* against the card now that it is printed on it, or a fixed 12px on a 330px
+       sheet sets nearly as wide as the colophon it is supposed to sit under */
+    font-size:clamp(10px, 2.6cqw, 12px);
     letter-spacing:.22em;
     text-indent:.22em;
     text-transform:uppercase;
@@ -654,7 +672,7 @@
   .env-front,
   .env-flap{
     position:absolute;
-    background-image:linear-gradient(158deg, var(--paper-hi) 0%, var(--paper) 46%, var(--paper-lo) 100%);
+    background-image:linear-gradient(158deg, var(--env-hi) 0%, var(--env) 46%, var(--env-lo) 100%);
     background-size:100vw 100vh;
     background-position:0 0;
     background-repeat:no-repeat;
@@ -794,7 +812,11 @@
     letter-spacing:.22em;
     text-indent:.22em;
     text-transform:uppercase;
-    color:var(--hint);
+    /* darker than --hint, which is still what the secondary button uses. This
+       one has to carry across a whole envelope of paper, and it breathes down to
+       .42 opacity for half of every cycle, so its darkest is the only moment it
+       is fully legible */
+    color:#857d6a;
     animation:breathe-hint 3.4s ease-in-out 1.2s infinite both;
   }
   .env-flap-layer.opening ~ .open-hint{ opacity:0; transition:opacity .45s linear; animation:none; }
@@ -944,9 +966,16 @@
         <path id="ip-foil"  fill="none" stroke="rgba(201,162,39,.62)" stroke-width=".8"/>
       </svg>
 
+      <!-- two elements, because the clip and the optical lift cannot live on the
+           same one: clip-path is applied in the element's own coordinates and
+           then transformed along with it, so a .secret that carries both would
+           move its own clip by exactly as much as it moved the text, and the
+           text would never move relative to the shape meant to be holding it -->
       <div class="secret">
-        <p class="line">invite you to celebrate their wedding on</p>
-        <p class="date" id="dateText">10 . 10 . 26</p>
+        <div class="secret-in">
+          <p class="line">invite you to celebrate their wedding on</p>
+          <p class="date" id="dateText">10 . 10 . 26</p>
+        </div>
       </div>
 
       <canvas id="foil" role="button" tabindex="0"
@@ -956,12 +985,15 @@
     <div class="colophon">
       <div class="rule deboss" aria-hidden="true"><span></span><b></b><span></span></div>
       <p class="eyebrow deboss">Save <i>the</i> Date</p>
+      <!-- The instruction belongs with the thing it is about. Below the card it
+           was a caption for the page, a hundred-odd pixels of blank sheet away
+           from the last line of the invitation and reading as neither. -->
+      <p class="hint" id="hint">Scratch the heart</p>
     </div>
   </div>
 </main>
 
 <div class="below">
-  <p class="hint" id="hint">Scratch the heart</p>
   <div class="after" id="after">
     <a class="btn" id="ics" download="misbah-areeb-save-the-date.ics" href="#">Add to Calendar</a>
     <button class="again" id="again" type="button">Scratch again</button>
