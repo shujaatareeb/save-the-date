@@ -57,6 +57,9 @@
     --foil:         #c9a227;
     --hint:         #9d9682;
     --edge:         rgba(93,84,62,.16);
+    /* the wax, shared: the hint underneath it is placed off the seal's own size
+       rather than off the bottom of the window, so the two stay together */
+    --seal:         min(23vw, 108px);
     --ease:         cubic-bezier(.16,.84,.24,1);
     /* Slower out of the gate and much longer in the tail than --ease, which is
        tuned for interface moves. Paper has mass; it should not snap. */
@@ -248,8 +251,12 @@
 
   /* Now the subordinate line under the rule, not the headline — sized down and
      tracked slightly so it reads as the colophon it has become. */
+  /* Darker than the .deboss default it used to take. Small type debossed into
+     paper loses contrast the script above it does not — the names are 10.6cqw of
+     stroke and can carry --relief, this is 5.6cqw of it and could not. */
   .eyebrow{
     margin:0;
+    color:#9a917f;
     font-size:5.6cqw;
     font-weight:400;
     line-height:1;
@@ -363,57 +370,54 @@
     align-items:center;
     justify-content:center;
     gap:2.5cqw;
-    padding:0 15cqw;
+    /* was 15cqw, which was set around type a size smaller than this; the date is
+       nowrap and would have run out under the lobes */
+    padding:0 12cqw;
     transform:translateY(-7%);
+    /* The reason the message can simply be visible. The silhouette narrows at
+       the foot and the date does not wrap, so on a narrow enough screen it would
+       reach past the outline and give the answer away before a finger touched
+       it — which is why this used to be hidden outright. Clipped to the plate's
+       own path, nothing can sit outside the gold that is covering it. */
+    clip-path:url(#heart-clip);
     z-index:2;
   }
 
-  /* Hidden outright until the reveal, not merely covered. The heart narrows at
-     the foot, and on a small phone the date is wider than the silhouette there
-     — leaning on the foil to hide it leaks the answer on exactly the screens
-     this gets opened on most. */
+  /* Covered, not hidden. These were held at opacity 0 until the 12% threshold,
+     which meant the gold came away over bare paper and then the whole message
+     arrived at once — after the work was already done, and by something other
+     than the work. They are simply here now, under the plate, and scratching
+     uncovers them the way scratching uncovers anything.
+
+     The clip on .secret is what makes that safe; see there. */
   .secret .line,
   .secret .date{
     margin:0;
-    color:#b8b09d;
-    opacity:0;
-    text-shadow:0 1px 0 rgba(255,255,255,.8);
-    transform:translateY(4px);
-    transition:
-      color     .5s var(--ease),
-      opacity   .45s var(--ease),
-      transform .5s var(--ease),
-      text-shadow .5s var(--ease),
-      letter-spacing .55s var(--ease);
+    text-shadow:0 1px 0 rgba(255,255,255,.55);
   }
 
+  /* Both used to arrive on --ink, which made the sentence and the answer to it
+     the same voice. The date is the one thing anyone is here to read, so it
+     takes the darker end and the lead-in steps back off it — the size difference
+     was already there, and this is the same hierarchy said in tone. */
   .secret .line{
+    color:#867e6d;
     font-style:italic;
-    font-size:3.1cqw;
+    font-size:3.7cqw;
     line-height:1.44;
     letter-spacing:.006em;
     text-wrap:balance;
-    transition-delay:.06s;
   }
 
   .secret .date{
-    font-size:4.8cqw;
+    color:#463f33;
+    font-size:5.6cqw;
     font-weight:600;          /* a shade heavier than the line above it */
-    letter-spacing:.16em;
-    text-indent:.16em;
+    letter-spacing:.25em;
+    text-indent:.25em;
     font-variant-numeric:tabular-nums lining-nums;
     white-space:nowrap;
-    transition-delay:.15s;
   }
-
-  .revealed .secret .line,
-  .revealed .secret .date{
-    color:var(--ink);
-    opacity:1;
-    text-shadow:0 1px 0 rgba(255,255,255,.55);
-    transform:none;
-  }
-  .revealed .secret .date{ letter-spacing:.25em; text-indent:.25em; }
 
   #foil{
     position:absolute;
@@ -463,13 +467,18 @@
   /* hint and buttons share one centred cell, so nothing shifts on reveal */
   .below > *{ grid-area:1 / 1; }
 
+  /* Darker than --hint, which is the colour the other hint uses. That one sits
+     on the envelope, which is paper and nearly white; this one sits on the
+     backdrop behind the card, which is two shades of the same stone as the type
+     was. It is the only instruction on the page and it was disappearing into
+     the thing it was printed on. */
   .hint{
     margin:0;
     font-size:12px;
     letter-spacing:.22em;
     text-indent:.22em;
     text-transform:uppercase;
-    color:var(--hint);
+    color:#6f6857;
     opacity:0;
     transition:opacity .5s ease;
   }
@@ -716,7 +725,7 @@
     position:absolute;
     left:50%;
     top:50%;
-    width:min(23vw, 108px);
+    width:var(--seal);
     aspect-ratio:1;
     transform:translate(-50%,-50%);
     display:grid;
@@ -769,10 +778,15 @@
     pointer-events:none;
   }
 
+  /* Under the wax, not at the foot of the window. Pinned to the bottom edge it
+     was a caption for the whole screen, and the screen is not the thing you tap
+     — it sat most of a viewport away from the one thing that is. Placed off the
+     seal's own centre and its own radius, so it keeps the same short gap under
+     the wax whatever size the wax is. */
   .open-hint{
     position:fixed;
     left:0; right:0;
-    bottom:calc(26px + env(safe-area-inset-bottom));
+    top:calc(50% + var(--seal) / 2 + clamp(15px, 3.2vh, 26px));
     z-index:82;
     margin:0;
     text-align:center;
@@ -918,6 +932,11 @@
             <stop offset=".54" stop-color="#ffffff" stop-opacity=".05"/>
             <stop offset="1"   stop-color="#6f6449" stop-opacity=".09"/>
           </linearGradient>
+          <!-- the same outline again, in unit coordinates, so .secret can be
+               clipped to the exact shape of the gold that is covering it -->
+          <clipPath id="heart-clip" clipPathUnits="objectBoundingBox">
+            <path id="ip-clip"/>
+          </clipPath>
         </defs>
         <path id="ip-face"  fill="url(#ip-lift)" stroke="none"/>
         <path id="ip-light" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="1.5" transform="translate(0,-0.8)"/>
@@ -1034,19 +1053,38 @@
     ctx.closePath();
   }
 
+  // A hair inside the box on every side. Fitted flush, the widest point of each
+  // lobe lands exactly on the first and last pixel column of the canvas and is
+  // cut flat there — which does not read as a heart that fills its box, it reads
+  // as a heart clipped by something. Applied to the width and the height by the
+  // same factor, so the silhouette keeps its proportion and only its margin
+  // changes.
+  const INSET = .965;
+
   const geom = () => {
-    const halfW = W * 0.5;
-    return { cx: W / 2, cy: H / 2, halfW, scale: (H / 2) / (14.5 * (halfW / 16)) };
+    const halfW = W * 0.5 * INSET;
+    return { cx: W / 2, cy: H / 2, halfW, scale: (H / 2 * INSET) / (14.5 * (halfW / 16)) };
   };
 
-  // the SVG imprint uses a fixed 100 x 94 viewBox, so it only has to be built once
+  // the SVG imprint uses a fixed 100 x 94 viewBox, so it only has to be built
+  // once — off the same INSET, or the outline left behind on the reveal would
+  // not be the same heart as the gold that was scratched off it
   (() => {
-    const scale = 47 / (14.5 * (50 / 16));
-    const d = heartPoints(50, 47, 50, scale, .03)
+    const halfW = 50 * INSET;
+    const scale = (47 * INSET) / (14.5 * (halfW / 16));
+    const d = heartPoints(50, 47, halfW, scale, .03)
       .map(([x, y], i) => (i ? 'L' : 'M') + x.toFixed(2) + ' ' + y.toFixed(2))
       .join(' ') + ' Z';
     for (const id of ['ip-face', 'ip-dark', 'ip-light', 'ip-foil'])
       document.getElementById(id).setAttribute('d', d);
+
+    // and once more in a unit box, for the clip. Same construction, W = H = 1,
+    // so the clip is the plate's own silhouette however large the plate is.
+    const hw = .5 * INSET, sc = (.5 * INSET) / (14.5 * (hw / 16));
+    document.getElementById('ip-clip').setAttribute('d',
+      heartPoints(.5, .5, hw, sc, .03)
+        .map(([x, y], i) => (i ? 'L' : 'M') + x.toFixed(5) + ' ' + y.toFixed(5))
+        .join(' ') + ' Z');
   })();
 
   /* ---------- the foil plate ---------- */
