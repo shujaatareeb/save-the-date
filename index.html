@@ -125,8 +125,26 @@
     container-type:inline-size;
     display:grid;               /* one in-flow child: the stack, centred in the sheet */
     position:relative;
+
+    /* What the window owes to everything that is not the card: its own padding
+       top and bottom, the gap under it, and the band the buttons will want. Both
+       of the first two are clamped against vh, so on a short screen they give up
+       most of their height — and the two flat numbers this used to be (139 and
+       209) went on reserving the tall-window version of them anyway. At 360x640
+       that was 42px held back from a card that had nowhere else to get it, which
+       is exactly the screen with the least to spare and exactly the gap that was
+       showing under the buttons.
+
+       Written out rather than measured off a rendering, so it stays true when
+       any of the three change. --band is the only part that differs between the
+       two states; keep it in step with .below's own height. */
+    --band:0px;
+    --reserve:calc(2 * clamp(16px, 3vh, 34px)   /* body padding, top and bottom */
+                 + clamp(14px, 2.6vh, 26px)     /* the gap under the card       */
+                 + var(--band)                  /* the buttons, once they exist */
+                 + 6px);                        /* and never flush to the edge   */
     /* 100% is the padded body box, so the card can never overflow sideways */
-    width:min(100%, calc((100dvh - 139px) / 1.52), 480px);
+    width:min(100%, calc((100dvh - var(--reserve)) / 1.52), 480px);
     aspect-ratio:1 / 1.52;
     background:
       linear-gradient(158deg, var(--paper-hi) 0%, var(--paper) 46%, var(--paper-lo) 100%);
@@ -149,7 +167,8 @@
     transition:width 1.6s var(--ease-paper) 1s;
   }
   .card.revealed{
-    width:min(100%, calc((100dvh - 209px) / 1.52), 460px);
+    --band:112px;               /* matches .card.revealed ~ .below */
+    width:min(100%, calc((100dvh - var(--reserve)) / 1.52), 470px);
   }
 
   @keyframes settle{
