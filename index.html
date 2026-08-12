@@ -120,10 +120,13 @@
     overflow:hidden;
     isolation:isolate;
     animation:settle .9s var(--ease) both;
-    /* the second of the two — the same .62s and the same second of delay as the
-       button below, because they are one move: the card steps back as the button
-       arrives, not before it */
-    transition:width .62s var(--ease) 1s;
+    /* Starts on the same second as the button below, because they are one move:
+       the card steps back as the button arrives, not before it. It does not end
+       on the same second. --ease is tuned for interface moves and .62s of it on
+       something this size reads as a zoom, which is a camera doing something to
+       the card rather than the card doing something; the sheet takes 1.6s of
+       --ease-paper instead, and is still settling as the button lands. */
+    transition:width 1.6s var(--ease-paper) 1s;
   }
   .card.revealed{
     width:min(100%, calc((100dvh - 233px) / 1.52), 430px);
@@ -169,14 +172,14 @@
   }
 
   /* Gold florals at two opposite corners, cropped out of the source frame and
-     placed on the diagonal the art was drawn on. They sit inside the trim rather
-     than bleeding off it — they were pulled in when the lace arrived, and they
-     stayed in when it went, because whole flowers at the corners read as placed
-     where cropped ones read as an accident of the crop.
+     placed on the diagonal the art was drawn on. Set into the corners rather
+     than floated near them: the art runs to the edge of its own bitmap on all
+     four sides, so any offset at all is a gap between the ornament and the trim,
+     and a gap is what made them read as stickers laid on the sheet.
 
      Every value is in cqw, against the card's own inline size, so the ornament
-     holds its proportion from a 320px phone to the 430px cap. Width and the two
-     offsets are the three numbers worth tuning by eye — they were set to clear
+     holds its proportion from a 320px phone to the 480px cap. The widths are the
+     two numbers worth tuning by eye — they are what keeps the flowers clear of
      the script names on the right and the colophon on the left. */
   .corner{
     position:absolute;
@@ -190,15 +193,15 @@
   }
   .corner-tr{
     --w:29cqw;
-    top:6cqw;
-    right:7cqw;
+    top:0;
+    right:0;
     aspect-ratio:448 / 598;
     background-image:url("corner-tr.png");
   }
   .corner-bl{
     --w:34cqw;
-    bottom:5cqw;
-    left:6cqw;
+    bottom:0;
+    left:0;
     aspect-ratio:448 / 466;
     background-image:url("corner-bl.png");
   }
@@ -592,7 +595,7 @@
      out of an envelope, and the journey is the arrival. */
   body.sealed .card,
   body.handed .card{ animation:none; }
-  .below{ transition:opacity .9s var(--ease) .5s, height .62s var(--ease) 1s; }
+  .below{ transition:opacity .9s var(--ease) .5s, height 1.6s var(--ease-paper) 1s; }
 
   /* The envelope falls, and it goes last.
 
@@ -659,11 +662,17 @@
     clip-path:polygon(0 20%, 50% 50%, 100% 20%, 100% 100%, 0 100%);
     /* A shade under the sheet behind it. The gradient still runs straight
        through the seam — this is a flat offset on top of it, the way a leaf of
-       paper lying on another leaf is simply a little further from the light. */
+       paper lying on another leaf is simply a little further from the light.
+
+       It was .955 against the flap's 1.035, and 8% is not a leaf of paper
+       further from the light: it is a second stock. What separates the two
+       shapes is the fold, and the fold is drawn by the two shadows below, not by
+       the tone. So the tone is down to a little over 2% across the seam, which
+       is about what one thickness of paper is worth. */
     /* The shadow its top edge casts is doing real work once it starts to fall:
        an edge with paper-thickness shadow under it passes in front of the card,
        where a hard edge with none of it merely erases. */
-    filter:brightness(.955) drop-shadow(0 -3px 9px rgba(70,62,44,.30));
+    filter:brightness(.988) drop-shadow(0 -3px 9px rgba(70,62,44,.30));
   }
 
   /* Not a triangle: a triangle drawn from the two top corners crosses the
@@ -677,11 +686,11 @@
     transform-origin:top center;
     transform:rotateX(0deg);
     transition:transform 1.5s var(--ease-paper) .15s;
-    /* and a shade over it, for the same reason in reverse. Wider apart than
-       feels right in the abstract: edge to edge there is no silhouette and no
-       trim, so the fold between flap and pocket is the only line telling anyone
-       this is an envelope at all. */
-    filter:brightness(1.035) drop-shadow(0 4px 7px rgba(70,62,44,.26));
+    /* and a shade over it, for the same reason in reverse — but the shadow under
+       the fold is what carries that line, so this only has to be enough to say
+       which of the two leaves is on top. Pushed any further and the flap stops
+       being the same sheet as the pocket. */
+    filter:brightness(1.014) drop-shadow(0 4px 7px rgba(70,62,44,.26));
   }
   /* Positive, which is away from the viewer. Negative swings the flap's point
      toward the camera on its way over, and a plane passing near the eye under a
