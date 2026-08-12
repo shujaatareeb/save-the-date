@@ -66,7 +66,7 @@
     --edge:         rgba(93,84,62,.16);
     /* the wax, shared: the hint underneath it is placed off the seal's own size
        rather than off the bottom of the window, so the two stay together */
-    --seal:         min(23vw, 108px);
+    --seal:         min(26.5vw, 124px);
     --ease:         cubic-bezier(.16,.84,.24,1);
     /* Slower out of the gate and much longer in the tail than --ease, which is
        tuned for interface moves. Paper has mass; it should not snap. */
@@ -906,7 +906,11 @@
       0 2px 4px rgba(44,6,12,.38),
       0 12px 22px -14px rgba(44,6,12,.6);
     font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
-    font-size:clamp(13px, 4.2vw, 20px);
+    /* off the wax rather than off the window. It was its own clamp, which held
+       the same two ends by coincidence and would have stayed behind the moment
+       the seal changed size — the monogram is part of the die, not a caption
+       sitting on it. */
+    font-size:calc(var(--seal) * .185);
     letter-spacing:.04em;
     /* gilt, and lit from the same place as everything else: the shadow above the
        stroke and the catch below it, so the die pressed down into the wax */
