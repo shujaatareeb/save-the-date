@@ -90,12 +90,23 @@
 
   /* ---------- the card ---------- */
 
+  /* Two sizes, and which one is in force says what the page is for.
+     Unscratched there is nothing under the card but one line of hint, so the
+     card is as large as the window allows and the reserve below it is that
+     line. Revealed, the calendar button needs somewhere to be, and it is given
+     the room by the card — which comes down a step and, because the column is
+     centred, rises as it goes. The card is smaller at the moment it stops being
+     the only thing on the page, which is the right way round.
+
+     Real width, not a transform: the heart is a canvas rasterised at the card's
+     layout size, and scaling the card would hand back a soft, upscaled heart —
+     the one thing `resizeFoil` is written to avoid. */
   .card{
     container-type:inline-size;
     display:grid;               /* one in-flow child: the stack, centred in the sheet */
     position:relative;
     /* 100% is the padded body box, so the card can never overflow sideways */
-    width:min(100%, calc((100dvh - 215px) / 1.52), 430px);
+    width:min(100%, calc((100dvh - 139px) / 1.52), 480px);
     aspect-ratio:1 / 1.52;
     background:
       linear-gradient(158deg, var(--paper-hi) 0%, var(--paper) 46%, var(--paper-lo) 100%);
@@ -109,6 +120,13 @@
     overflow:hidden;
     isolation:isolate;
     animation:settle .9s var(--ease) both;
+    /* the second of the two — the same .62s and the same second of delay as the
+       button below, because they are one move: the card steps back as the button
+       arrives, not before it */
+    transition:width .62s var(--ease) 1s;
+  }
+  .card.revealed{
+    width:min(100%, calc((100dvh - 233px) / 1.52), 430px);
   }
 
   @keyframes settle{
@@ -422,12 +440,23 @@
 
   /* ---------- below the card ---------- */
 
+  /* Only ever as tall as what is actually being shown in it. Before the reveal
+     that is one line of hint, and the 106px the buttons will eventually need was
+     90px of nothing held open under the card for the whole first half of the
+     page. The card has it until the buttons come to claim it.
+
+     A definite height rather than a floor, because the buttons are hidden with
+     opacity and are therefore still in the layout: a floor would be raised to
+     their height immediately and nothing would be freed. At 30px they overflow
+     the band instead, which costs nothing — they are invisible and untouchable
+     until the class that opens the band arrives with them. */
   .below{
     display:grid;
     place-items:center;
     width:100%;
-    min-height:106px;
+    height:30px;
   }
+  .card.revealed ~ .below{ height:124px; }
   /* hint and buttons share one centred cell, so nothing shifts on reveal */
   .below > *{ grid-area:1 / 1; }
 
@@ -563,7 +592,7 @@
      out of an envelope, and the journey is the arrival. */
   body.sealed .card,
   body.handed .card{ animation:none; }
-  .below{ transition:opacity .9s var(--ease) .5s; }
+  .below{ transition:opacity .9s var(--ease) .5s, height .62s var(--ease) 1s; }
 
   /* The envelope falls, and it goes last.
 
@@ -800,6 +829,13 @@
   @media (max-width:699px){
     /* a fingertip is not a cursor */
     .again{ padding:13px 18px; }
+
+    /* On a phone the card is bound by the width of the screen and not by the
+       height of it — there is height to spare and no way to spend it, because
+       the sheet keeps its 1:1.52. The margin either side is the only room left
+       to give it, so it is trimmed to the least that still reads as a margin
+       and still has somewhere to put the shadow. */
+    body{ padding-inline:10px; }
   }
 
   @media (prefers-reduced-motion:reduce){
@@ -1711,7 +1747,16 @@
 
   /* ---------- boot ---------- */
 
-  new ResizeObserver(resizeFoil).observe(foil);
+  // Coalesced, because the card now changes width on the reveal and again on a
+  // second scratch: 620ms of resize reports, each of which would rebuild the
+  // plate and re-count every 24th pixel of it. One rebuild once the move
+  // settles. In between the bitmap simply stretches inside its box, and for the
+  // whole of that it is either dissolving or already gone.
+  let foilResize = 0;
+  new ResizeObserver(() => {
+    clearTimeout(foilResize);
+    foilResize = setTimeout(resizeFoil, 90);
+  }).observe(foil);
   new ResizeObserver(resizeFx).observe(document.documentElement);
   addEventListener('resize', resizeFx);
   addEventListener('orientationchange', resizeFx);
