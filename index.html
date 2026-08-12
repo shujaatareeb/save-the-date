@@ -117,23 +117,35 @@
   }
 
   /* The stock, and now the only thing dressing the sheet. Two frequencies, not
-     one: the fine layer is cotton-rag fibre, and the slow layer is the cloud
-     left where the pulp settled unevenly in the mould. A single high-frequency
-     noise reads as screen grain — it is the low one that says paper, because
-     nothing manufactured flat has patches.
+     one: the fine layer is the tooth of the sheet, and the slow layer is the
+     cloud left where the pulp settled unevenly in the mould. A single
+     high-frequency noise reads as screen grain — it is the low one that says
+     paper, because nothing manufactured flat has patches.
+
+     The tooth is a photograph of cold-press paper rather than turbulence, which
+     is the one thing procedural noise cannot fake: the grain of real stock is
+     directional and clumped where noise is evenly random. Two things were done
+     to the photograph to make it usable. Its own lighting — a slow gradient and
+     a soft vignette, i.e. the room it was shot in — was subtracted and the rest
+     hung off white, so under multiply it darkens only where the tooth is and the
+     sheet's colour still comes from the gradient underneath. Then it was
+     mirrored into a 2x2 block, which is what lets a photograph tile at all: the
+     pixels that meet across a repeat are the same pixels.
 
      Same stock for the envelope and the card inside it, so the whole thing is
-     cut from one sheet. */
+     cut from one sheet. The tiles are laid from each panel's own top-left, and
+     for the three envelope panels that is the same corner of the window, so the
+     grain runs straight through the seams the way the gradient does. */
   .stock::before{
     content:"";
     position:absolute;
     inset:0;
     background-image:
-      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='f'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='220' height='220' filter='url(%23f)' opacity='0.42'/></svg>"),
+      url("paper.jpg"),
       url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='520' height='520'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='520' height='520' filter='url(%23m)' opacity='0.30'/></svg>");
-    background-size:220px 220px, 520px 520px;
+    background-size:600px auto, 520px 520px;
     mix-blend-mode:multiply;
-    opacity:.34;
+    opacity:.55;
     pointer-events:none;
     z-index:1;
   }
