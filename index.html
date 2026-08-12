@@ -339,16 +339,24 @@
     -webkit-touch-callout:none;
   }
 
-  /* the pressed heart the foil sat in — surfaces as the foil goes */
+  /* The pressed heart the foil sat in — and it surfaces as the foil goes, which
+     is what it always said it did and never did. It was held at opacity 0 until
+     the threshold and then faded up, so the impression arrived after the thing
+     that made it had already gone. It is under the plate at z-index 1 and it can
+     simply be there, like the message beside it: what a scratch uncovers is
+     paper that has been pressed and printed, not a state change. */
   .imprint{
     position:absolute; inset:0;
     width:100%; height:100%;
-    opacity:0;
-    transition:opacity .5s var(--ease) .08s;
+    /* Driven by how much gold is gone, not by whether it all is. The plate is
+       read every sixth pointer move, so this steps rather than slides; the short
+       linear transition is what carries it between readings. */
+    opacity:var(--surfaced, 0);
+    transition:opacity .18s linear;
     pointer-events:none;
     z-index:1;
   }
-  .revealed .imprint{ opacity:1; }
+  .card.revealed .imprint{ opacity:1; }
 
   /* one warm breath of light at the moment of reveal */
   .bloom{
@@ -1311,7 +1319,24 @@
     return { x: e.clientX - r.left, y: e.clientY - r.top };
   };
 
-  const cleared = () => opaqueAtStart && countOpaque() / opaqueAtStart < CLEAR_AT;
+  // One reading, two uses. countOpaque reads the whole plate and is the most
+  // expensive thing that happens mid-drag, so the impression surfacing rides on
+  // the reading already being taken for the threshold rather than asking for one
+  // of its own.
+  //
+  // It reaches full strength exactly at CLEAR_AT and not at zero: the impression
+  // is under the plate, so what is showing of it is what has already been
+  // uncovered, and ramping to the last scrap of gold would have it still
+  // arriving at the moment there was nothing left for it to arrive from.
+  function measure(){
+    if (!opaqueAtStart) return 1;
+    const left = countOpaque() / opaqueAtStart;
+    card.style.setProperty('--surfaced',
+      String(Math.min(1, Math.max(0, (1 - left) / (1 - CLEAR_AT)))));
+    return left;
+  }
+
+  const cleared = () => measure() < CLEAR_AT;
 
   foil.addEventListener('pointerdown', e => {
     if (revealed) return;
@@ -1614,6 +1639,7 @@
     hint.classList.remove('gone');
     parts.length = 0;
     foil.style.opacity = '';
+    card.style.setProperty('--surfaced', '0');   // pressed back under the gold
     paintPlate();
     opaqueAtStart = countOpaque();
     if (!reduce) shimmerId = requestAnimationFrame(shimmer);
