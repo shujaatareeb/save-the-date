@@ -176,7 +176,8 @@
       url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='520' height='520'><filter id='m'><feTurbulence type='fractalNoise' baseFrequency='0.011' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='520' height='520' filter='url(%23m)' opacity='0.30'/></svg>");
     background-size:600px auto, 520px 520px;
     mix-blend-mode:multiply;
-    opacity:.55;
+    /* the card's setting; the envelope raises it, see --tooth there */
+    opacity:var(--tooth, .55);
     pointer-events:none;
     z-index:1;
   }
@@ -687,13 +688,28 @@
   .env-front,
   .env-flap{
     position:absolute;
-    background-image:linear-gradient(158deg, var(--env-hi) 0%, var(--env) 46%, var(--env-lo) 100%);
-    background-size:100vw 100vh;
-    background-position:0 0;
+    --sheet:linear-gradient(158deg, var(--env-hi) 0%, var(--env) 46%, var(--env-lo) 100%);
     background-repeat:no-repeat;
+    /* Harder tooth than the card takes. It is the coarser stock of the two — an
+       envelope is meant to be handled and the card inside it is not — and while
+       the page is sealed it is the only surface on screen, so it is carrying the
+       whole impression of paper on its own. */
+    --tooth:.82;
   }
 
-  .env-back{ inset:0; }
+  /* Not a flat field. Three panels of one continuous gradient still read as a
+     wall unless the light falls off somewhere, and the corners of a room are
+     where it falls off. Everything below is laid over the sheet and under the
+     tooth, because it is light on paper rather than a mark on it. */
+  .env-back{
+    inset:0;
+    background-image:
+      radial-gradient(122% 86% at 50% 28%, rgba(255,255,255,.30), rgba(255,255,255,0) 58%),
+      radial-gradient(118% 98% at 50% 44%, rgba(86,77,56,0) 54%, rgba(86,77,56,.17) 100%),
+      var(--sheet);
+    background-size:100% 100%, 100% 100%, 100vw 100vh;
+    background-position:0 0, 0 0, 0 0;
+  }
 
   /* The pocket, with the two side flaps notched out of its top. Its notch and
      the flap's lower edges are the same two lines — 20% at the sides down to
@@ -711,10 +727,39 @@
        shapes is the fold, and the fold is drawn by the two shadows below, not by
        the tone. So the tone is down to a little over 2% across the seam, which
        is about what one thickness of paper is worth. */
+    /* The near leaf, and it takes the light at its mouth and loses it toward the
+       foot where it meets the panel behind. The highlight sits at 20%, which is
+       the shoulder line — the notch has cut away everything above it at the
+       sides, so a stop any higher is paint on a part of the element that is not
+       there.
+
+       Full-height layer with the stops moved, rather than a shorter layer pushed
+       down: a percentage background-position resolves against the free space and
+       not the container, so `80%` sized and `20%` positioned put the gradient
+       36px down a 900px window and left a hard edge across it at 756. */
+    background-image:
+      linear-gradient(180deg,
+        rgba(255,255,255,0)   0%,
+        rgba(255,255,255,.30) 20%,
+        rgba(255,255,255,.08) 30%,
+        rgba(255,255,255,0)   42%,
+        rgba(86,77,56,.05)    79%,
+        rgba(86,77,56,.14)    100%),
+      var(--sheet);
+    background-size:100% 100%, 100vw 100vh;
+    background-position:0 0, 0 0;
     /* The shadow its top edge casts is doing real work once it starts to fall:
        an edge with paper-thickness shadow under it passes in front of the card,
-       where a hard edge with none of it merely erases. */
-    filter:brightness(.988) drop-shadow(0 -3px 9px rgba(70,62,44,.30));
+       where a hard edge with none of it merely erases.
+
+       Two of them, because one soft shadow is an object floating and one tight
+       shadow is an object stuck down. drop-shadow follows the clipped alpha, so
+       both trace the notch rather than the element's box — which is also why an
+       inset box-shadow is no use here: it would draw on the rectangle, and the
+       rectangle is not the shape. */
+    filter:brightness(.988)
+           drop-shadow(0 -1px 1px rgba(70,62,44,.34))
+           drop-shadow(0 -4px 11px rgba(70,62,44,.26));
   }
 
   /* Not a triangle: a triangle drawn from the two top corners crosses the
@@ -728,11 +773,35 @@
     transform-origin:top center;
     transform:rotateX(0deg);
     transition:transform 1.5s var(--ease-paper) .15s;
+    /* The bow. A flap is one leaf hinged along a single edge and it never lies
+       quite flat: it stands a little proud at the fold and settles onto the
+       pocket at the point. Nothing else here says the flap is a piece of paper
+       rather than a triangle — the tone across the seam is only 2%, deliberately,
+       and a shape lit dead evenly reads as a shape. Measured off the flap's own
+       box, so 0% is the fold and 100% is the point. */
+    background-image:
+      linear-gradient(180deg,
+        rgba(255,255,255,.42) 0%,
+        rgba(255,255,255,.15) 26%,
+        rgba(255,255,255,0)   50%,
+        rgba(86,77,56,.06)    74%,
+        rgba(86,77,56,.16)    100%),
+      var(--sheet);
+    background-size:100% 100%, 100vw 100vh;
+    background-position:0 0, 0 0;
     /* and a shade over it, for the same reason in reverse — but the shadow under
        the fold is what carries that line, so this only has to be enough to say
        which of the two leaves is on top. Pushed any further and the flap stops
-       being the same sheet as the pocket. */
-    filter:brightness(1.014) drop-shadow(0 4px 7px rgba(70,62,44,.26));
+       being the same sheet as the pocket.
+
+       One shadow here, not the pair the pocket carries. The contact line wants
+       two, but this is the panel that rotates, and a second drop-shadow is a
+       second full-viewport blur every frame of a 1.5s swing: measured mean 18.7
+       against 16.7 and a dropped frame at 1280x900, unthrottled. The pocket is
+       static and can afford it, and the notch and the flap's lower edges are the
+       same two lines by design — so the tight shadow sits over there, lands in
+       the same place, and costs nothing. */
+    filter:brightness(1.014) drop-shadow(0 5px 10px rgba(70,62,44,.26));
   }
   /* Positive, which is away from the viewer. Negative swings the flap's point
      toward the camera on its way over, and a plane passing near the eye under a
