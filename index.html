@@ -75,7 +75,17 @@
 
   *{ box-sizing:border-box; }
 
-  html,body{ height:100%; }
+  /* Nothing on this page is below the fold: the card is sized against the window
+     and the band under it holds the buttons. So there is nothing to gain from
+     the page moving, and something to lose — a drag that starts on the heart and
+     gets read as a scroll is a drag taken away from the scratch, and on a phone
+     that is most of them. overscroll-behavior on both, or the rubber band still
+     travels on iOS with the scroll container gone. */
+  html,body{
+    height:100%;
+    overflow:hidden;
+    overscroll-behavior:none;
+  }
 
   body{
     margin:0;
@@ -487,18 +497,19 @@
 
      A definite height rather than a floor, because the buttons are hidden with
      opacity and are therefore still in the layout: a floor would be raised to
-     their height immediately and nothing would be freed. At zero they overflow
-     the band instead, which costs nothing — they are invisible and untouchable
-     until the class that opens the band arrives with them. */
+     their height immediately and nothing would be freed.
+
+     This is a spacer and nothing else. The buttons hang off it absolutely rather
+     than sitting in it, because an in-flow child overflowing a zero-height band
+     still counts toward the height of the document — 44px of invisible scroll at
+     1280x900 and 65px at 360x640, on a page where a drag that gets read as a
+     scroll is a drag taken away from the scratch. */
   .below{
-    display:grid;
-    place-items:center;
+    position:relative;
     width:100%;
     height:0;
   }
   .card.revealed ~ .below{ height:112px; }
-  /* hint and buttons share one centred cell, so nothing shifts on reveal */
-  .below > *{ grid-area:1 / 1; }
 
   /* On the card now, under the colophon, so it is printed on the same sheet as
      the line it follows rather than floating on the backdrop below it. Darker
@@ -523,16 +534,20 @@
      land on its own first — arriving with it would make the calendar button
      part of the surprise instead of what you do about it. */
   .after{
+    position:absolute;
+    left:0; right:0;
+    top:50%;
     display:flex;
     flex-direction:column;
     align-items:center;
     gap:12px;
     opacity:0;
-    transform:translateY(22px);
+    /* the -50% is the centring, the 22px is the float-up */
+    transform:translateY(calc(-50% + 22px));
     transition:opacity .62s var(--ease) 1s, transform .62s var(--ease) 1s;
     pointer-events:none;
   }
-  .after.show{ opacity:1; transform:none; pointer-events:auto; }
+  .after.show{ opacity:1; transform:translateY(-50%); pointer-events:auto; }
 
   /* the same stock and the same press as the invitation above it */
   .btn{
@@ -842,19 +857,25 @@
        is how you shade a sphere — and it read as one. Wax is nearly flat on top
        with the light broad and low in contrast, and it goes dark at the rim
        where it squeezed out under the stamp. */
+    /* Oxblood, which is what sealing wax is and has been for four hundred years.
+       It was gold, and gold wax under a gold monogram gave the one object on a
+       page of cream paper nothing to be read against — the letters were an
+       emboss in a coin rather than a stamp on a seal. */
     background:
-      radial-gradient(130% 120% at 50% 8%, rgba(255,246,206,.5), rgba(255,246,206,0) 52%),
-      radial-gradient(96% 96% at 50% 46%, #cba62c 0%, #bd961f 58%, #94711a 88%, #7a5c12 100%);
+      radial-gradient(130% 120% at 50% 8%, rgba(255,198,180,.34), rgba(255,198,180,0) 52%),
+      radial-gradient(96% 96% at 50% 46%, #8f2634 0%, #7c1e2a 58%, #5b131e 88%, #430c16 100%);
     box-shadow:
-      0 1px 0 rgba(255,247,214,.3) inset,
-      0 -3px 7px rgba(60,42,4,.34) inset,
-      0 2px 4px rgba(70,54,12,.3),
-      0 12px 22px -14px rgba(70,54,12,.5);
+      0 1px 0 rgba(255,186,176,.24) inset,
+      0 -3px 7px rgba(38,5,10,.46) inset,
+      0 2px 4px rgba(58,10,18,.34),
+      0 12px 22px -14px rgba(58,10,18,.55);
     font-family:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
     font-size:clamp(13px, 4.2vw, 20px);
     letter-spacing:.04em;
-    color:#5a4310;
-    text-shadow:0 1px 0 rgba(255,240,190,.5), 0 -1px 1px rgba(52,36,2,.5);
+    /* gilt, and lit from the same place as everything else: the shadow above the
+       stroke and the catch below it, so the die pressed down into the wax */
+    color:#e3c069;
+    text-shadow:0 1px 0 rgba(255,228,162,.28), 0 -1px 1px rgba(44,5,11,.62);
     transition:transform .8s var(--ease-paper), opacity .8s var(--ease-paper), box-shadow .3s var(--ease);
   }
   /* the ring the die leaves inside the rim — the part that says it was pressed
@@ -864,15 +885,18 @@
     position:absolute;
     inset:12%;
     border-radius:inherit;
-    border:1px solid rgba(92,68,10,.32);
-    box-shadow:0 1px 0 rgba(255,244,198,.26);
+    /* gilt too, and faintly: it is the same die as the letters, so it is the
+       same metal — but a ring reads at a glance where letters are read one at a
+       time, and at full strength it takes the monogram's place */
+    border:1px solid rgba(227,192,105,.30);
+    box-shadow:0 1px 0 rgba(44,5,11,.34);
     pointer-events:none;
   }
   .seal:hover{ box-shadow:
-      0 1px 0 rgba(255,247,214,.6) inset,
-      0 -2px 4px rgba(60,42,4,.45) inset,
-      0 3px 7px rgba(70,54,12,.44),
-      0 14px 26px -12px rgba(70,54,12,.6); }
+      0 1px 0 rgba(255,190,180,.42) inset,
+      0 -2px 4px rgba(38,5,10,.52) inset,
+      0 3px 7px rgba(58,10,18,.46) ,
+      0 14px 26px -12px rgba(58,10,18,.62); }
   .seal:focus-visible{ outline:2px solid #8a7a4a; outline-offset:4px; }
   .env-flap-layer.opening .seal{
     transform:translate(-50%,-50%) scale(1.18) rotate(7deg);
@@ -1147,7 +1171,11 @@
                     '#ffffff','#ffffff','#fdfbf3','#f4f0e4'];
   const WHITES   = new Set(['#ffffff','#fdfbf3','#f4f0e4']);
 
-  const CLEAR_AT = .12;      // fraction of foil left before the card lets go
+  // Fraction of foil left when the card lets go — so it goes at 80% scratched,
+  // not 88%. The last stretch is the part nobody enjoys: the shape is already
+  // read, the date is already legible through what is left, and what remains is
+  // chasing slivers along an edge. The dissolve takes them.
+  const CLEAR_AT = .20;
 
   /* ---------- geometry ---------- */
 
@@ -1766,6 +1794,8 @@
 
     let wanted = true;                     // what the visitor has asked for
     let armed = false;                     // gesture fallback listening?
+    let starting = false;                  // a play() already in flight
+    let pauseTimer = 0;                    // the fade-out's pending pause
 
     const ramp = (to, seconds) => {
       if (gain){
@@ -1778,20 +1808,36 @@
       music.volume = to;                   // no-op on iOS, correct everywhere else
     };
 
+    // Fading and pausing are one action, and the pause belongs to the fade that
+    // asked for it. Kept together so that anything which cancels the fade can
+    // cancel the pause with it — a pause that outlives its fade lands on music
+    // that has since been turned back on, and stops it for good.
+    function fadeOut(seconds, after){
+      ramp(0, seconds);
+      clearTimeout(pauseTimer);
+      pauseTimer = setTimeout(() => music.pause(), after);
+    }
+
     const kick = () => { play(); };
+
+    // pointerdown alone where it exists. Registering touchstart beside it means
+    // one tap on a phone calls play() twice, and the second call interrupts the
+    // first — an AbortError that lands in the catch and re-arms the very
+    // fallback that just succeeded.
+    const GESTURES = window.PointerEvent
+      ? ['pointerdown', 'keydown']
+      : ['touchstart', 'mousedown', 'keydown'];
 
     function arm(){
       if (armed) return;
       armed = true;
-      for (const type of ['pointerdown', 'touchstart', 'keydown'])
-        addEventListener(type, kick, { passive: true });
+      for (const type of GESTURES) addEventListener(type, kick, { passive: true });
     }
 
     function disarm(){
       if (!armed) return;
       armed = false;
-      for (const type of ['pointerdown', 'touchstart', 'keydown'])
-        removeEventListener(type, kick);
+      for (const type of GESTURES) removeEventListener(type, kick);
     }
 
     // Playing is not the same as audible. A context routed between the element
@@ -1805,12 +1851,23 @@
       else arm();
     }
 
-    function play(){
-      if (!wanted) return;
-      ctx?.resume?.().catch(() => {});
-      const p = music.play();
-      if (!p || !p.then){ settle(); return; }
-      p.then(settle).catch(arm);
+    // Awaited rather than fired and forgotten. resume() is a promise, and the
+    // old code read ctx.state on the line after calling it — which is the state
+    // before it resolves, so a context that was about to run looked suspended,
+    // and the fallback re-armed for a gesture it did not need.
+    async function play(){
+      if (!wanted || starting) return;
+      starting = true;
+      clearTimeout(pauseTimer);            // whatever asked for it, it is stale now
+      try {
+        if (ctx && ctx.state !== 'running') await ctx.resume();
+        await music.play();
+        settle();
+      } catch {
+        arm();
+      } finally {
+        starting = false;
+      }
     }
 
     chip.addEventListener('click', () => {
@@ -1819,17 +1876,27 @@
       chip.setAttribute('aria-pressed', String(wanted));
       chip.setAttribute('aria-label', wanted ? 'Mute the music' : 'Play the music');
       if (wanted){ play(); return; }
-      ramp(0, .35);
+      fadeOut(.35, 380);
       disarm();
-      setTimeout(() => { if (!wanted) music.pause(); }, 380);
     });
 
     // A page left open in a background tab should not keep playing into a room
     // nobody is looking at.
+    //
+    // Coming back calls play() outright rather than asking whether the element
+    // is paused first. Leave and return inside the fade's 280ms and it is not
+    // paused yet — so the old condition declined to do anything, the queued
+    // pause landed a moment later, and the music stopped with the chip still
+    // showing it on and no way back but the chip. play() clears that pause and
+    // ramps the gain back up, and it is a no-op if the audio never stopped.
     addEventListener('visibilitychange', () => {
-      if (document.hidden){ ramp(0, .25); setTimeout(() => music.pause(), 280); }
-      else if (wanted && music.paused) play();
+      if (document.hidden) fadeOut(.25, 280);
+      else if (wanted) play();
     });
+
+    // Nothing to offer, so do not offer it: a chip that cannot start the music
+    // is worse than no chip.
+    music.addEventListener('error', () => { disarm(); chip.hidden = true; });
 
     chip.hidden = false;
     play();
