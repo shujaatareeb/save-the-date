@@ -202,14 +202,14 @@
     z-index:0;
   }
   .corner-tr{
-    --w:29cqw;
+    --w:34cqw;
     top:0;
     right:0;
     aspect-ratio:448 / 598;
     background-image:url("corner-tr.png");
   }
   .corner-bl{
-    --w:34cqw;
+    --w:40cqw;
     bottom:0;
     left:0;
     aspect-ratio:448 / 466;
@@ -391,13 +391,14 @@
 
   /* Optically centred, in cqw against the card rather than in per cent against
      the box, so the lift is a fixed fraction of the sheet and not of whatever
-     the text happens to measure. */
+     the text happens to measure. Two lines and a date read as one block or as
+     three things depending almost entirely on this gap. */
   .secret-in{
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:2.5cqw;
-    transform:translateY(-6.2cqw);
+    gap:1.4cqw;
+    transform:translateY(-4.6cqw);
   }
 
   /* Covered, not hidden. These were held at opacity 0 until the 12% threshold,
@@ -430,8 +431,14 @@
     color:#463f33;
     font-size:5.6cqw;
     font-weight:600;          /* a shade heavier than the line above it */
-    letter-spacing:.25em;
-    text-indent:.25em;
+    letter-spacing:.16em;
+    /* No text-indent, and nothing in its place. It was there to answer the
+       trailing letter-space — the one added after the last glyph as well as
+       between them — but a max-content box does not include that space, so
+       there was nothing to answer and the indent was simply
+       .25em of padding on one side. It measured as 3.2px of the date hanging
+       right of the heart's centre at 1280x900. Removed, the box is the ink and
+       centring one centres the other. */
     font-variant-numeric:tabular-nums lining-nums;
     white-space:nowrap;
   }
