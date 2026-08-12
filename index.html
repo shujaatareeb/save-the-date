@@ -772,8 +772,13 @@
        both trace the notch rather than the element's box — which is also why an
        inset box-shadow is no use here: it would draw on the rectangle, and the
        rectangle is not the shape. */
-    filter:brightness(.988)
-           drop-shadow(0 -1px 2px rgba(58,50,34,.48))
+    /* The contact shadow was 2px of blur, which is a drawn line and not a fold —
+       the edge under it is a clip-path boundary and already as hard as an edge
+       gets, so a tight shadow behind it just sharpens what was sharp. Widened to
+       6px: still contact rather than ambient, but the eye reads a crease instead
+       of a rule. Free to widen, because this panel does not animate. */
+    filter:brightness(.991)
+           drop-shadow(0 -1px 6px rgba(58,50,34,.44))
            drop-shadow(0 -7px 18px rgba(58,50,34,.36));
   }
 
@@ -787,7 +792,15 @@
     clip-path:polygon(0 0, 100% 0, 100% 40%, 50% 100%, 0 40%);
     transform-origin:top center;
     transform:rotateX(0deg);
-    transition:transform 1.5s var(--ease-paper) .15s;
+    /* Its own curve, and not --ease-paper. That one already leans into its start,
+       but only just — slope .19 out of the gate, which on a shape this size is
+       close enough to a constant rate to read as one. A flap has to be got
+       moving: it is held by the fold and by whatever the wax left behind, and it
+       gives way rather than setting off. So barely anything for the first
+       stretch, then it goes, then a long settle onto the pocket. 2s, because at
+       1.5 the give and the swing ran together and it was over before it read as
+       a flap at all. */
+    transition:transform 2s cubic-bezier(.62,.01,.24,1) .15s;
     /* The bow. A flap is one leaf hinged along a single edge and it never lies
        quite flat: it stands a little proud at the fold and settles onto the
        pocket at the point. Nothing else here says the flap is a piece of paper
@@ -820,7 +833,7 @@
        every frame of the swing and the radius is what it costs — 16px measured a
        dropped frame at 1280x900 unthrottled where 11px measures none, and .44
        against .26 is the darker shadow either way. */
-    filter:brightness(1.014) drop-shadow(0 6px 11px rgba(58,50,34,.44));
+    filter:brightness(1.011) drop-shadow(0 6px 11px rgba(58,50,34,.44));
   }
   /* Positive, which is away from the viewer. Negative swings the flap's point
      toward the camera on its way over, and a plane passing near the eye under a
