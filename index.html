@@ -1190,7 +1190,9 @@
 
 <div class="below">
   <div class="after" id="after">
-    <a class="btn" id="ics" download="misbah-areeb-save-the-date.ics" href="#">Add to Calendar</a>
+    <!-- No `download` here: it is added back only on the platforms it helps.
+         See the calendar section at the foot of this file. -->
+    <a class="btn" id="ics" href="#">Add to Calendar</a>
     <button class="again" id="again" type="button">Scratch again</button>
   </div>
 </div>
@@ -1205,6 +1207,7 @@
     date:  '2026-10-10',            // ISO, drives the .ics
     shown: '10 . 10 . 26',          // how it reads on the card
     title: 'Misbah & Areeb — Wedding',
+    blurb: 'Save the date. Invitation to follow.',
   };
 
   // Set to a real .ics path when this page is hosted (see the calendar section
@@ -1212,11 +1215,18 @@
   const ICS_URL = 'save-the-date.ics';
   // ----------------------------------------------------------------------
 
-  function buildIcs(){
-    const d = EVENT.date.replace(/-/g, '');
+  // An all-day event is written as the day it starts and the day after it ends,
+  // which both the .ics and Google's URL want in the same YYYYMMDD spelling.
+  // One function so the two can never disagree about when the wedding is.
+  function eventDays(){
+    const start = EVENT.date.replace(/-/g, '');
     const next = new Date(EVENT.date + 'T00:00:00Z');
     next.setUTCDate(next.getUTCDate() + 1);
-    const end = next.toISOString().slice(0, 10).replace(/-/g, '');
+    return { start, end: next.toISOString().slice(0, 10).replace(/-/g, '') };
+  }
+
+  function buildIcs(){
+    const { start: d, end } = eventDays();
     return [
       'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//save the date//EN',
       'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
@@ -1226,7 +1236,7 @@
       'DTSTART;VALUE=DATE:' + d,
       'DTEND;VALUE=DATE:' + end,
       'SUMMARY:' + EVENT.title,
-      'DESCRIPTION:Save the date. Invitation to follow.',
+      'DESCRIPTION:' + EVENT.blurb,
       'TRANSP:TRANSPARENT',
       'END:VEVENT', 'END:VCALENDAR',
     ].join('\r\n');
@@ -1832,13 +1842,50 @@
 
   /* ---------- calendar file ---------- */
 
-  // A real .ics served over http is the only form every phone handles well —
-  // iOS opens it straight into Calendar. When this page is hosted somewhere and
-  // ICS_URL points at a sibling file, use it. Standing alone with no server, a
-  // Blob is the next best thing; a `data:` URI is the one form iOS ignores
-  // outright, so it is not used at all.
+  // One button, but not one link. What "add this to my calendar" means depends
+  // entirely on what the guest is holding:
+  //
+  //   Apple    — hand it the .ics and it opens in Calendar. Crucially WITHOUT
+  //              `download`: iOS honours that attribute by filing the .ics away
+  //              in Files, where Calendar never sees it, and the guest is left
+  //              holding a downloaded document instead of an event.
+  //   Android  — a downloaded .ics lands in a notification tray and asks to be
+  //              found. Google's own URL opens the event already filled in,
+  //              which on a phone that ships with Google Calendar is one tap.
+  //   Desktop  — the .ics goes to whatever handles it, Outlook or Calendar, and
+  //              here `download` earns its place by giving the file a name a
+  //              person can recognise in a Downloads folder.
+  //
+  // A real .ics served over http is still the backbone of all of this. Standing
+  // alone with no server, a Blob is the next best thing; a `data:` URI is the
+  // one form iOS ignores outright, so it is not used at all.
   (() => {
     const link = document.getElementById('ics');
+    const ua = navigator.userAgent;
+
+    // iPadOS reports itself as a Mac and means it — the user agent is a desktop
+    // Safari string down to the version. A touch screen is the one thing that
+    // gives it away, and it has to, or iPad guests get the desktop branch.
+    const isApple = /iPad|iPhone|iPod/.test(ua)
+      || (/Mac/.test(ua) && !/Android/.test(ua));
+    const isAndroid = /Android/.test(ua);
+
+    if (isAndroid){
+      const { start, end } = eventDays();
+      const url = new URL('https://calendar.google.com/calendar/render');
+      url.searchParams.set('action', 'TEMPLATE');
+      url.searchParams.set('text', EVENT.title);
+      url.searchParams.set('dates', start + '/' + end);
+      url.searchParams.set('details', EVENT.blurb);
+      link.href = url.toString();
+      // The card is a thing people show each other. Sending it away to Google
+      // in the same tab ends that, so the event opens beside it instead.
+      link.target = '_blank';
+      link.rel = 'noopener';
+      return;
+    }
+
+    if (!isApple) link.download = 'misbah-areeb-save-the-date.ics';
 
     if (typeof ICS_URL === 'string' && ICS_URL){
       link.href = ICS_URL;
