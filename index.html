@@ -1931,6 +1931,15 @@
     let starting = false;                  // a play() already in flight
     let pauseTimer = 0;                    // the fade-out's pending pause
 
+    // Whether this page has been touched yet, which is the only thing that
+    // makes resume() worth calling. Watched in the capture phase so it is true
+    // before any handler that might want to ask.
+    let gestured = false;
+    for (const type of ['pointerdown', 'mousedown', 'touchstart', 'keydown']){
+      addEventListener(type, () => { gestured = true; }, { capture: true, passive: true });
+    }
+    const activated = () => (navigator.userActivation ? navigator.userActivation.hasBeenActive : gestured);
+
     const ramp = (to, seconds) => {
       if (gain){
         const t = ctx.currentTime;
@@ -1985,16 +1994,34 @@
       else arm();
     }
 
-    // Awaited rather than fired and forgotten. resume() is a promise, and the
-    // old code read ctx.state on the line after calling it — which is the state
-    // before it resolves, so a context that was about to run looked suspended,
-    // and the fallback re-armed for a gesture it did not need.
+    // A context is allowed to start a moment after the gesture that allowed it,
+    // not on the line that asked. So the state settle() reads can still say
+    // suspended on the very call that fixed it, and the fallback stays armed
+    // against a problem that has already gone away. The flip is the reliable
+    // signal, so settle again on it.
+    if (ctx) ctx.addEventListener('statechange', () => {
+      if (ctx.state === 'running' && wanted && !music.paused) settle();
+    });
+
+    // resume() is not asked for before the page has been touched, and it is
+    // never awaited.
+    //
+    // Called before a gesture, Chrome returns a promise it never settles — not
+    // one it rejects, and not one the eventual gesture settles either. Awaiting
+    // that stranded play() short of music.play() for the life of the page:
+    // `starting` stayed true, so the fallback was never armed, every later call
+    // returned at the guard, and the chip went with it — one dead promise and
+    // the page has no way left to make a sound.
+    //
+    // Not calling it at all until there is a gesture is the other half. A
+    // request the browser is only going to park is worth nothing, and leaving
+    // one parked on the context is a state this does not need to be in.
     async function play(){
       if (!wanted || starting) return;
       starting = true;
       clearTimeout(pauseTimer);            // whatever asked for it, it is stale now
       try {
-        if (ctx && ctx.state !== 'running') await ctx.resume();
+        if (ctx && ctx.state !== 'running' && activated()) ctx.resume().catch(() => {});
         await music.play();
         settle();
       } catch {
