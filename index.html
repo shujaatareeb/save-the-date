@@ -1007,18 +1007,20 @@
     letter-spacing:.22em;
     text-indent:.22em;
     text-transform:uppercase;
-    /* darker than --hint, which is still what the secondary button uses. This
-       one has to carry across a whole envelope of paper, and it breathes down to
-       .42 opacity for half of every cycle, so its darkest is the only moment it
-       is fully legible */
-    color:#857d6a;
-    animation:breathe-hint 3.4s ease-in-out 1.2s infinite both;
+    /* Held still, and dark enough to be read while it is. It used to breathe
+       between .42 and 1 opacity, which spent half of every cycle under legible
+       and pulled the eye off the seal it was pointing at; the colour was picked
+       for the top of that pulse. Standing still it can sit at the page's own
+       ink, which is what it should have been reading as all along. */
+    color:var(--ink);
+    opacity:1;
   }
-  .env-flap-layer.opening ~ .open-hint{ opacity:0; transition:opacity .45s linear; animation:none; }
-  @keyframes breathe-hint{
-    0%,100%{ opacity:.42; }
-    50%    { opacity:1; }
-  }
+  /* Two ways the flap stops being something to tap: it opens, or it was never
+     offered — asking for less motion hands the card over with no envelope round
+     it at all. Only the first was covered, so that reader kept a "Tap to open"
+     pointing at nothing for as long as the page was up. */
+  .env-flap-layer.opening ~ .open-hint,
+  .env-flap-layer.gone ~ .open-hint{ opacity:0; transition:opacity .45s linear; }
 
   /* ---------- the sound chip ---------- */
 
