@@ -89,6 +89,15 @@ const BLOCKED_WEB_AUDIO = () => {
       const ctx = Reflect.construct(target, args);
       let allowed = false;
 
+      // Every gain node the page builds, so the assertions can ask the one
+      // question the element cannot answer: is any of this actually audible.
+      const nativeGain = ctx.createGain.bind(ctx);
+      ctx.createGain = () => {
+        const g = nativeGain();
+        (window.__gains || (window.__gains = [])).push(g);
+        return g;
+      };
+
       Object.defineProperty(ctx, 'state', {
         configurable: true,
         get: () => (allowed ? Reflect.get(Native.prototype, 'state', ctx) : 'suspended'),
@@ -122,19 +131,26 @@ const BLOCKED_WEB_AUDIO = () => {
 const sound = () => {
   const m = document.getElementById('music');
   const contexts = window.__contexts || [];
+  const gains = window.__gains || [];
   return {
     paused: m.paused,
     currentTime: m.currentTime,
     readyState: m.readyState,
     error: m.error && m.error.code,
     contexts: contexts.map((c) => c.state),
+    // Whichever of the two carries the level: the gain node once the graph is
+    // up, the element's own volume before that.
+    level: gains.length ? Math.max(...gains.map((g) => g.gain.value)) : m.volume,
   };
 };
 
 // Playing means the clock is moving, not merely that `paused` went false —
 // a stalled element reports both.
 const playing = (a, b) => !b.paused && b.currentTime > a.currentTime;
-const audible = (s) => s.contexts.every((state) => state === 'running');
+// Audible means a running context AND a level that has come up off the floor.
+// Music playing into a gain still sitting at 0 is silence that passes every
+// other check on this page.
+const audible = (s) => s.contexts.every((state) => state === 'running') && s.level > 0.1;
 
 async function observe(page, forSeconds = 5) {
   const deadline = Date.now() + forSeconds * 1000;
@@ -169,6 +185,15 @@ await page.waitForTimeout(600);
 const before = await page.evaluate(sound);
 report('silent before a gesture', before.paused === true, `paused=${before.paused}`);
 
+// And nothing is wired up yet either. A context built on an untouched page is
+// born suspended, and an element routed into a suspended context is stuck in a
+// way no later gesture reliably undoes — so the graph has to wait.
+report(
+  'builds no audio graph before a gesture',
+  before.contexts.length === 0,
+  `contexts=[${before.contexts}]`,
+);
+
 // The gesture. A guest's first touch is nearly always the seal or the scratch;
 // the backdrop is the same event with nothing else attached to it.
 await page.mouse.click(200, 700);
@@ -176,8 +201,14 @@ const first = await observe(page);
 report(
   'plays after the first gesture',
   first.ok,
-  `paused=${first.last.paused} currentTime=${first.last.currentTime.toFixed(2)} contexts=[${first.last.contexts}] readyState=${first.last.readyState}`,
+  `paused=${first.last.paused} currentTime=${first.last.currentTime.toFixed(2)} level=${first.last.level.toFixed(2)} contexts=[${first.last.contexts}]`,
 );
+
+// The ramp is 1.2s, and the check above passes the moment the level leaves the
+// floor. It also has to arrive.
+await page.waitForTimeout(1800);
+const full = await page.evaluate(sound);
+report('comes up to full level', full.level > 0.5, `level=${full.level.toFixed(2)}`);
 
 // The chip is the only way back from a mute, so a mute that cannot be undone
 // is worse than no chip.
@@ -188,7 +219,7 @@ const again = await observe(page);
 report(
   'comes back after mute and unmute',
   again.ok,
-  `paused=${again.last.paused} currentTime=${again.last.currentTime.toFixed(2)} contexts=[${again.last.contexts}]`,
+  `paused=${again.last.paused} currentTime=${again.last.currentTime.toFixed(2)} level=${again.last.level.toFixed(2)} contexts=[${again.last.contexts}]`,
 );
 
 await context.close();

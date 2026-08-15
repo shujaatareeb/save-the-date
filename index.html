@@ -1911,39 +1911,53 @@
     const chip  = document.getElementById('sound');
     const LEVEL = .62;
 
-    // iOS makes HTMLMediaElement.volume read-only, so a volume fade is silently
-    // ignored on exactly the devices this page is opened on most. Routing the
-    // element through a gain node is the one way to ramp it there; if any of it
-    // is unavailable, fall back to the plain property and let it no-op.
     let ctx = null, gain = null;
-    try {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (AC){
-        ctx  = new AC();
-        gain = ctx.createGain();
-        gain.gain.value = 0;
-        ctx.createMediaElementSource(music).connect(gain).connect(ctx.destination);
-      }
-    } catch { ctx = gain = null; }
-
-    if (!gain) music.volume = 0;
-
     let wanted = true;                     // what the visitor has asked for
     let armed = false;                     // gesture fallback listening?
     let starting = false;                  // a play() already in flight
     let pauseTimer = 0;                    // the fade-out's pending pause
 
-    // Whether this page has been touched yet, which is the only thing that
-    // makes resume() worth calling. Watched in the capture phase so it is true
-    // before any handler that might want to ask.
+    music.volume = 0;                      // until there is something to ramp
+
+    // Whether this page has been touched yet. Watched in the capture phase so
+    // it is already true by the time any handler asks.
     let gestured = false;
     for (const type of ['pointerdown', 'mousedown', 'touchstart', 'keydown']){
       addEventListener(type, () => { gestured = true; }, { capture: true, passive: true });
     }
     const activated = () => (navigator.userActivation ? navigator.userActivation.hasBeenActive : gestured);
 
+    // iOS makes HTMLMediaElement.volume read-only, so a volume fade is silently
+    // ignored on exactly the devices this page is opened on most. Routing the
+    // element through a gain node is the one way to ramp it there.
+    //
+    // The graph is built on the first gesture and never before it. Built at
+    // load, on a page nobody has touched yet, the context is born suspended and
+    // the element is wired into a sink that is not running — and an element in
+    // that state is not merely quiet, it is stuck: play() can resolve into
+    // silence, or not settle at all, and resume() hands back a promise the
+    // browser is entitled to leave pending forever. Built inside the gesture,
+    // the context is born running and none of those states exist.
+    function wire(){
+      if (ctx) return;
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        const c = new AC();
+        const g = c.createGain();
+        g.gain.value = 0;
+        c.createMediaElementSource(music).connect(g).connect(c.destination);
+        ctx = c;
+        gain = g;
+        music.volume = 1;                  // the gain node carries the level now
+        ctx.addEventListener('statechange', () => {
+          if (ctx.state === 'running' && wanted && !music.paused) settle();
+        });
+      } catch { ctx = gain = null; }
+    }
+
     const ramp = (to, seconds) => {
-      if (gain){
+      if (ctx && gain){
         const t = ctx.currentTime;
         gain.gain.cancelScheduledValues(t);
         gain.gain.setValueAtTime(gain.gain.value, t);
@@ -1963,7 +1977,14 @@
       pauseTimer = setTimeout(() => music.pause(), after);
     }
 
-    const kick = () => { play(); };
+    // The chip is not a gesture to start on. It is a window-level listener, so
+    // a tap on the chip reaches it too — and that tap would start the music a
+    // beat before the chip's own click turned it off, which reads as a mute
+    // button that does nothing the first time it is pressed.
+    const kick = e => {
+      if (e && e.target && e.target.closest && e.target.closest('#sound')) return;
+      play();
+    };
 
     // pointerdown alone where it exists. Registering touchstart beside it means
     // one tap on a phone calls play() twice, and the second call interrupts the
@@ -1985,45 +2006,35 @@
       for (const type of GESTURES) removeEventListener(type, kick);
     }
 
-    // Playing is not the same as audible. A context routed between the element
-    // and the speakers starts suspended under the same autoplay policy, and
-    // Chrome will happily resolve play() while it stays that way — which is
-    // silence with every success signal you could ask for. So the gesture
-    // fallback stays armed until the context is actually running.
+    // Playing is not the same as audible. A context between the element and the
+    // speakers that is not running is silence with every success signal you
+    // could ask for, so the fallback stays armed until the context says it is
+    // running — and the statechange above settles again if that arrives late.
     function settle(){
       ramp(LEVEL, 1.2);
       if (!ctx || ctx.state === 'running') disarm();
       else arm();
     }
 
-    // A context is allowed to start a moment after the gesture that allowed it,
-    // not on the line that asked. So the state settle() reads can still say
-    // suspended on the very call that fixed it, and the fallback stays armed
-    // against a problem that has already gone away. The flip is the reliable
-    // signal, so settle again on it.
-    if (ctx) ctx.addEventListener('statechange', () => {
-      if (ctx.state === 'running' && wanted && !music.paused) settle();
-    });
-
-    // resume() is not asked for before the page has been touched, and it is
-    // never awaited.
+    // Before the first gesture this plays the element on its own and lets the
+    // browser refuse, which is the cheap way to catch the visitor who is
+    // allowed to hear it immediately — a return visit, or a browser that has
+    // decided this page has earned it. The refusal costs nothing and arms the
+    // fallback.
     //
-    // Called before a gesture, Chrome returns a promise it never settles — not
-    // one it rejects, and not one the eventual gesture settles either. Awaiting
-    // that stranded play() short of music.play() for the life of the page:
-    // `starting` stayed true, so the fallback was never armed, every later call
-    // returned at the guard, and the chip went with it — one dead promise and
-    // the page has no way left to make a sound.
-    //
-    // Not calling it at all until there is a gesture is the other half. A
-    // request the browser is only going to park is worth nothing, and leaving
-    // one parked on the context is a state this does not need to be in.
+    // From the gesture onward the graph exists, and resume() is fired rather
+    // than awaited: called on a context the policy has blocked, Chrome returns
+    // a promise it never settles, and awaiting that stranded play() short of
+    // music.play() for the life of the page. `starting` stayed true, the
+    // fallback was never armed, and every later call — the chip included —
+    // returned at the guard on the first line.
     async function play(){
       if (!wanted || starting) return;
       starting = true;
       clearTimeout(pauseTimer);            // whatever asked for it, it is stale now
       try {
-        if (ctx && ctx.state !== 'running' && activated()) ctx.resume().catch(() => {});
+        if (activated()) wire();           // only ever inside a gesture
+        if (ctx && ctx.state !== 'running') ctx.resume().catch(() => {});
         await music.play();
         settle();
       } catch {
