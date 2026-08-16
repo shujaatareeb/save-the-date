@@ -549,6 +549,66 @@
   .hint.show{ opacity:1; }
   .hint.gone{ opacity:0; }
 
+  /* The hint and the place are the same line of the composition said twice —
+     what to do, and then where it is — so they share one cell rather than
+     following each other down the sheet. Stacked in a grid, the swap costs no
+     height: a second line in the colophon would be blank stock under the hint
+     for the whole first half of the page, and the stack is sized against what
+     it actually needs. */
+  .tagline{ display:grid; }
+  .tagline > *{ grid-area:1 / 1; }
+
+  /* The hint's register, a step darker: this is the invitation still talking,
+     not an instruction about it. Held the same full second as the calendar
+     button, for the same reason — the date has to land on its own before
+     anything else about the day arrives. */
+  .venue{
+    margin:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:.52em;
+    /* The letter-space is added after the last glyph as well as between them,
+       so centring the box sets the ink half a space left of centre. Padding on
+       the leading edge shifts the content by half of itself, which is exactly
+       that half back. (.hint answers the same trailing space with text-indent;
+       a flex container has no first line to indent.) */
+    padding-left:.22em;
+    font-size:clamp(10px, 2.6cqw, 12px);
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:#5c5545;
+    opacity:0;
+    /* Leaving takes no delay — on "scratch again" the hint is already coming
+       back into this same cell, and a place that waited a second to go would
+       be lying on top of the instruction that replaced it. */
+    transition:opacity .42s var(--ease);
+  }
+  .card.revealed .venue{
+    opacity:1;
+    transition:opacity .62s var(--ease) 1s;
+  }
+
+  /* Sized in em so it holds its proportion against type that is itself clamped
+     between 10 and 12px. Drawn rather than set: at this size a glyph pin would
+     carry whatever weight the fallback font gave it, and stroke is the one way
+     to keep it as light as the hairline rule above. */
+  .venue svg{
+    /* The box is the drawing, not a 24-unit square with the pin sitting small
+       in the middle of it — the viewBox is cropped to the outline plus half a
+       stroke, so these two numbers are the size the pin actually renders at.
+       Its own proportion, or the crop would letterbox and give the space back. */
+    height:.96em;
+    width:.745em;
+    flex:none;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:1.7;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    opacity:.82;
+  }
+
   /* Held back a full second after the reveal, then floated up. The date has to
      land on its own first — arriving with it would make the calendar button
      part of the surprise instead of what you do about it. */
@@ -1185,7 +1245,17 @@
       <!-- The instruction belongs with the thing it is about. Below the card it
            was a caption for the page, a hundred-odd pixels of blank sheet away
            from the last line of the invitation and reading as neither. -->
-      <p class="hint" id="hint">Scratch the heart</p>
+      <div class="tagline">
+        <p class="hint" id="hint">Scratch the heart</p>
+        <!-- Takes the hint's place rather than a line of its own; see .tagline. -->
+        <p class="venue">
+          <svg viewBox="4.55 2.95 14.9 19.2" aria-hidden="true">
+            <path d="M12 21.3c4.4-4.3 6.6-7.8 6.6-10.6a6.6 6.6 0 0 0-13.2 0c0 2.8 2.2 6.3 6.6 10.6Z"/>
+            <circle cx="12" cy="10.4" r="2.5"/>
+          </svg>
+          Mumbai, India
+        </p>
+      </div>
     </div>
   </div>
 </main>
