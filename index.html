@@ -5,7 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Misbah &amp; Areeb — Save the Date</title>
 <meta name="description" content="Misbah &amp; Areeb invite you to celebrate their wedding on 10.10.26. Scratch the gold heart to reveal the date.">
-<meta name="robots" content="noindex,nofollow">
+<!-- Named crawlers, not `robots`. The page is meant to stay out of a search
+     result — it has two people's names and the date they are getting married
+     on it — but `name="robots"` says that to everything that fetches a page,
+     and the things that build link previews are crawlers too. Slack, Apple and
+     Meta all read a blanket noindex as "leave this page alone", which is why a
+     link pasted into a chat arrived as bare blue text with no card at all.
+
+     Deliberately no robots.txt to go with this: a Disallow would stop Google
+     fetching the page, and a page it cannot fetch is a page whose noindex it
+     cannot read — the URL can then still surface, bare. Letting it in and
+     telling it not to keep anything is what actually keeps it out. -->
+<meta name="googlebot" content="noindex,nofollow">
+<meta name="bingbot" content="noindex,nofollow">
 <meta name="theme-color" content="#e2ded2">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Misbah &amp; Areeb — Save the Date">
