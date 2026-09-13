@@ -18,7 +18,7 @@ export function unescapeJsString(s) {
     if (brace) return String.fromCodePoint(parseInt(brace, 16));
     if (u4) return String.fromCharCode(parseInt(u4, 16));
     if (x2) return String.fromCharCode(parseInt(x2, 16));
-    if (ch === '\r\n' || ch === '\n' || ch === '\r' || ch === ' ' || ch === ' ') return ''; // line continuation
+    if (ch === '\r\n' || ch === '\n' || ch === '\r' || ch === '\u2028' || ch === '\u2029') return ''; // line continuation
     return SIMPLE_ESCAPES[ch] ?? ch; // \' \" \\ \/ and anything else stand for themselves
   });
 }
