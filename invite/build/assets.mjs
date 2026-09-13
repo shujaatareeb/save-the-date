@@ -91,14 +91,14 @@ async function encodeStill(src, maxWidth, naturalWidth) {
   if (!fs.existsSync(out)) {
     const target = Math.min(naturalWidth, Math.ceil(maxWidth * 2));
     const vf = target < naturalWidth ? ['-vf', `scale=${target}:-2`] : [];
-    await ffmpeg(['-i', src, ...vf, '-c:v', 'libwebp', '-quality', '88', '-compression_level', '6', out]);
+    await ffmpeg(['-i', src, ...vf, '-c:v', 'libwebp', '-quality', '80', '-compression_level', '6', out]);
   }
   return out;
 }
 
 async function encodeAnimated(src) {
   const out = path.join(ASSETS, hashName(src, '.webp'));
-  if (!fs.existsSync(out)) await ffmpeg(['-i', src, '-vf', 'scale=800:-2', '-c:v', 'libwebp_anim', '-loop', '0', '-quality', '75', '-an', out]);
+  if (!fs.existsSync(out)) await ffmpeg(['-i', src, '-vf', 'scale=640:-2', '-c:v', 'libwebp_anim', '-loop', '0', '-quality', '60', '-an', out]);
   return out;
 }
 
