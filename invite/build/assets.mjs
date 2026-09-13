@@ -18,11 +18,12 @@ import { SITE } from './fetch.mjs';
 const run = promisify(execFile);
 export const ffmpeg = async (args) => { await run(ffmpegPath, ['-hide_banner', '-loglevel', 'error', '-y', ...args]); };
 
-const STYLE_WEIGHTS = { THIN: 100, EXTRA_LIGHT: 200, LIGHT: 300, REGULAR: 400, MEDIUM: 500, SEMI_BOLD: 600, BOLD: 700, EXTRA_BOLD: 800, BLACK: 900, HEAVY: 900 };
+const STYLE_WEIGHTS = { THIN: 100, EXTRA_LIGHT: 200, ULTRA_LIGHT: 200, LIGHT: 300, REGULAR: 400, MEDIUM: 500, SEMI_BOLD: 600, BOLD: 700, EXTRA_BOLD: 800, ULTRA_BOLD: 800, BLACK: 900, HEAVY: 900 };
 export function styleToFace(style) {
   const italic = /ITALIC/.test(style);
   const base = style.replace(/_?ITALICS?$/, '') || 'REGULAR';
-  return { weight: STYLE_WEIGHTS[base] ?? 400, italic };
+  if (!(base in STYLE_WEIGHTS)) throw new Error(`unknown font style ${style}`);
+  return { weight: STYLE_WEIGHTS[base], italic };
 }
 
 const walk = (els, fn, scale = 1) => {
@@ -108,6 +109,18 @@ async function encodeVideo(src) {
   return out;
 }
 
+// Bytes a single page pulls: its media plus the font faces its text uses.
+export function pageBytes(model, manifest, slug) {
+  const page = model.pages.find((p) => p.slug === slug);
+  const sub = { ...model, pages: [page] };
+  const files = new Set();
+  for (const id of usedMedia(sub).keys()) { const m = manifest.media[id]; files.add(m.src); if (m.poster) files.add(m.poster); }
+  for (const face of planFonts(sub)) files.add(manifest.fonts[face.key].src);
+  let total = 0;
+  for (const f of files) total += fs.statSync(path.join(INVITE, f)).size;
+  return total;
+}
+
 export async function buildAssets(model) {
   fs.mkdirSync(ASSETS, { recursive: true });
   const manifest = { media: {}, fonts: {} };
@@ -141,4 +154,7 @@ if (isMain(import.meta.url)) {
   const total = fs.readdirSync(ASSETS, { recursive: true }).reduce((n, f) => { const p = path.join(ASSETS, f); return n + (fs.statSync(p).isFile() ? fs.statSync(p).size : 0); }, 0);
   console.log(`media=${Object.keys(manifest.media).length} fonts=${Object.keys(manifest.fonts).length} assets=${(total / 1e6).toFixed(1)}MB`);
   if (total > 12e6) { console.error('assets exceed the 12 MB budget'); process.exit(1); }
+  const envelope = pageBytes(model, manifest, 'envelope');
+  console.log(`envelope page ${(envelope / 1e6).toFixed(2)}MB`);
+  if (envelope > 1.5e6) { console.error('envelope page exceeds the 1.5 MB budget'); process.exit(1); }
 }
