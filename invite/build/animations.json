@@ -1,0 +1,6296 @@
+{
+ "LBBcjtxjzZv8KTTD": {
+  "effect": 2,
+  "startMs": 42,
+  "durationMs": 2609,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.29,
+    "scale": 1.018,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.048,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.33,
+    "scale": 1.025,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.107,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.34,
+    "scale": 1.029,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.157,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.33,
+    "scale": 1.028,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.215,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.3,
+    "scale": 1.026,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.26,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.29,
+    "scale": 1.024,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.323,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.26,
+    "scale": 1.022,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.368,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.25,
+    "scale": 1.021,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.413,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.23,
+    "scale": 1.019,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.476,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.2,
+    "scale": 1.017,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.522,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.18,
+    "scale": 1.015,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.584,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.16,
+    "scale": 1.014,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.63,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.14,
+    "scale": 1.012,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.674,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.13,
+    "scale": 1.011,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.735,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.1,
+    "scale": 1.009,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.783,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.08,
+    "scale": 1.007,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.844,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.06,
+    "scale": 1.005,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.892,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.04,
+    "scale": 1.003,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.95,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.02,
+    "scale": 1.001,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LB6qlSVh3zzcqk96": {
+  "effect": 2,
+  "startMs": 42,
+  "durationMs": 2609,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.8,
+    "scale": 1.018,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.048,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -2.02,
+    "scale": 1.025,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.107,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -2.13,
+    "scale": 1.029,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.157,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -2.02,
+    "scale": 1.028,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.215,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.87,
+    "scale": 1.026,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.26,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.76,
+    "scale": 1.024,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.323,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.61,
+    "scale": 1.022,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.368,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.51,
+    "scale": 1.021,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.413,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.39,
+    "scale": 1.019,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.476,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.25,
+    "scale": 1.017,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.522,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.13,
+    "scale": 1.015,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.584,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.99,
+    "scale": 1.014,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.63,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.87,
+    "scale": 1.012,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.674,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.78,
+    "scale": 1.011,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.735,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.62,
+    "scale": 1.009,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.783,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.52,
+    "scale": 1.007,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.844,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.36,
+    "scale": 1.005,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.892,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.25,
+    "scale": 1.003,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.95,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.1,
+    "scale": 1.001,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBq7bt3xrnV5lSC1": {
+  "effect": 26,
+  "startMs": 42,
+  "durationMs": 2961,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": -58.16,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.053,
+    "opacity": 1,
+    "dx": -49.79,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.111,
+    "opacity": 1,
+    "dx": -40.72,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.161,
+    "opacity": 1,
+    "dx": -34.17,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.217,
+    "opacity": 1,
+    "dx": -28.32,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.257,
+    "opacity": 1,
+    "dx": -23.79,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.313,
+    "opacity": 1,
+    "dx": -18.79,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.364,
+    "opacity": 1,
+    "dx": -14.94,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.419,
+    "opacity": 1,
+    "dx": -11.66,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.472,
+    "opacity": 1,
+    "dx": -8.61,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.527,
+    "opacity": 1,
+    "dx": -6.16,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.584,
+    "opacity": 1,
+    "dx": -4.22,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.635,
+    "opacity": 1,
+    "dx": -2.86,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.69,
+    "opacity": 1,
+    "dx": -1.84,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.743,
+    "opacity": 1,
+    "dx": -1.02,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.786,
+    "opacity": 1,
+    "dx": -0.62,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.837,
+    "opacity": 1,
+    "dx": -0.26,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.892,
+    "opacity": 1,
+    "dx": -0.09,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.945,
+    "opacity": 1,
+    "dx": -0.01,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBQNJvG60twpqJkW": {
+  "effect": 26,
+  "startMs": 42,
+  "durationMs": 3044,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": -132.91,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.052,
+    "opacity": 1,
+    "dx": -114.39,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.108,
+    "opacity": 1,
+    "dx": -94.23,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.157,
+    "opacity": 1,
+    "dx": -79.59,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.212,
+    "opacity": 1,
+    "dx": -66.47,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.263,
+    "opacity": 1,
+    "dx": -53.81,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.316,
+    "opacity": 1,
+    "dx": -43.85,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.367,
+    "opacity": 1,
+    "dx": -34.36,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.42,
+    "opacity": 1,
+    "dx": -26.3,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.474,
+    "opacity": 1,
+    "dx": -19.61,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.526,
+    "opacity": 1,
+    "dx": -14.66,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.578,
+    "opacity": 1,
+    "dx": -10.63,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.63,
+    "opacity": 1,
+    "dx": -7.11,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.683,
+    "opacity": 1,
+    "dx": -4.46,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.737,
+    "opacity": 1,
+    "dx": -2.56,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.791,
+    "opacity": 1,
+    "dx": -1.41,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.841,
+    "opacity": 1,
+    "dx": -0.6,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.893,
+    "opacity": 1,
+    "dx": -0.21,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.945,
+    "opacity": 1,
+    "dx": -0.03,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBQT2HJSy9LM987t": {
+  "effect": 2,
+  "startMs": 42,
+  "durationMs": 2609,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 1.22,
+    "scale": 1.018,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.048,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 1.37,
+    "scale": 1.025,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.107,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 1.44,
+    "scale": 1.029,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.157,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 1.37,
+    "scale": 1.028,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.215,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 1.27,
+    "scale": 1.026,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.26,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 1.19,
+    "scale": 1.024,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.323,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 1.09,
+    "scale": 1.022,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.368,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 1.03,
+    "scale": 1.021,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.413,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.94,
+    "scale": 1.019,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.476,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.85,
+    "scale": 1.017,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.522,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.77,
+    "scale": 1.015,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.584,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.67,
+    "scale": 1.014,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.63,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.59,
+    "scale": 1.012,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.674,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.53,
+    "scale": 1.011,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.735,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.42,
+    "scale": 1.009,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.783,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.35,
+    "scale": 1.007,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.844,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.25,
+    "scale": 1.005,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.892,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.17,
+    "scale": 1.003,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.95,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.07,
+    "scale": 1.001,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBrC6ChVnFnyKTVx": {
+  "effect": null,
+  "startMs": 42,
+  "durationMs": 5961,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0.952,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.047,
+    "opacity": 0.639,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.121,
+    "opacity": 0.399,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.169,
+    "opacity": 0.808,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.214,
+    "opacity": 0.783,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.255,
+    "opacity": 0.445,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.329,
+    "opacity": 0.616,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.369,
+    "opacity": 0.954,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.416,
+    "opacity": 0.637,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.497,
+    "opacity": 0.47,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.537,
+    "opacity": 0.808,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.583,
+    "opacity": 0.783,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.631,
+    "opacity": 0.373,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.698,
+    "opacity": 0.614,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.745,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.785,
+    "opacity": 0.639,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.865,
+    "opacity": 0.448,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.912,
+    "opacity": 0.856,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.953,
+    "opacity": 0.782,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 0.375,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBcnJcGX70hSMkpn": {
+  "effect": 2,
+  "startMs": 42,
+  "durationMs": 2609,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.44,
+    "scale": 1.018,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.048,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.62,
+    "scale": 1.025,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.107,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.71,
+    "scale": 1.029,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.157,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.62,
+    "scale": 1.028,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.215,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.5,
+    "scale": 1.026,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.26,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.41,
+    "scale": 1.024,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.323,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.29,
+    "scale": 1.022,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.368,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.21,
+    "scale": 1.021,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.413,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.12,
+    "scale": 1.019,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.476,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1,
+    "scale": 1.017,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.522,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.91,
+    "scale": 1.015,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.584,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.8,
+    "scale": 1.014,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.63,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.7,
+    "scale": 1.012,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.674,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.62,
+    "scale": 1.011,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.735,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.5,
+    "scale": 1.009,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.783,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.41,
+    "scale": 1.007,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.844,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.29,
+    "scale": 1.005,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.892,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.2,
+    "scale": 1.003,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.95,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.08,
+    "scale": 1.001,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBlqq7YKXXT8k9V4": {
+  "effect": 8,
+  "startMs": 43,
+  "durationMs": 78,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0.999,
+    "dx": 0,
+    "dy": 0.07,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.5,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBMv0klX8Xzpfvsc": {
+  "effect": 8,
+  "startMs": 43,
+  "durationMs": 596,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0.693,
+    "dx": 0,
+    "dy": -24.56,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.065,
+    "opacity": 0.73,
+    "dx": 0,
+    "dy": -21.63,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.131,
+    "opacity": 0.763,
+    "dx": 0,
+    "dy": -18.98,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.206,
+    "opacity": 0.809,
+    "dx": 0,
+    "dy": -15.28,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.262,
+    "opacity": 0.838,
+    "dx": 0,
+    "dy": -13,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.344,
+    "opacity": 0.875,
+    "dx": 0,
+    "dy": -10.03,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.401,
+    "opacity": 0.898,
+    "dx": 0,
+    "dy": -8.19,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.473,
+    "opacity": 0.918,
+    "dx": 0,
+    "dy": -6.55,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.54,
+    "opacity": 0.944,
+    "dx": 0,
+    "dy": -4.5,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.597,
+    "opacity": 0.959,
+    "dx": 0,
+    "dy": -3.3,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.681,
+    "opacity": 0.977,
+    "dx": 0,
+    "dy": -1.87,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.737,
+    "opacity": 0.986,
+    "dx": 0,
+    "dy": -1.15,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.814,
+    "opacity": 0.995,
+    "dx": 0,
+    "dy": -0.38,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.876,
+    "opacity": 0.999,
+    "dx": 0,
+    "dy": -0.11,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.931,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBx2hFJCMqCggSF4": {
+  "effect": 2,
+  "startMs": 43,
+  "durationMs": 2599,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.04,
+    "scale": 0.993,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.047,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.05,
+    "scale": 1.001,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.109,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.06,
+    "scale": 1.011,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.156,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.08,
+    "scale": 1.019,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.214,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.09,
+    "scale": 1.029,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.263,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.09,
+    "scale": 1.028,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.322,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.08,
+    "scale": 1.026,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.368,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.07,
+    "scale": 1.024,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.417,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.07,
+    "scale": 1.023,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.477,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.06,
+    "scale": 1.02,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.521,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.06,
+    "scale": 1.018,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.585,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.05,
+    "scale": 1.016,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.63,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.04,
+    "scale": 1.014,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.676,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.04,
+    "scale": 1.012,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.737,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.03,
+    "scale": 1.01,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.784,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.02,
+    "scale": 1.008,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.846,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.02,
+    "scale": 1.006,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.891,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.01,
+    "scale": 1.004,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.953,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.002,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBgGJ9RCQ67C4FZq": {
+  "effect": null,
+  "startMs": 43,
+  "durationMs": 1355,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.49,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.176,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.27,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.238,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.14,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.263,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.38,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.324,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.25,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.358,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.22,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.41,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.23,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.44,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.14,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.504,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.42,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.534,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.32,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.593,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.03,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.618,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.05,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.681,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.1,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.706,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.08,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.767,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.799,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.02,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.889,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.02,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.914,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.02,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.976,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBRj93yjdcNcCWG8": {
+  "effect": 2,
+  "startMs": 43,
+  "durationMs": 2599,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.4,
+    "scale": 0.993,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.047,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.5,
+    "scale": 1.001,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.109,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.64,
+    "scale": 1.011,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.156,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.76,
+    "scale": 1.019,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.214,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.9,
+    "scale": 1.029,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.263,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.86,
+    "scale": 1.028,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.322,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.8,
+    "scale": 1.026,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.368,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.74,
+    "scale": 1.024,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.417,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.69,
+    "scale": 1.023,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.477,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.61,
+    "scale": 1.02,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.521,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.56,
+    "scale": 1.018,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.585,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.48,
+    "scale": 1.016,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.63,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.43,
+    "scale": 1.014,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.676,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.37,
+    "scale": 1.012,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.737,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.3,
+    "scale": 1.01,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.784,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.24,
+    "scale": 1.008,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.846,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.17,
+    "scale": 1.006,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.891,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.12,
+    "scale": 1.004,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.953,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.05,
+    "scale": 1.002,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBQXXfYqhNRnkrRP": {
+  "effect": 2,
+  "startMs": 43,
+  "durationMs": 2599,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.37,
+    "scale": 0.993,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.047,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.47,
+    "scale": 1.001,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.109,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.6,
+    "scale": 1.011,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.156,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.71,
+    "scale": 1.019,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.214,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.84,
+    "scale": 1.029,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.263,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.8,
+    "scale": 1.028,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.322,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.74,
+    "scale": 1.026,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.368,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.69,
+    "scale": 1.024,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.417,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.64,
+    "scale": 1.023,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.477,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.57,
+    "scale": 1.02,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.521,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.52,
+    "scale": 1.018,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.585,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.45,
+    "scale": 1.016,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.63,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.4,
+    "scale": 1.014,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.676,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.35,
+    "scale": 1.012,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.737,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.28,
+    "scale": 1.01,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.784,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.23,
+    "scale": 1.008,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.846,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.16,
+    "scale": 1.006,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.891,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.11,
+    "scale": 1.004,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.953,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.04,
+    "scale": 1.002,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBP8p2kGBc4C50Gn": {
+  "effect": 31,
+  "startMs": 0,
+  "durationMs": 7407,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.75,
+    "blur": 24,
+    "clip": null
+   },
+   {
+    "t": 0.935,
+    "opacity": 0.172,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.793,
+    "blur": 19.87,
+    "clip": null
+   },
+   {
+    "t": 0.94,
+    "opacity": 0.291,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.823,
+    "blur": 17.02,
+    "clip": null
+   },
+   {
+    "t": 0.945,
+    "opacity": 0.398,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.849,
+    "blur": 14.45,
+    "clip": null
+   },
+   {
+    "t": 0.951,
+    "opacity": 0.54,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.885,
+    "blur": 11.03,
+    "clip": null
+   },
+   {
+    "t": 0.957,
+    "opacity": 0.668,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.917,
+    "blur": 7.96,
+    "clip": null
+   },
+   {
+    "t": 0.962,
+    "opacity": 0.74,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.935,
+    "blur": 6.24,
+    "clip": null
+   },
+   {
+    "t": 0.966,
+    "opacity": 0.805,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.951,
+    "blur": 4.69,
+    "clip": null
+   },
+   {
+    "t": 0.973,
+    "opacity": 0.883,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.971,
+    "blur": 2.81,
+    "clip": null
+   },
+   {
+    "t": 0.978,
+    "opacity": 0.924,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.981,
+    "blur": 1.83,
+    "clip": null
+   },
+   {
+    "t": 0.983,
+    "opacity": 0.957,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.989,
+    "blur": 1.04,
+    "clip": null
+   },
+   {
+    "t": 0.989,
+    "opacity": 0.988,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.997,
+    "blur": 0.29,
+    "clip": null
+   },
+   {
+    "t": 0.994,
+    "opacity": 0.998,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0.04,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBRqrqZXJ2xTTnKg": {
+  "effect": null,
+  "startMs": 0,
+  "durationMs": 23961,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.068,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.29,
+    "opacity": 0.765,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.108,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.329,
+    "opacity": 0.525,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.144,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.369,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.215,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.409,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.191,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.447,
+    "opacity": 0.562,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.175,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.487,
+    "opacity": 0.779,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.128,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.526,
+    "opacity": 0.98,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.566,
+    "opacity": 0.763,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.061,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.606,
+    "opacity": 0.571,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.015,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.645,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.006,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.684,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.97,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.724,
+    "opacity": 0.515,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.949,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.763,
+    "opacity": 0.754,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.937,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.803,
+    "opacity": 0.973,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.923,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.841,
+    "opacity": 0.763,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.92,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.881,
+    "opacity": 0.57,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.91,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.921,
+    "opacity": 0.353,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.91,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.96,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.947,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 0.515,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LB7KNXNdyg4sxl4b": {
+  "effect": 24,
+  "startMs": 0,
+  "durationMs": 6758,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LB4Y2RWwTV5nNnQL": {
+  "effect": 31,
+  "startMs": 0,
+  "durationMs": 6608,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.75,
+    "blur": 24,
+    "clip": null
+   },
+   {
+    "t": 0.921,
+    "opacity": 0.016,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.754,
+    "blur": 23.62,
+    "clip": null
+   },
+   {
+    "t": 0.926,
+    "opacity": 0.143,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.786,
+    "blur": 20.58,
+    "clip": null
+   },
+   {
+    "t": 0.932,
+    "opacity": 0.26,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.815,
+    "blur": 17.75,
+    "clip": null
+   },
+   {
+    "t": 0.939,
+    "opacity": 0.425,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.856,
+    "blur": 13.79,
+    "clip": null
+   },
+   {
+    "t": 0.945,
+    "opacity": 0.521,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.88,
+    "blur": 11.49,
+    "clip": null
+   },
+   {
+    "t": 0.95,
+    "opacity": 0.608,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.902,
+    "blur": 9.41,
+    "clip": null
+   },
+   {
+    "t": 0.957,
+    "opacity": 0.723,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.931,
+    "blur": 6.64,
+    "clip": null
+   },
+   {
+    "t": 0.962,
+    "opacity": 0.788,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.947,
+    "blur": 5.08,
+    "clip": null
+   },
+   {
+    "t": 0.97,
+    "opacity": 0.872,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.968,
+    "blur": 3.08,
+    "clip": null
+   },
+   {
+    "t": 0.975,
+    "opacity": 0.915,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.979,
+    "blur": 2.05,
+    "clip": null
+   },
+   {
+    "t": 0.98,
+    "opacity": 0.949,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.987,
+    "blur": 1.23,
+    "clip": null
+   },
+   {
+    "t": 0.987,
+    "opacity": 0.984,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.996,
+    "blur": 0.38,
+    "clip": null
+   },
+   {
+    "t": 0.992,
+    "opacity": 0.996,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.999,
+    "blur": 0.09,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LB5vKDMjMg75DrHY": {
+  "effect": 31,
+  "startMs": 0,
+  "durationMs": 7241,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.75,
+    "blur": 24,
+    "clip": null
+   },
+   {
+    "t": 0.862,
+    "opacity": 0.044,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.761,
+    "blur": 22.96,
+    "clip": null
+   },
+   {
+    "t": 0.873,
+    "opacity": 0.199,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.8,
+    "blur": 19.22,
+    "clip": null
+   },
+   {
+    "t": 0.878,
+    "opacity": 0.257,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.814,
+    "blur": 17.83,
+    "clip": null
+   },
+   {
+    "t": 0.885,
+    "opacity": 0.342,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.836,
+    "blur": 15.79,
+    "clip": null
+   },
+   {
+    "t": 0.895,
+    "opacity": 0.445,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.861,
+    "blur": 13.32,
+    "clip": null
+   },
+   {
+    "t": 0.901,
+    "opacity": 0.517,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.879,
+    "blur": 11.59,
+    "clip": null
+   },
+   {
+    "t": 0.913,
+    "opacity": 0.625,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.906,
+    "blur": 8.99,
+    "clip": null
+   },
+   {
+    "t": 0.917,
+    "opacity": 0.665,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.916,
+    "blur": 8.05,
+    "clip": null
+   },
+   {
+    "t": 0.922,
+    "opacity": 0.703,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.926,
+    "blur": 7.13,
+    "clip": null
+   },
+   {
+    "t": 0.933,
+    "opacity": 0.787,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.947,
+    "blur": 5.12,
+    "clip": null
+   },
+   {
+    "t": 0.94,
+    "opacity": 0.83,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.958,
+    "blur": 4.07,
+    "clip": null
+   },
+   {
+    "t": 0.945,
+    "opacity": 0.856,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.964,
+    "blur": 3.45,
+    "clip": null
+   },
+   {
+    "t": 0.956,
+    "opacity": 0.913,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.978,
+    "blur": 2.09,
+    "clip": null
+   },
+   {
+    "t": 0.961,
+    "opacity": 0.932,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.983,
+    "blur": 1.63,
+    "clip": null
+   },
+   {
+    "t": 0.972,
+    "opacity": 0.968,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.992,
+    "blur": 0.77,
+    "clip": null
+   },
+   {
+    "t": 0.979,
+    "opacity": 0.984,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.996,
+    "blur": 0.39,
+    "clip": null
+   },
+   {
+    "t": 0.984,
+    "opacity": 0.991,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.998,
+    "blur": 0.22,
+    "clip": null
+   },
+   {
+    "t": 0.995,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBpx4R6Jb5dzwf96": {
+  "effect": 31,
+  "startMs": 0,
+  "durationMs": 7157,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.75,
+    "blur": 24,
+    "clip": null
+   },
+   {
+    "t": 0.86,
+    "opacity": 0.008,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.752,
+    "blur": 23.81,
+    "clip": null
+   },
+   {
+    "t": 0.872,
+    "opacity": 0.168,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.792,
+    "blur": 19.96,
+    "clip": null
+   },
+   {
+    "t": 0.877,
+    "opacity": 0.227,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.807,
+    "blur": 18.54,
+    "clip": null
+   },
+   {
+    "t": 0.884,
+    "opacity": 0.313,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.828,
+    "blur": 16.49,
+    "clip": null
+   },
+   {
+    "t": 0.895,
+    "opacity": 0.445,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.861,
+    "blur": 13.32,
+    "clip": null
+   },
+   {
+    "t": 0.9,
+    "opacity": 0.493,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.873,
+    "blur": 12.17,
+    "clip": null
+   },
+   {
+    "t": 0.912,
+    "opacity": 0.604,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.901,
+    "blur": 9.5,
+    "clip": null
+   },
+   {
+    "t": 0.916,
+    "opacity": 0.645,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.911,
+    "blur": 8.53,
+    "clip": null
+   },
+   {
+    "t": 0.923,
+    "opacity": 0.702,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.925,
+    "blur": 7.15,
+    "clip": null
+   },
+   {
+    "t": 0.933,
+    "opacity": 0.771,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.943,
+    "blur": 5.51,
+    "clip": null
+   },
+   {
+    "t": 0.939,
+    "opacity": 0.816,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.954,
+    "blur": 4.42,
+    "clip": null
+   },
+   {
+    "t": 0.944,
+    "opacity": 0.843,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.961,
+    "blur": 3.76,
+    "clip": null
+   },
+   {
+    "t": 0.956,
+    "opacity": 0.902,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.976,
+    "blur": 2.35,
+    "clip": null
+   },
+   {
+    "t": 0.962,
+    "opacity": 0.922,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.981,
+    "blur": 1.87,
+    "clip": null
+   },
+   {
+    "t": 0.972,
+    "opacity": 0.962,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.99,
+    "blur": 0.91,
+    "clip": null
+   },
+   {
+    "t": 0.978,
+    "opacity": 0.974,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.993,
+    "blur": 0.63,
+    "clip": null
+   },
+   {
+    "t": 0.984,
+    "opacity": 0.987,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.997,
+    "blur": 0.31,
+    "clip": null
+   },
+   {
+    "t": 0.995,
+    "opacity": 0.999,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0.02,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBwySg2vwJKtFn3Y": {
+  "effect": 2,
+  "startMs": 0,
+  "durationMs": 15035,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0,
+    "dx": 0,
+    "dy": 1.5,
+    "scale": 0.9,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.431,
+    "opacity": 0.431,
+    "dx": 0,
+    "dy": 1.2,
+    "scale": 0.913,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.463,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.88,
+    "scale": 0.927,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.495,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.55,
+    "scale": 0.941,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.527,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.23,
+    "scale": 0.955,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.556,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.06,
+    "scale": 0.968,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.589,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.39,
+    "scale": 0.982,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.62,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.7,
+    "scale": 0.995,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.652,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.02,
+    "scale": 1.009,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.684,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.34,
+    "scale": 1.023,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.716,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.42,
+    "scale": 1.028,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.747,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.26,
+    "scale": 1.025,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.779,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.1,
+    "scale": 1.022,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.811,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.94,
+    "scale": 1.019,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.843,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.78,
+    "scale": 1.016,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.872,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.63,
+    "scale": 1.013,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.904,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.47,
+    "scale": 1.009,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.936,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.32,
+    "scale": 1.006,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.969,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.15,
+    "scale": 1.003,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBPd0b8jpV6kLTdB": {
+  "effect": 2,
+  "startMs": 0,
+  "durationMs": 15035,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0,
+    "dx": 0,
+    "dy": 3.11,
+    "scale": 0.9,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.431,
+    "opacity": 0.613,
+    "dx": 0,
+    "dy": 2.48,
+    "scale": 0.913,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.463,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 1.81,
+    "scale": 0.927,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.495,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 1.15,
+    "scale": 0.941,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.527,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.48,
+    "scale": 0.955,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.556,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.12,
+    "scale": 0.968,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.589,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.81,
+    "scale": 0.982,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.62,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.46,
+    "scale": 0.995,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.652,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -2.12,
+    "scale": 1.009,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.684,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -2.77,
+    "scale": 1.023,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.716,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -2.93,
+    "scale": 1.028,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.747,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -2.61,
+    "scale": 1.025,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.779,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -2.28,
+    "scale": 1.022,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.811,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.94,
+    "scale": 1.019,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.843,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.62,
+    "scale": 1.016,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.872,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.31,
+    "scale": 1.013,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.904,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.98,
+    "scale": 1.009,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.936,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.65,
+    "scale": 1.006,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.969,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.32,
+    "scale": 1.003,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LB5G72RFmZTRXFxD": {
+  "effect": 30,
+  "startMs": 0,
+  "durationMs": 6053,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBVZBC45JpRRs6H6": {
+  "effect": null,
+  "startMs": 0,
+  "durationMs": 6959,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 611.26,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.938,
+    "opacity": 1,
+    "dx": 472.86,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.942,
+    "opacity": 1,
+    "dx": 378.01,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.95,
+    "opacity": 1,
+    "dx": 259.9,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.954,
+    "opacity": 1,
+    "dx": 197.28,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.959,
+    "opacity": 1,
+    "dx": 144.22,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.966,
+    "opacity": 1,
+    "dx": 84.89,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.971,
+    "opacity": 1,
+    "dx": 56.38,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.978,
+    "opacity": 1,
+    "dx": 26.59,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.983,
+    "opacity": 1,
+    "dx": 14.22,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.989,
+    "opacity": 1,
+    "dx": 6.26,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.995,
+    "opacity": 1,
+    "dx": 0.93,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBhhD4LVzg2ntqdp": {
+  "effect": 24,
+  "startMs": 0,
+  "durationMs": 6035,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LB59yCSn0L7vj9hv": {
+  "effect": 3,
+  "startMs": 0,
+  "durationMs": 9984,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0,
+    "dx": -14.86,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.619,
+    "opacity": 0.4,
+    "dx": -14.42,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.644,
+    "opacity": 0.866,
+    "dx": -12.77,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.664,
+    "opacity": 1,
+    "dx": -10.4,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.683,
+    "opacity": 1,
+    "dx": -7.13,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.703,
+    "opacity": 1,
+    "dx": -2.97,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.728,
+    "opacity": 1,
+    "dx": 1.44,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.748,
+    "opacity": 1,
+    "dx": 4.45,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.768,
+    "opacity": 1,
+    "dx": 6.31,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.787,
+    "opacity": 1,
+    "dx": 7.23,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.811,
+    "opacity": 1,
+    "dx": 7.38,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.831,
+    "opacity": 1,
+    "dx": 7.06,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.851,
+    "opacity": 1,
+    "dx": 6.44,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.871,
+    "opacity": 1,
+    "dx": 5.52,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.896,
+    "opacity": 1,
+    "dx": 4.08,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.916,
+    "opacity": 1,
+    "dx": 2.68,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.936,
+    "opacity": 1,
+    "dx": 1.57,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.957,
+    "opacity": 1,
+    "dx": 0.7,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.98,
+    "opacity": 1,
+    "dx": 0.15,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBCGwnCzzD6hXFpn": {
+  "effect": 20,
+  "startMs": 0,
+  "durationMs": 6185,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LB3VJ2pBKL9SYPpw": {
+  "effect": null,
+  "startMs": 0,
+  "durationMs": 802,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": -0.11,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.045,
+    "opacity": 1,
+    "dx": 0.01,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.097,
+    "opacity": 1,
+    "dx": 0.04,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.148,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.191,
+    "opacity": 1,
+    "dx": -0.44,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.253,
+    "opacity": 1,
+    "dx": 0.39,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.294,
+    "opacity": 1,
+    "dx": -0.45,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.353,
+    "opacity": 1,
+    "dx": -0.1,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.393,
+    "opacity": 1,
+    "dx": 0.4,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.439,
+    "opacity": 1,
+    "dx": -0.5,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.542,
+    "opacity": 1,
+    "dx": 0.12,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.591,
+    "opacity": 1,
+    "dx": 0.41,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.648,
+    "opacity": 1,
+    "dx": -0.45,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.69,
+    "opacity": 1,
+    "dx": 0.11,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.749,
+    "opacity": 1,
+    "dx": -0.24,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.788,
+    "opacity": 1,
+    "dx": 0.5,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.839,
+    "opacity": 1,
+    "dx": 0.22,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.898,
+    "opacity": 1,
+    "dx": 0.07,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.939,
+    "opacity": 1,
+    "dx": 0.03,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBDKD68Lf5BM7kkq": {
+  "effect": 26,
+  "startMs": 45,
+  "durationMs": 3001,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -583.5,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.052,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -493.57,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.106,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -412.92,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.161,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -348.44,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.211,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -285.32,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.265,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -234.97,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.323,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -182.36,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.373,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -145.62,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.427,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -114.17,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.478,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -84.89,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.521,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -67.68,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.572,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -47.51,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.626,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -33.14,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.678,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -20.99,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.734,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -12.2,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.788,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -6.78,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.839,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -2.96,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.892,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.08,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.945,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.18,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBmGP6J3tmzZBvKq": {
+  "effect": 14,
+  "startMs": 45,
+  "durationMs": 3034,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 583.51,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.051,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 493.57,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.105,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 412.93,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.159,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 348.44,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.209,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 285.32,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.262,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 234.97,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.319,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 182.37,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.368,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 145.62,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.422,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 114.17,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.473,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 84.9,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.525,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 63.29,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.583,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 42.34,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.632,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 29.09,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.686,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 18.94,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.737,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 10.79,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.789,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 5.83,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.846,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 2.2,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.896,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.7,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.949,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.11,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBlyRpR4rDTZVybx": {
+  "effect": null,
+  "startMs": 45,
+  "durationMs": 5964,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0.645,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.834,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.053,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.79,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.106,
+    "opacity": 0.704,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.995,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.162,
+    "opacity": 0.814,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.801,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.207,
+    "opacity": 0.454,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.79,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.262,
+    "opacity": 0.441,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.98,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.315,
+    "opacity": 0.897,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.801,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.369,
+    "opacity": 0.622,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.865,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.422,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.931,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.475,
+    "opacity": 0.705,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.782,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.522,
+    "opacity": 0.909,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.866,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.576,
+    "opacity": 0.429,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.92,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.631,
+    "opacity": 0.44,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.779,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.683,
+    "opacity": 0.897,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.925,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.738,
+    "opacity": 0.62,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.877,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.791,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.768,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.839,
+    "opacity": 0.656,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.955,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.892,
+    "opacity": 0.887,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.868,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.945,
+    "opacity": 0.429,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.767,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 0.44,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBHb4nSN2rqPfTlS": {
+  "effect": null,
+  "startMs": 45,
+  "durationMs": 5964,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0.645,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.834,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.053,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.79,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.106,
+    "opacity": 0.704,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.995,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.162,
+    "opacity": 0.814,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.801,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.207,
+    "opacity": 0.454,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.79,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.262,
+    "opacity": 0.441,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.98,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.315,
+    "opacity": 0.897,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.801,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.369,
+    "opacity": 0.622,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.865,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.422,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.931,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.475,
+    "opacity": 0.705,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.782,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.522,
+    "opacity": 0.909,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.866,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.576,
+    "opacity": 0.429,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.92,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.631,
+    "opacity": 0.44,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.779,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.683,
+    "opacity": 0.897,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.925,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.738,
+    "opacity": 0.62,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.877,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.791,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.768,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.839,
+    "opacity": 0.656,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.955,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.892,
+    "opacity": 0.887,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.868,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.945,
+    "opacity": 0.429,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.767,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 0.44,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBVTT3zrdb7ZLTsb": {
+  "effect": null,
+  "startMs": 45,
+  "durationMs": 5964,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0.645,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.834,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.053,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.79,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.106,
+    "opacity": 0.704,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.995,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.162,
+    "opacity": 0.814,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.801,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.207,
+    "opacity": 0.454,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.79,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.262,
+    "opacity": 0.441,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.98,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.315,
+    "opacity": 0.897,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.801,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.369,
+    "opacity": 0.622,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.865,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.422,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.931,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.475,
+    "opacity": 0.705,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.782,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.522,
+    "opacity": 0.909,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.866,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.576,
+    "opacity": 0.429,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.92,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.631,
+    "opacity": 0.44,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.779,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.683,
+    "opacity": 0.897,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.925,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.738,
+    "opacity": 0.62,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.877,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.791,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.768,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.839,
+    "opacity": 0.656,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.955,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.892,
+    "opacity": 0.887,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.868,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.945,
+    "opacity": 0.429,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.767,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 0.44,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBKfKj6FmM82zkVH": {
+  "effect": null,
+  "startMs": 45,
+  "durationMs": 5964,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0.645,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.834,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.053,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.79,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.106,
+    "opacity": 0.704,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.995,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.162,
+    "opacity": 0.814,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.801,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.207,
+    "opacity": 0.454,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.79,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.262,
+    "opacity": 0.441,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.98,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.315,
+    "opacity": 0.897,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.801,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.369,
+    "opacity": 0.622,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.865,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.422,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.931,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.475,
+    "opacity": 0.705,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.782,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.522,
+    "opacity": 0.909,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.866,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.576,
+    "opacity": 0.429,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.92,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.631,
+    "opacity": 0.44,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.779,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.683,
+    "opacity": 0.897,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.925,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.738,
+    "opacity": 0.62,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.877,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.791,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.768,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.839,
+    "opacity": 0.656,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.955,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.892,
+    "opacity": 0.887,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.868,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.945,
+    "opacity": 0.429,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.767,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 0.44,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LB1SkwLJGxZP0lNx": {
+  "effect": null,
+  "startMs": 45,
+  "durationMs": 5964,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0.645,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.834,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.053,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.79,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.106,
+    "opacity": 0.704,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.995,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.162,
+    "opacity": 0.814,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.801,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.207,
+    "opacity": 0.454,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.79,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.262,
+    "opacity": 0.441,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.98,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.315,
+    "opacity": 0.897,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.801,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.369,
+    "opacity": 0.622,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.865,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.422,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.931,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.475,
+    "opacity": 0.705,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.782,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.522,
+    "opacity": 0.909,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.866,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.576,
+    "opacity": 0.429,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.92,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.631,
+    "opacity": 0.44,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.779,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.683,
+    "opacity": 0.897,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.925,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.738,
+    "opacity": 0.62,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.877,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.791,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.768,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.839,
+    "opacity": 0.656,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.955,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.892,
+    "opacity": 0.887,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.868,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.945,
+    "opacity": 0.429,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.767,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 0.44,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBx6J5Zhs32BNSTn": {
+  "effect": null,
+  "startMs": 45,
+  "durationMs": 5964,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0.645,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.834,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.053,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.79,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.106,
+    "opacity": 0.704,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.995,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.162,
+    "opacity": 0.814,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.801,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.207,
+    "opacity": 0.454,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.79,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.262,
+    "opacity": 0.441,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.98,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.315,
+    "opacity": 0.897,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.801,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.369,
+    "opacity": 0.622,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.865,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.422,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.931,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.475,
+    "opacity": 0.705,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.782,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.522,
+    "opacity": 0.909,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.866,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.576,
+    "opacity": 0.429,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.92,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.631,
+    "opacity": 0.44,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.779,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.683,
+    "opacity": 0.897,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.925,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.738,
+    "opacity": 0.62,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.877,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.791,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.768,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.839,
+    "opacity": 0.656,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.955,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.892,
+    "opacity": 0.887,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.868,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.945,
+    "opacity": 0.429,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.767,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 0.44,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBk7nrmZq8RwCKw1": {
+  "effect": null,
+  "startMs": 46,
+  "durationMs": 2474,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 75.39,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.048,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 59.66,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.115,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 45.69,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.16,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 37.11,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.21,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 29.26,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.257,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 23.7,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.324,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 17.52,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.37,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 14.57,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.419,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 11.34,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.472,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 9.08,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.533,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 6.54,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.58,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 5.16,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.631,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 4.03,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.681,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 2.98,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.742,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 2.06,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.79,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 1.5,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.841,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 1.03,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.89,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.61,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.956,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0.23,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LBy1MrY9MctlgX5z": {
+  "effect": 2,
+  "startMs": 46,
+  "durationMs": 5953,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.79,
+    "scale": 0.819,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.053,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.29,
+    "scale": 0.978,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.108,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.47,
+    "scale": 0.966,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.16,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1.22,
+    "scale": 0.83,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.208,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -1,
+    "scale": 0.996,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.262,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.73,
+    "scale": 0.932,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.315,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.49,
+    "scale": 0.814,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.369,
+    "opacity": 1,
+    "dx": 0,
+    "dy": -0.24,
+    "scale": 1.045,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.424,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.882,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.477,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.803,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.524,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.055,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.578,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.882,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.63,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.803,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.684,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.055,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.739,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.852,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.794,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.882,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.839,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1.041,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.894,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.84,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.947,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 0.883,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 1,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LB1P27837r8487lS": {
+  "effect": null,
+  "startMs": 40,
+  "durationMs": 5967,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0.421,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.074,
+    "opacity": 0.614,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.122,
+    "opacity": 0.974,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.161,
+    "opacity": 0.639,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.235,
+    "opacity": 0.399,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.277,
+    "opacity": 0.783,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.321,
+    "opacity": 0.831,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.363,
+    "opacity": 0.47,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.436,
+    "opacity": 0.567,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.477,
+    "opacity": 0.903,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.529,
+    "opacity": 0.639,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.598,
+    "opacity": 0.375,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.645,
+    "opacity": 0.783,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.684,
+    "opacity": 0.879,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.732,
+    "opacity": 0.47,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.799,
+    "opacity": 0.494,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.846,
+    "opacity": 0.905,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.885,
+    "opacity": 0.759,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.933,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 0.663,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ },
+ "LByMWm41HMzLjPV0": {
+  "effect": null,
+  "startMs": 40,
+  "durationMs": 5967,
+  "frames": [
+   {
+    "t": 0,
+    "opacity": 0.421,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.074,
+    "opacity": 0.614,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.122,
+    "opacity": 0.974,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.161,
+    "opacity": 0.639,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.235,
+    "opacity": 0.399,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.277,
+    "opacity": 0.783,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.321,
+    "opacity": 0.831,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.363,
+    "opacity": 0.47,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.436,
+    "opacity": 0.567,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.477,
+    "opacity": 0.903,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.529,
+    "opacity": 0.639,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.598,
+    "opacity": 0.375,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.645,
+    "opacity": 0.783,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.684,
+    "opacity": 0.879,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.732,
+    "opacity": 0.47,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.799,
+    "opacity": 0.494,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.846,
+    "opacity": 0.905,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.885,
+    "opacity": 0.759,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 0.933,
+    "opacity": 0.35,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   },
+   {
+    "t": 1,
+    "opacity": 0.663,
+    "dx": 0,
+    "dy": 0,
+    "scale": 1,
+    "blur": 0,
+    "clip": null
+   }
+  ]
+ }
+}
