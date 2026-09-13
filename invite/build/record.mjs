@@ -15,7 +15,6 @@ import { SITE } from './fetch.mjs';
 
 const VIEWPORT = { width: 1366, height: 900 };
 const SAMPLE_MS = 40;
-const WATCH_MS = 6000;
 const MAX_FRAMES = 20;
 const STEP_PX = 450;
 const STEP_WAIT_MS = 4000;
@@ -28,15 +27,18 @@ export function parseTransform(str) {
   return { x: num(/translate\(\s*([-\d.e]+)px/, 0), y: num(/translate\([^,]+,\s*([-\d.e]+)px/, 0), rot: num(/rotate\(\s*([-\d.e]+)deg/, 0), scale: num(/scale\(\s*([-\d.e]+)/, 1) };
 }
 
-export function normalise(samples, triggerMs) {
-  const rest = samples.at(-1);
+// Frames relative to the sample at refIndex: the last one for an entrance
+// (it settles at rest), the first one for an idle loop (it never settles).
+export function normalise(samples, triggerMs, refIndex = samples.length - 1) {
+  const rest = samples[refIndex];
   const restT = parseTransform(rest.transform);
-  const startMs = samples[0].t - triggerMs;
-  const durationMs = Math.max(1, rest.t - samples[0].t);
+  const first = samples[0], last = samples.at(-1);
+  const startMs = first.t - triggerMs;
+  const durationMs = Math.max(1, last.t - first.t);
   const toFrame = (s) => {
     const tf = parseTransform(s.transform);
     return {
-      t: round((s.t - samples[0].t) / durationMs, 3),
+      t: round((s.t - first.t) / durationMs, 3),
       opacity: s.opacity === '' ? 1 : round(parseFloat(s.opacity), 3),
       dx: round(tf.x - restT.x), dy: round(tf.y - restT.y),
       scale: round(tf.scale / (restT.scale || 1), 3),
@@ -50,23 +52,17 @@ export function normalise(samples, triggerMs) {
     picked = Array.from({ length: MAX_FRAMES }, (_, i) => samples[Math.round(i * step)]);
   }
   const frames = picked.map(toFrame);
+  if (frames.length === 1) frames.push({ ...frames[0] });
   frames[0].t = 0; frames[frames.length - 1].t = 1;
-  return { startMs: Math.max(0, Math.round(startMs)), durationMs: Math.round(durationMs), frames };
+  return { startMs: Math.max(0, Math.round(startMs)), durationMs: Math.round(durationMs), frames: distinctT(frames) };
 }
 
-// Idle loops never settle, so treat the FIRST sample as rest instead of the
-// last. Reversing the array alone would leave timestamps descending, sending
-// normalise's durationMs negative (clamped to 1 by its own guard) and its
-// frame t values far outside 0..1; negating t too keeps the array in valid
-// ascending order while samples.at(-1) still lands on the original first
-// sample, i.e. normalise's "rest" reference.
-export function normaliseLoop(samples, triggerMs) {
-  const desiredStartMs = samples[0].t - triggerMs;
-  const reversed = [...samples].reverse().map((s) => ({ ...s, t: -s.t }));
-  const result = normalise(reversed, reversed[0].t - desiredStartMs);
-  result.frames.reverse().forEach((f, k, arr) => { f.t = k === 0 ? 0 : k === arr.length - 1 ? 1 : f.t; });
-  return result;
-}
+// Over a long timeline two neighbouring samples can round to the same t (or
+// onto an end's pinned 0 or 1); keep the first of each run so t is strictly
+// increasing, and always keep both ends.
+const distinctT = (frames) => frames.filter((f, i, arr) => i === 0 || i === arr.length - 1 || (f.t > arr[i - 1].t && f.t < 1));
+
+export const normaliseLoop = (samples, triggerMs) => normalise(samples, triggerMs, 0);
 
 function score(node, el, x, y) {
   const drot = Math.abs((((node.rot || 0) - (el.rotation || 0)) % 360));
@@ -192,11 +188,6 @@ const SAMPLER = `(() => {
   S.timer = setInterval(tick, ${SAMPLE_MS});
 })()`;
 
-const SCROLLER = `(() => {
-  const all = [document.scrollingElement, ...document.querySelectorAll('body *')];
-  return all.find(e => e && e.scrollHeight > e.clientHeight + 50 && e.clientHeight >= innerHeight * 0.6) ? true : false;
-})()`;
-
 // Playwright 1.62 ignores the arg when pageFunction is passed as a string, so
 // the step size is baked into the source (same trick SAMPLER already uses
 // for SAMPLE_MS) instead of passed at call time.
@@ -227,6 +218,41 @@ const COLLECT = `(() => {
   }));
 })()`;
 
+// Turn what COLLECT sampled into one animation entry per model element.
+// Nodes are matched on absolute resting position (sum of translates up the
+// ancestor chain) against the model flattened to absolute coordinates, then
+// every node that lands on the same element is merged into one timeline.
+export function assemble(nodes, pageModel, sectionLeft) {
+  const flat = flattenPage(pageModel, sectionLeft);
+  const byElement = new Map();
+  const unmatched = [];
+  for (const node of nodes) {
+    if (node.isVideo) continue;
+    const hit = matchAbsolute(node.abs, flat);
+    if (!hit) { unmatched.push({ page: pageModel.slug, abs: node.abs, tag: node.tag }); continue; }
+    if (!byElement.has(hit.el.id)) byElement.set(hit.el.id, { el: hit.el, nodes: [] });
+    byElement.get(hit.el.id).nodes.push(node);
+  }
+  const entries = [...byElement.values()].map(({ el, nodes }) => {
+    const starts = nodes.map((n) => n.samples[0].t).sort((a, b) => a - b);
+    const isText = el.kind === 'text';
+    // per-character reveals: many short-lived nodes on one text element → keep the earliest, note the stagger
+    const parts = isText && nodes.length >= 3 ? nodes.length : 0;
+    const merged = parts ? nodes.reduce((a, b) => (a.samples[0].t <= b.samples[0].t ? a : b)).samples : mergeSamples(nodes.map((n) => n.samples));
+    const gaps = starts.slice(1).map((t, i) => t - starts[i]).sort((a, b) => a - b);
+    return { el, samples: merged, start: starts[0], parts, stagger: parts ? gaps[Math.floor(gaps.length / 2)] || 0 : 0 };
+  });
+  const clustered = clusterStarts(entries.map((e) => e.start));
+  const out = {};
+  entries.forEach((e, i) => {
+    const loop = isLooping(e.samples);
+    const entry = { effect: e.el.anim?.effect ?? null, loop, ...(loop ? normaliseLoop(e.samples, e.start - clustered[i]) : normalise(e.samples, e.start - clustered[i])) };
+    if (e.parts) { entry.parts = e.parts; entry.stagger = e.stagger; }
+    out[e.el.id] = entry;
+  });
+  return { out, unmatched };
+}
+
 export async function recordPage(browser, model, pageModel) {
   const page = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 1 });
   try {
@@ -242,38 +268,7 @@ export async function recordPage(browser, model, pageModel) {
       await page.waitForTimeout(STEP_WAIT_MS);
     }
     const nodes = await page.evaluate(COLLECT);
-
-    // Match on absolute resting position (sum of translates up the ancestor
-    // chain) against the model flattened to absolute coordinates, then merge
-    // every node that lands on the same element into one timeline.
-    const flat = flattenPage(pageModel, sectionLeft);
-    const byElement = new Map();
-    const unmatched = [];
-    for (const node of nodes) {
-      if (node.isVideo) continue;
-      const hit = matchAbsolute(node.abs, flat);
-      if (!hit) { unmatched.push({ page: pageModel.slug, abs: node.abs, tag: node.tag }); continue; }
-      if (!byElement.has(hit.el.id)) byElement.set(hit.el.id, { el: hit.el, nodes: [] });
-      byElement.get(hit.el.id).nodes.push(node);
-    }
-    const entries = [...byElement.values()].map(({ el, nodes }) => {
-      const starts = nodes.map((n) => n.samples[0].t).sort((a, b) => a - b);
-      const isText = el.kind === 'text';
-      // per-character reveals: many short-lived nodes on one text element → keep the earliest, note the stagger
-      const parts = isText && nodes.length >= 3 ? nodes.length : 0;
-      const merged = parts ? nodes.reduce((a, b) => (a.samples[0].t <= b.samples[0].t ? a : b)).samples : mergeSamples(nodes.map((n) => n.samples));
-      const gaps = starts.slice(1).map((t, i) => t - starts[i]).sort((a, b) => a - b);
-      return { el, samples: merged, start: starts[0], parts, stagger: parts ? gaps[Math.floor(gaps.length / 2)] || 0 : 0 };
-    });
-    const clustered = clusterStarts(entries.map((e) => e.start));
-    const out = {};
-    entries.forEach((e, i) => {
-      const loop = isLooping(e.samples);
-      const entry = { effect: e.el.anim?.effect ?? null, loop, ...(loop ? normaliseLoop(e.samples, e.start - clustered[i]) : normalise(e.samples, e.start - clustered[i])) };
-      if (e.parts) { entry.parts = e.parts; entry.stagger = e.stagger; }
-      out[e.el.id] = entry;
-    });
-    return { out, unmatched };
+    return assemble(nodes, pageModel, sectionLeft);
   } finally {
     await page.close();
   }
@@ -285,15 +280,19 @@ if (isMain(import.meta.url)) {
   const file = path.join(BUILD, 'animations.json');
   const all = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
   const browser = await chromium.launch();
-  for (const p of model.pages) {
-    if (only && p.slug !== only) continue;
-    const { out, unmatched } = await recordPage(browser, model, p);
-    Object.assign(all, out);
-    const loopCount = Object.values(out).filter((e) => e.loop).length;
-    const partsCount = Object.values(out).filter((e) => e.parts).length;
-    console.log(`${p.slug.padEnd(11)} recorded=${Object.keys(out).length} unmatched=${unmatched.length} loop=${loopCount} parts=${partsCount}`);
-    for (const u of unmatched) console.log('  unmatched', JSON.stringify(u));
+  try {
+    for (const p of model.pages) {
+      if (only && p.slug !== only) continue;
+      const { out, unmatched } = await recordPage(browser, model, p);
+      Object.assign(all, out);
+      // written after every page so an exception later on keeps what came before
+      fs.writeFileSync(file, JSON.stringify(all, null, 1));
+      const loopCount = Object.values(out).filter((e) => e.loop).length;
+      const partsCount = Object.values(out).filter((e) => e.parts).length;
+      console.log(`${p.slug.padEnd(11)} recorded=${Object.keys(out).length} unmatched=${unmatched.length} loop=${loopCount} parts=${partsCount}`);
+      for (const u of unmatched) console.log('  unmatched', JSON.stringify(u));
+    }
+  } finally {
+    await browser.close();
   }
-  await browser.close();
-  fs.writeFileSync(file, JSON.stringify(all, null, 1));
 }

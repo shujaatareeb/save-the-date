@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseTransform, normalise, matchElement, matchOnPage, clusterStarts, flattenPage, matchAbsolute, mergeSamples } from '../../invite/build/record.mjs';
+import { parseTransform, normalise, normaliseLoop, matchElement, matchOnPage, clusterStarts, flattenPage, matchAbsolute, mergeSamples, assemble } from '../../invite/build/record.mjs';
 
 test('parses translate, rotate and scale out of an inline transform', () => {
   assert.deepEqual(parseTransform('translate(87.9885px, 63.8488px) rotate(-17.5069deg) scale(0.738, 0.738)'), { x: 87.9885, y: 63.8488, rot: -17.5069, scale: 0.738 });
@@ -81,4 +81,88 @@ test('merges per-property timelines from several nodes into one', () => {
   assert.equal(merged[1].transform, 'translate(0px, 80px)');
   assert.equal(merged[1].opacity, '0.5');
   assert.equal(merged[2].transform, 'translate(0px, 0px)');
+});
+
+test('pads a single sample to two frames spanning t 0..1', () => {
+  const { durationMs, frames } = normalise([{ t: 1000, opacity: '', transform: 'translate(10px, 20px)', filter: '', clip: '' }], 0);
+  assert.equal(durationMs, 1);
+  assert.equal(frames.length, 2);
+  assert.deepEqual(frames.map((f) => f.t), [0, 1]);
+  assert.deepEqual(frames[1], { t: 1, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null });
+});
+
+test('drops a frame whose t rounds onto its neighbour over a long timeline', () => {
+  const s = (t, y) => ({ t, opacity: '', transform: `translate(0px, ${y}px)`, filter: '', clip: '' });
+  // 10004 ms rounds to the same t as 10000 ms; 39990 ms rounds to 1, the last frame's t
+  const samples = [s(0, 0), s(10000, 10), s(10004, 11), s(20000, 20), s(39990, 5), s(40000, 0)];
+  const { frames } = normalise(samples, 0);
+  assert.deepEqual(frames.map((f) => f.t), [0, 0.25, 0.5, 1]);
+  assert.deepEqual(frames.map((f) => f.dy), [0, 10, 20, 0]);
+  assert.ok(frames.every((f, i) => i === 0 || f.t > frames[i - 1].t), 't must increase strictly');
+});
+
+test('times a loop forward, relative to its first sample', () => {
+  const samples = [
+    { t: 1000, opacity: '', transform: 'translate(50px, 100px)', filter: '', clip: '' },
+    { t: 1500, opacity: '', transform: 'translate(50px, 120px)', filter: '', clip: '' },
+    { t: 2000, opacity: '', transform: 'translate(50px, 100px)', filter: '', clip: '' },
+    { t: 2500, opacity: '', transform: 'translate(50px, 80px)', filter: '', clip: '' },
+    { t: 3000, opacity: '', transform: 'translate(50px, 100px)', filter: '', clip: '' },
+  ];
+  const { startMs, durationMs, frames } = normaliseLoop(samples, 800);
+  assert.equal(startMs, 200);
+  assert.equal(durationMs, 2000);
+  assert.deepEqual(frames.map((f) => f.t), [0, 0.25, 0.5, 0.75, 1]);
+  assert.ok(frames.every((f, i) => i === 0 || f.t > frames[i - 1].t), 't must increase strictly');
+  assert.deepEqual([frames[0].dx, frames[0].dy], [0, 0]);
+  assert.deepEqual(frames.map((f) => f.dy), [0, 20, 0, -20, 0]);
+  assert.equal(frames.at(-1).t, 1);
+});
+
+test('assembles sampled nodes into one entry per matched element', () => {
+  const pageModel = { slug: 'tiny', sections: [{ height: 1000, elements: [
+    { id: 'title', kind: 'text', top: 100, left: 200, width: 300, height: 40, rotation: 0, anim: { effect: 18 } },
+    { id: 'photo', kind: 'image', top: 400, left: 500, width: 200, height: 200, rotation: 0, anim: { effect: 2 } },
+    { id: 'grp', kind: 'group', top: 700, left: 100, width: 200, height: 100, nativeWidth: 200, nativeHeight: 100, rotation: 0,
+      children: [{ id: 'kid', kind: 'image', top: 10, left: 20, width: 50, height: 50, rotation: 0 }] },
+  ] }] };
+  const sample = (t, over) => ({ t, opacity: '', transform: '', filter: '', clip: '', ...over });
+  const node = (abs, samples, over = {}) => ({ samples, isVideo: false, abs: { rot: 0, depth: 3, ...abs }, tag: 'DIV', ...over });
+  const nodes = [
+    // the image: an outer wrapper slides it up while an inner node fades it in
+    node({ x: 500, y: 400 }, [sample(1000, { transform: 'translate(500px, 480px)' }), sample(1500, { transform: 'translate(500px, 440px)' }), sample(2000, { transform: 'translate(500px, 400px)' })]),
+    node({ x: 500, y: 400, depth: 4 }, [sample(1000, { opacity: '0' }), sample(1250, { opacity: '0.5' }), sample(2000, { opacity: '' })]),
+    // the text: four per-character spans, each a short fade, 100 ms apart
+    ...[1000, 1100, 1200, 1300].map((t) => node({ x: 200, y: 100 }, [sample(t, { opacity: '0' }), sample(t + 200, { opacity: '' })], { tag: 'SPAN' })),
+    // nothing lives 30 px to the right of the image
+    node({ x: 530, y: 400 }, [sample(1000, { opacity: '0' }), sample(1400, { opacity: '' })]),
+    // a video sitting on the group's child is ignored outright
+    node({ x: 120, y: 710 }, [sample(1000, { opacity: '0' }), sample(1400, { opacity: '' })], { isVideo: true, tag: 'VIDEO' }),
+  ];
+  const { out, unmatched } = assemble(nodes, pageModel, 0);
+
+  assert.deepEqual(Object.keys(out).sort(), ['photo', 'title']);
+  assert.deepEqual(unmatched, [{ page: 'tiny', abs: { x: 530, y: 400, rot: 0, depth: 3 }, tag: 'DIV' }]);
+
+  const photo = out.photo;
+  assert.deepEqual(Object.keys(photo), ['effect', 'loop', 'startMs', 'durationMs', 'frames']);
+  assert.equal(photo.effect, 2);
+  assert.equal(photo.loop, false);
+  assert.equal(photo.durationMs, 1000);
+  assert.deepEqual(photo.frames[0], { t: 0, opacity: 0, dx: 0, dy: 80, scale: 1, blur: 0, clip: null });
+  assert.deepEqual(photo.frames.at(-1), { t: 1, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null });
+
+  const title = out.title;
+  assert.deepEqual(Object.keys(title), ['effect', 'loop', 'startMs', 'durationMs', 'frames', 'parts', 'stagger']);
+  assert.equal(title.effect, 18);
+  assert.equal(title.parts, 4);
+  assert.equal(title.stagger, 100);
+  assert.equal(title.frames[0].opacity, 0);
+
+  for (const entry of Object.values(out)) {
+    assert.ok(entry.frames.length >= 2 && entry.frames.length <= 20);
+    assert.equal(entry.frames[0].t, 0);
+    assert.equal(entry.frames.at(-1).t, 1);
+    assert.ok(entry.frames.every((f, i) => i === 0 || f.t > entry.frames[i - 1].t), 't must increase strictly');
+  }
 });
