@@ -98,7 +98,7 @@ async function encodeStill(src, maxWidth, naturalWidth) {
 
 async function encodeAnimated(src) {
   const out = path.join(ASSETS, hashName(src, '.webp'));
-  if (!fs.existsSync(out)) await ffmpeg(['-i', src, '-vf', 'scale=640:-2', '-c:v', 'libwebp_anim', '-loop', '0', '-quality', '60', '-an', out]);
+  if (!fs.existsSync(out)) await ffmpeg(['-i', src, '-vf', 'fps=15,scale=480:-2', '-c:v', 'libwebp_anim', '-loop', '0', '-quality', '55', '-an', out]);
   return out;
 }
 
