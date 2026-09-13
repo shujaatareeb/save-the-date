@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseTransform, normalise, matchElement } from '../../invite/build/record.mjs';
+import { parseTransform, normalise, matchElement, matchOnPage, clusterStarts } from '../../invite/build/record.mjs';
 
 test('parses translate, rotate and scale out of an inline transform', () => {
   assert.deepEqual(parseTransform('translate(87.9885px, 63.8488px) rotate(-17.5069deg) scale(0.738, 0.738)'), { x: 87.9885, y: 63.8488, rot: -17.5069, scale: 0.738 });
@@ -39,4 +39,19 @@ test('matches a sampled node to the element whose resting position it has', () =
   assert.equal(matchElement({ x: 534.47 + 589.5, y: 176.17, rot: 0 }, section, 589.5).id, 'gloves');
   assert.equal(matchElement({ x: 87.9885, y: 63.8488, rot: -17.5069 }, section, 589.5).id, 'ring');
   assert.equal(matchElement({ x: 5, y: 5, rot: 0 }, section, 589.5), null);
+});
+
+test('matches across sections using the cumulative offset when the DOM merged them', () => {
+  const page = { sections: [
+    { height: 1000, elements: [{ id: 'a', kind: 'image', top: 100, left: 200, width: 10, height: 10, rotation: 0 }] },
+    { height: 800, elements: [{ id: 'b', kind: 'image', top: 50, left: 300, width: 10, height: 10, rotation: 0 }] },
+  ] };
+  assert.equal(matchOnPage({ x: 300, y: 50, rot: 0 }, page, 0).el.id, 'b');
+  assert.equal(matchOnPage({ x: 300, y: 1050, rot: 0 }, page, 0).el.id, 'b');
+  assert.equal(matchOnPage({ x: 300, y: 1050, rot: 0 }, page, 0).section, 1);
+  assert.equal(matchOnPage({ x: 900, y: 900, rot: 0 }, page, 0).el, null);
+});
+
+test('clusters start times so each burst of reveals begins at zero', () => {
+  assert.deepEqual(clusterStarts([5000, 5200, 5100, 12000, 12300]), [0, 200, 100, 0, 300]);
 });
