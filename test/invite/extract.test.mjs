@@ -100,3 +100,11 @@ test('computes a content box that excludes full-bleed backgrounds', () => {
   assert.ok(c.width > 400 && c.width < 600, `content width ${c.width}`);
   assert.ok(c.left > 300, `content left ${c.left}`);
 });
+
+test('every text run carries the full run interface', () => {
+  const keys = ['start', 'end', 'font', 'styleIndex', 'size', 'weight', 'italic', 'color', 'decoration', 'link', 'letterSpacing', 'lineHeight', 'align', 'transform'];
+  for (const p of model.pages) for (const s of p.sections) for (const e of flat(s.elements)) {
+    const blocks = e.kind === 'text' ? [e] : e.kind === 'shape' && e.text ? [e.text] : [];
+    for (const b of blocks) for (const r of b.runs) for (const k of keys) assert.ok(k in r, `${k} missing on ${e.id}`);
+  }
+});

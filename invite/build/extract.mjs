@@ -24,7 +24,7 @@ function decodeAnim(x) {
   const p = x.B || {};
   return {
     effect: x.A,
-    durationMs: p.G?.A ? Math.round(p.G.A / 1000) : null,
+    durationMs: p.G?.A != null ? Math.round(p.G.A / 1000) : null,
     params: { a: p.A ?? null, b: p.B ?? null, c: p.C ?? null, d: p.D ?? null, video: p.G?.C?.A ?? null },
   };
 }
@@ -54,15 +54,16 @@ function decodeTextBlock(t, lines) {
   const text = t.A.join('');
   const bounds = t.D || [0, text.length];
   const runs = [];
-  let prev = { size: 16, weight: 400, italic: false, color: '#000000', align: 'center', transform: 'none' };
+  let prev = { font: null, styleIndex: 0, size: 16, weight: 400, italic: false, color: '#000000', decoration: 'none', link: null, letterSpacing: null, lineHeight: null, align: 'center', transform: 'none' };
   for (let i = 0; i + 1 < bounds.length; i++) {
     prev = { ...prev, ...pickStyle(t.C[i] || {}) };
     runs.push({ start: bounds[i], end: bounds[i + 1], ...prev });
   }
+  for (const r of runs) if (!r.font) throw new Error('text run without a font');
   return { text, lines: lines?.length ? lines : [text.length], runs };
 }
 
-function decodeElement(raw, ctx) {
+function decodeElement(raw) {
   const kind = KINDS[raw['A?']];
   if (!kind) throw new Error(`unknown element kind ${raw['A?']} on ${raw._}`);
   const el = {
@@ -87,7 +88,7 @@ function decodeElement(raw, ctx) {
     } else {
       el.nativeWidth = raw.b || el.width;
       el.nativeHeight = raw.a || el.height;
-      el.children = (raw.c || []).map((c) => decodeElement(c, ctx));
+      el.children = (raw.c || []).map((c) => decodeElement(c));
     }
   } else if (kind === 'shape') {
     el.viewBox = { width: raw.a?.D || el.width, height: raw.a?.C || el.height };
@@ -138,7 +139,7 @@ export function extractModel(canva) {
     if (!slug) throw new Error(`page ${p.P} "${p.B}" has no slug`);
     const page = { id: p.a, number: String(p.P), slug, title: p.B, sections: [] };
     for (const s of p.t) {
-      const section = { width: s.C.A, height: s.C.B, background: s.D?.C || null, elements: s.E.map((e) => decodeElement(e, { page: slug })) };
+      const section = { width: s.C.A, height: s.C.B, background: s.D?.C || null, elements: s.E.map((e) => decodeElement(e)) };
       section.content = contentBox(section);
       page.sections.push(section);
     }
