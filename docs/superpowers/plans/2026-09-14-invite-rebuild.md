@@ -1795,6 +1795,137 @@ Do not push. Report to the user: test counts, asset total, measured k at 390, th
 
 ---
 
+### Task 9: Composite Canva's vector spritesheets
+
+Added during execution. 46 of the 529 media entries are `type: "VECTOR"`; 22 of those in use on published pages are *spritesheets*: one PNG holding N sprites side by side (`spritesheetMetadata.spritesWide × spritesHigh`), each sprite a grayscale mask for one layer. Rendered raw they are black rectangles (17 elements across envelope, home, timeline, nikah, reception). Verified live against the envelope's gold glitter: a sprite's luminance is the layer's alpha; `RECOLORABLE` layers are filled with their `color`; `BACKGROUND_R/G/B` sprites give the base image's channels and `BACKGROUND_A` its alpha (an `A` alone is treated as black with that alpha). Layers composite in order. Each media id also appears up to three times in `page.E` (800 / 1600 / 2400 px variants) — the declared `width × height` is the size of ONE sprite, and the PNG is `wide × width` by `high × height`.
+
+Runs after Task 5 and before Task 6.
+
+**Files:**
+- Modify: `invite/build/extract.mjs` (media table)
+- Modify: `invite/build/assets.mjs` (composite step)
+- Test: `test/invite/extract.test.mjs`, `test/invite/assets.test.mjs`
+- Regenerate: `invite/build/model.json`, `invite/build/assets.json`, `invite/assets/`, `invite/index.html`, `invite/invite.css`
+
+**Interfaces:**
+- `model.media[id]` gains `type: 'vector'` and, for spritesheets, `sprites: { wide, high, layers: [{ type: 'background-a'|'background-r'|'background-g'|'background-b'|'recolor', color?: 'rgb(r, g, b)' }] }`. When an id appears several times, the entry with the largest `width` wins (explicitly, not by array order).
+- `assets.mjs` exports `spriteRect(sheetWidth, sheetHeight, wide, high, k) → {x, y, w, h}` and `compositeSheet(pngPath, sprites, outPath): Promise<void>` (Playwright canvas). Manifest `media[id].width/height` become the composite's (one sprite's) dimensions.
+
+- [ ] **Step 1: Failing tests**
+
+Append to `test/invite/extract.test.mjs`:
+```js
+test('keeps the largest variant of a media id and carries spritesheet layers', () => {
+  const m = model.media['MAG66LCSz84'];
+  assert.equal(m.type, 'vector');
+  assert.equal(m.width, 2400);
+  assert.deepEqual(m.sprites.layers[0], { type: 'background-a' });
+  assert.deepEqual(m.sprites.layers[1], { type: 'recolor', color: 'rgb(250, 249, 216)' });
+  assert.equal(m.sprites.wide, 6);
+  assert.equal(m.sprites.high, 1);
+  assert.equal(model.media['MAHKwKua_Z8'].sprites, undefined);
+});
+```
+Append to `test/invite/assets.test.mjs`:
+```js
+import { spriteRect } from '../../invite/build/assets.mjs';
+test('locates sprite k in a wide-by-high sheet', () => {
+  assert.deepEqual(spriteRect(14400, 1585, 6, 1, 2), { x: 4800, y: 0, w: 2400, h: 1585 });
+  assert.deepEqual(spriteRect(2400, 218, 3, 2, 4), { x: 800, y: 109, w: 800, h: 109 });
+});
+test('spritesheet media are shipped as single composited images', () => {
+  const m = manifest.media['MAG66LCSz84'];
+  assert.match(m.src, /\.webp$/);
+  assert.ok(m.width <= 2400 && m.height <= 1585 && Math.abs(m.width / m.height - 2400 / 1585) < 0.01, JSON.stringify(m));
+});
+```
+Run both files; expect the new tests to fail.
+
+- [ ] **Step 2: extract.mjs media table**
+
+Replace the `for (const m of doc.E)` loop with:
+```js
+const LAYER_TYPES = { BACKGROUND_A: 'background-a', BACKGROUND_R: 'background-r', BACKGROUND_G: 'background-g', BACKGROUND_B: 'background-b', RECOLORABLE: 'recolor' };
+for (const m of doc.E) {
+  const f = m.files[0];
+  const prev = media[m.id];
+  if (prev && prev.width >= f.width) continue;           // keep the largest variant
+  const entry = { type: m.type === 'VECTOR' ? 'vector' : 'raster', url: f.url, width: f.width, height: f.height, mime: f.mimeType };
+  if (f.spritesheet) {
+    const meta = m.spritesheetMetadata;
+    if (!meta) throw new Error(`spritesheet ${m.id} without metadata`);
+    entry.sprites = { wide: meta.spritesWide, high: meta.spritesHigh, layers: meta.layers.map((l) => {
+      const type = LAYER_TYPES[l.type];
+      if (!type) throw new Error(`unknown sprite layer ${l.type} on ${m.id}`);
+      return l.color ? { type, color: l.color } : { type };
+    }) };
+  }
+  media[m.id] = entry;
+}
+```
+
+- [ ] **Step 3: assets.mjs composite step**
+
+Add:
+```js
+import { chromium } from 'playwright';
+
+export function spriteRect(sheetWidth, sheetHeight, wide, high, k) {
+  const w = sheetWidth / wide, h = sheetHeight / high;
+  return { x: (k % wide) * w, y: Math.floor(k / wide) * h, w, h };
+}
+
+// Runs in a browser page: luminance of each sprite is that layer's alpha.
+const COMPOSITE = async ({ dataUrl, sprites }) => {
+  const img = new Image(); img.src = dataUrl; await img.decode();
+  const W = img.naturalWidth / sprites.wide, H = img.naturalHeight / sprites.high;
+  const out = document.createElement('canvas'); out.width = W; out.height = H; const ctx = out.getContext('2d');
+  const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H; const t = tmp.getContext('2d');
+  const read = (k) => { t.clearRect(0, 0, W, H); t.drawImage(img, (k % sprites.wide) * W, Math.floor(k / sprites.wide) * H, W, H, 0, 0, W, H); return t.getImageData(0, 0, W, H); };
+  const channels = {};
+  sprites.layers.forEach((l, k) => { if (l.type.startsWith('background-')) channels[l.type.slice(-1)] = read(k).data; });
+  if (channels.a) {
+    const d = t.createImageData(W, H), p = d.data;
+    for (let i = 0; i < p.length; i += 4) { p[i] = channels.r ? channels.r[i] : 0; p[i + 1] = channels.g ? channels.g[i] : 0; p[i + 2] = channels.b ? channels.b[i] : 0; p[i + 3] = channels.a[i]; }
+    t.putImageData(d, 0, 0); ctx.drawImage(tmp, 0, 0);
+  }
+  sprites.layers.forEach((l, k) => {
+    if (l.type !== 'recolor') return;
+    const [r, g, b] = l.color.match(/\d+/g).map(Number);
+    const d = read(k), p = d.data;
+    for (let i = 0; i < p.length; i += 4) { const lum = p[i]; p[i] = r; p[i + 1] = g; p[i + 2] = b; p[i + 3] = lum; }
+    t.putImageData(d, 0, 0); ctx.drawImage(tmp, 0, 0);
+  });
+  return out.toDataURL('image/png');
+};
+
+let browserPromise = null;
+export async function compositeSheet(pngPath, sprites, outPath) {
+  browserPromise ||= chromium.launch();
+  const page = await (await browserPromise).newPage();
+  try {
+    const dataUrl = `data:image/png;base64,${fs.readFileSync(pngPath).toString('base64')}`;
+    const result = await page.evaluate(COMPOSITE, { dataUrl, sprites });
+    fs.writeFileSync(outPath, Buffer.from(result.split(',')[1], 'base64'));
+  } finally { await page.close(); }
+}
+export async function closeCompositor() { if (browserPromise) { await (await browserPromise).close(); browserPromise = null; } }
+```
+In `buildAssets`, for `m.type === 'raster' || m.type === 'vector'` stills: if `m.sprites`, first `const flat = path.join(CACHE, path.basename(src, '.png') + '.composite.png'); if (!fs.existsSync(flat)) await compositeSheet(src, m.sprites, flat);` then `encodeStill(flat, use.maxWidth, m.width)`. Manifest `width/height` for sprites = `m.width`, `m.height` (already the sprite size). Call `await closeCompositor()` before writing the manifest. Keep the SVG passthrough for `image/svg+xml`.
+
+- [ ] **Step 4: Regenerate and verify**
+
+`npm run invite:extract && rm -rf invite/assets && npm run invite:assets && npm run invite:render`, then `node --test test/invite/extract.test.mjs test/invite/assets.test.mjs test/invite/render.test.mjs`. Open `http://localhost:8734/invite/`: the gold glitter around CLICK TO OPEN must be gold glitter, not a black box; check the same on `#home` (7 elements) and `#timeline` (5). Budgets still hold (the asset script exits non-zero otherwise).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add invite/build/extract.mjs invite/build/assets.mjs invite/build/model.json invite/build/assets.json invite/assets invite/index.html invite/invite.css test/invite/extract.test.mjs test/invite/assets.test.mjs
+git commit -m "Composite Canva's vector spritesheets into real images"
+```
+
+---
+
 ## Self-review
 
 **Spec coverage.** Fetch/extract/assets/render pipeline → Tasks 1–3, 5. model.json shape → Task 2. Scaling rule with 0.25 floor → Task 6 (`PAD` 8 instead of 12; fine, documented in Task 8). Elements (image crop, real text, groups, shapes, z-order) → Task 5. Seven slugs + hash router + back button → Tasks 2, 6. Canva footer dropped → render never emits it. Assets (referenced only, ≤2× size, WebP, hash names, fonts with fallback stack, petals, budget, lazy per page) → Tasks 3, 5, 6, 8. Animations per element from recordings + fallback → Tasks 4, 5 (unrecorded elements simply have no `an` class, i.e. shown static; the spec's "fade+rise fallback" is dropped in favour of static — noted for Task 8's spec update). Countdown native → Tasks 5, 6. Failure handling (missing media throws, unknown kind throws) → Tasks 2, 3, 5. Tests at three widths, diff vs references, shots, build checks → Tasks 2, 7. No-JS fallback → `<noscript>` in Task 5.
