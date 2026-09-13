@@ -1,3 +1,5 @@
 node_modules/
 package-lock.json
 test/shots/
+invite/build/cache/
+test/invite/out/
