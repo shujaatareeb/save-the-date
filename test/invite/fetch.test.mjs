@@ -15,4 +15,6 @@ test('fails loudly when the blob is missing', () => {
 
 test('unescapes JS string-literal escapes without evaluating', () => {
   assert.equal(unescapeJsString(String.raw`a\'b\"c\\d\/e\né\x41\u{1F600}`), `a'b"c\\d/e\néA😀`);
+  assert.equal(unescapeJsString('a\\ b'), 'a b');
+  assert.equal(unescapeJsString('a\\\u2028b'), 'ab');
 });
