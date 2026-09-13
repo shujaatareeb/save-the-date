@@ -154,69 +154,75 @@ const COLLECT = `(() => {
   }));
 })()`;
 
-export async function recordPage(page, model, pageModel) {
-  await page.goto(`${SITE}#page-${pageModel.number}`, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(3000);
-  await page.evaluate(SAMPLER);
-  const sectionLeft = await page.evaluate(() => document.querySelector('main section').getBoundingClientRect().left);
-  await page.waitForTimeout(STEP_WAIT_MS);
-  for (let guard = 0; guard < 40; guard++) {
-    const { before, after } = await page.evaluate(SCROLL_STEP);
-    if (after <= before) break;
+export async function recordPage(browser, model, pageModel) {
+  const page = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 1 });
+  try {
+    // Installed before any of the page's own scripts run, so sampling starts
+    // at document start — nothing an early-firing entrance can miss.
+    await page.addInitScript(SAMPLER);
+    await page.goto(`${SITE}#page-${pageModel.number}`, { waitUntil: 'networkidle' });
     await page.waitForTimeout(STEP_WAIT_MS);
-  }
-  const nodes = await page.evaluate(COLLECT);
+    const sectionLeft = await page.evaluate(() => document.querySelector('main section').getBoundingClientRect().left);
+    for (let guard = 0; guard < 40; guard++) {
+      const { before, after } = await page.evaluate(SCROLL_STEP);
+      if (after <= before) break;
+      await page.waitForTimeout(STEP_WAIT_MS);
+    }
+    const nodes = await page.evaluate(COLLECT);
 
-  // Direct match first; per-character spans (rest ≈ identity) fall back to their anchor.
-  const matched = [];
-  const unmatched = [];
-  for (const node of nodes) {
-    if (node.isVideo) continue;
-    const rest = parseTransform(node.samples.at(-1).transform);
-    let m = matchOnPage(rest, pageModel, sectionLeft);
-    let viaAnchor = false;
-    if (!m.el && node.anchor) { m = matchOnPage(parseTransform(node.anchor), pageModel, sectionLeft); viaAnchor = true; }
-    if (!m.el) { unmatched.push({ page: pageModel.slug, rest, anchor: node.anchor }); continue; }
-    matched.push({ el: m.el, node, viaAnchor, start: node.samples[0].t });
-  }
+    // Direct match first; per-character spans (rest ≈ identity) fall back to their anchor.
+    const matched = [];
+    const unmatched = [];
+    for (const node of nodes) {
+      if (node.isVideo) continue;
+      const rest = parseTransform(node.samples.at(-1).transform);
+      let m = matchOnPage(rest, pageModel, sectionLeft);
+      let viaAnchor = false;
+      if (!m.el && node.anchor) { m = matchOnPage(parseTransform(node.anchor), pageModel, sectionLeft); viaAnchor = true; }
+      if (!m.el) { unmatched.push({ page: pageModel.slug, rest, anchor: node.anchor }); continue; }
+      matched.push({ el: m.el, node, viaAnchor, start: node.samples[0].t });
+    }
 
-  const starts = clusterStarts(matched.map((m) => m.start));
-  const out = {};
-  matched.forEach((m, i) => {
-    const loop = isLooping(m.node.samples);
-    // Reversing the array alone leaves absolute timestamps descending, which
-    // sends normalise's durationMs negative (clamped to 1) and its t values
-    // far outside 0..1. Negating t too keeps the array in ascending order
-    // (so the duration/fraction math holds) while still landing the FIRST
-    // original sample at samples.at(-1), i.e. normalise's "rest" reference.
-    const samples = loop ? [...m.node.samples].reverse().map((s) => ({ ...s, t: -s.t })) : m.node.samples;
-    const entry = { effect: m.el.anim?.effect ?? null, loop, ...normalise(samples, samples[0].t - starts[i]) };
-    if (loop) entry.frames.reverse().forEach((f, k, arr) => { f.t = k === 0 ? 0 : k === arr.length - 1 ? 1 : f.t; });
-    const prev = out[m.el.id];
-    if (m.viaAnchor) {
-      // merge per-character parts: earliest start wins, count and stagger recorded.
-      // prev can already exist from a direct (non-anchor) match on the same
-      // element id without .starts/.parts — initialise them rather than crash.
-      if (!prev) { out[m.el.id] = { ...entry, parts: 1, starts: [m.start] }; }
-      else {
-        if (!prev.starts) prev.starts = [];
-        prev.parts = (prev.parts || 0) + 1;
-        prev.starts.push(m.start);
-        if (m.start < Math.min(...prev.starts.slice(0, -1))) Object.assign(prev, entry, { parts: prev.parts, starts: prev.starts });
+    const starts = clusterStarts(matched.map((m) => m.start));
+    const out = {};
+    matched.forEach((m, i) => {
+      const loop = isLooping(m.node.samples);
+      // Reversing the array alone leaves absolute timestamps descending, which
+      // sends normalise's durationMs negative (clamped to 1) and its t values
+      // far outside 0..1. Negating t too keeps the array in ascending order
+      // (so the duration/fraction math holds) while still landing the FIRST
+      // original sample at samples.at(-1), i.e. normalise's "rest" reference.
+      const samples = loop ? [...m.node.samples].reverse().map((s) => ({ ...s, t: -s.t })) : m.node.samples;
+      const entry = { effect: m.el.anim?.effect ?? null, loop, ...normalise(samples, samples[0].t - starts[i]) };
+      if (loop) entry.frames.reverse().forEach((f, k, arr) => { f.t = k === 0 ? 0 : k === arr.length - 1 ? 1 : f.t; });
+      const prev = out[m.el.id];
+      if (m.viaAnchor) {
+        // merge per-character parts: earliest start wins, count and stagger recorded.
+        // prev can already exist from a direct (non-anchor) match on the same
+        // element id without .starts/.parts — initialise them rather than crash.
+        if (!prev) { out[m.el.id] = { ...entry, parts: 1, starts: [m.start] }; }
+        else {
+          if (!prev.starts) prev.starts = [];
+          prev.parts = (prev.parts || 0) + 1;
+          prev.starts.push(m.start);
+          if (m.start < Math.min(...prev.starts.slice(0, -1))) Object.assign(prev, entry, { parts: prev.parts, starts: prev.starts });
+        }
+      } else if (!prev || (prev.frames?.length ?? 0) < entry.frames.length) {
+        out[m.el.id] = { ...entry, ...(prev?.parts && { parts: prev.parts, starts: prev.starts }) };
       }
-    } else if (!prev || (prev.frames?.length ?? 0) < entry.frames.length) {
-      out[m.el.id] = { ...entry, ...(prev?.parts && { parts: prev.parts, starts: prev.starts }) };
+    });
+    for (const e of Object.values(out)) {
+      if (e.starts) {
+        const s = [...e.starts].sort((a, b) => a - b);
+        const gaps = s.slice(1).map((t, i) => t - s[i]).sort((a, b) => a - b);
+        e.stagger = gaps.length ? gaps[Math.floor(gaps.length / 2)] : 0;
+        delete e.starts;
+      }
     }
-  });
-  for (const e of Object.values(out)) {
-    if (e.starts) {
-      const s = [...e.starts].sort((a, b) => a - b);
-      const gaps = s.slice(1).map((t, i) => t - s[i]).sort((a, b) => a - b);
-      e.stagger = gaps.length ? gaps[Math.floor(gaps.length / 2)] : 0;
-      delete e.starts;
-    }
+    return { out, unmatched };
+  } finally {
+    await page.close();
   }
-  return { out, unmatched };
 }
 
 if (isMain(import.meta.url)) {
@@ -225,10 +231,9 @@ if (isMain(import.meta.url)) {
   const file = path.join(BUILD, 'animations.json');
   const all = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : {};
   const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: VIEWPORT, deviceScaleFactor: 1 });
   for (const p of model.pages) {
     if (only && p.slug !== only) continue;
-    const { out, unmatched } = await recordPage(page, model, p);
+    const { out, unmatched } = await recordPage(browser, model, p);
     Object.assign(all, out);
     const loopCount = Object.values(out).filter((e) => e.loop).length;
     const partsCount = Object.values(out).filter((e) => e.parts).length;
