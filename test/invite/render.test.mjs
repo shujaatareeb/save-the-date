@@ -53,6 +53,53 @@ test('the full render has seven pages, fonts and no unresolved media', () => {
   assert.match(html, /data-cd="s"/);
 });
 
+test('animation rulings: hygiene, snap, loop class, invisible skip, borrowing', () => {
+  const home = model.pages.find((p) => p.slug === 'home');
+  const homeIds = new Set(); (function walk(els) { for (const e of els) { homeIds.add(e.id); if (e.children) walk(e.children); } })(home.sections.flatMap((s) => s.elements));
+  const loopId = Object.entries(anims).find(([id, a]) => a.loop && homeIds.has(id))[0];
+  const restId = Object.entries(anims).find(([id, a]) => !a.loop && homeIds.has(id))[0];
+  const { html, css } = render(model, assets, anims);
+  // loop class present on a looping element
+  assert.match(html, new RegExp(`data-id="${loopId}"[^>]*class="[^"]*\\ban\\b[^"]*\\bloop\\b|class="[^"]*\\bloop\\b[^"]*"[^>]*data-id="${loopId}"`));
+  assert.match(css, /\.el\.an\.loop\.in\{animation-iteration-count:infinite;animation-direction:alternate\}/);
+  // non-loop keyframes end at rest
+  const restClass = html.match(new RegExp(`data-id="${restId}"[^>]*class="el [^"]*\\b(k\\d+)\\b`))?.[1] || html.match(new RegExp(`class="el [^"]*\\b(k\\d+)\\b[^"]*"[^>]*data-id="${restId}"`))?.[1];
+  assert.ok(restClass, `no keyframe class on ${restId}`);
+  const block = css.match(new RegExp(`@keyframes ${restClass}\\{[^]*?\\}\\}`))[0];
+  assert.match(block, /100%\{opacity:calc\(var\(--op,1\)\*1\);transform:translate\(0px,0px\) rotate\(var\(--rot,0deg\)\) scale\(1\);filter:blur\(0px\)/);
+  // borrowed: element with anim.effect but no recording still animates, with zero delay
+  // (LBTsJDh8fRLwBhKl from the review's suggestion borrows effect 18, whose first-in-file
+  // entry LBwHyJnDhFdwT00m is itself skipped as invisible per ruling 4 — so that fixture
+  // would stay static, not animate. LBXZW5Svpnfy6Mmv instead borrows effect 24 from
+  // LB7KNXNdyg4sxl4b, a visible entry, so it actually gets the an class.)
+  const borrowedId = 'LBXZW5Svpnfy6Mmv';
+  assert.ok(!anims[borrowedId], 'fixture assumption: not recorded');
+  assert.match(html, new RegExp(`data-id="${borrowedId}"[^>]*--del:0ms|--del:0ms[^>]*data-id="${borrowedId}"`));
+});
+
+test('hygiene sorts and de-duplicates frames and skips invisible entries', () => {
+  const el = model.pages[0].sections[0].elements[12];
+  const messy = { [el.id]: { effect: 8, loop: false, startMs: 0, durationMs: 500, frames: [
+    { t: 1, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null },
+    { t: 0.5, opacity: 0.5, dx: 0, dy: 40, scale: 1, blur: 0, clip: null },
+    { t: 0.5, opacity: 0.6, dx: 0, dy: 40, scale: 1, blur: 0, clip: null },
+    { t: 0, opacity: 0, dx: 0, dy: 80, scale: 1, blur: 0, clip: null },
+  ] } };
+  const { css } = render(model, assets, messy);
+  const block = css.match(/@keyframes k1\{[^]*?\}\}/)[0];
+  assert.deepEqual([...block.matchAll(/(\d+(?:\.\d+)?)%\{/g)].map((m) => Number(m[1])), [0, 50, 100]);
+  const still = { [el.id]: { effect: 8, loop: true, startMs: 0, durationMs: 30000, frames: [
+    { t: 0, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null },
+    { t: 1, opacity: 0.995, dx: 0.1, dy: 0, scale: 1.001, blur: 0, clip: null },
+  ] } };
+  const out = render(model, assets, still);
+  // class precedes data-id in this renderer's tag order; check both orders so the
+  // assertion actually exercises the "no an class" behaviour rather than looking
+  // only after data-id (where an animated element's class token never appears).
+  assert.doesNotMatch(out.html, new RegExp(`data-id="${el.id}"[^>]*\\ban\\b|class="[^"]*\\ban\\b[^"]*"[^>]*data-id="${el.id}"`));
+  assert.doesNotMatch(out.css, /@keyframes/);
+});
+
 test('rendered elements land where the model puts them at 1366 wide', async () => {
   const { html, css } = render(model, assets, anims);
   fs.writeFileSync(new URL('../../invite/index.html', import.meta.url), html);

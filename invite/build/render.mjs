@@ -95,7 +95,7 @@ export function renderTextBlock(block, effects) {
 
 export function renderElement(el, ctx) {
   if (el.kind === 'image') {
-    const overlay = el.anim?.params.video && ctx.assets.media[el.anim.params.video]
+    const overlay = el.anim?.params?.video && ctx.assets.media[el.anim.params.video]
       ? mediaTag(el.anim.params.video, { left: 0, top: 0, width: el.width, height: el.height }, ctx, 'mix-blend-mode:screen;pointer-events:none;')
       : '';
     return `${open(el, 'img', ctx)}${mediaTag(el.media, el.crop, ctx)}${overlay}${close(el)}`;
@@ -118,7 +118,8 @@ export function renderElement(el, ctx) {
         if (!m) throw new Error(`no asset for media ${p.fill.media}`);
         const id = `p-${el.id}-${i}`;
         const c = p.fill.crop;
-        defs += `<pattern id="${id}" patternUnits="userSpaceOnUse" x="0" y="0" width="${r(W)}" height="${r(H)}"><image href="${m.src}" x="${r(c.left)}" y="${r(c.top)}" width="${r(c.width)}" height="${r(c.height)}" preserveAspectRatio="none"/></pattern>`;
+        const hrefAttr = ctx.eager ? `href="${m.src}"` : `data-href="${m.src}"`;
+        defs += `<pattern id="${id}" patternUnits="userSpaceOnUse" x="0" y="0" width="${r(W)}" height="${r(H)}"><image ${hrefAttr} x="${r(c.left)}" y="${r(c.top)}" width="${r(c.width)}" height="${r(c.height)}" preserveAspectRatio="none"/></pattern>`;
         paths += `<path d="${attr(p.d)}" fill="url(#${id})"/>`;
       } else {
         paths += `<path d="${attr(p.d)}" fill="${attr(p.fill.color)}"/>`;
@@ -209,12 +210,19 @@ export function render(model, assets, anims) {
   function resolveAnim(el) {
     if (resolvedCache.has(el.id)) return resolvedCache.get(el.id);
     let entry = anims[el.id];
-    if (!entry && el.anim?.effect != null) entry = byEffect.get(el.anim.effect);
+    let borrowed = false;
+    if (!entry && el.anim?.effect != null) {
+      entry = byEffect.get(el.anim.effect);
+      borrowed = !!entry;
+    }
     let result = null;
     if (entry && entry.frames?.length) {
       let frames = hygieneFrames(entry.frames);
       if (!entry.loop) frames = frames.slice(0, -1).concat([RESTING_FRAME]);
-      if (!isInvisible(frames)) result = { ...entry, frames };
+      // A borrowed profile carries an unrelated element's timing — zero its
+      // startMs so it doesn't skew this section's sectionStart, and mark it
+      // so sectionStart's min-over-starts excludes it.
+      if (!isInvisible(frames)) result = { ...entry, frames, borrowed, startMs: borrowed ? 0 : entry.startMs };
     }
     resolvedCache.set(el.id, result);
     return result;
@@ -231,7 +239,7 @@ export function render(model, assets, anims) {
         if (e.children) walk(e.children);
       });
       walk(s.elements);
-      const starts = Object.values(elementAnims).map((a) => a.startMs).filter((n) => n != null);
+      const starts = Object.values(elementAnims).filter((a) => !a.borrowed).map((a) => a.startMs).filter((n) => n != null);
       const ctx = { assets, anims: elementAnims, eager, keyframeName, sectionStart: starts.length ? Math.min(...starts) : 0 };
       const bg = s.background ? `background:${s.background};` : '';
       const c = s.content;
