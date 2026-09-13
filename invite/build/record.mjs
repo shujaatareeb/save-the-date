@@ -54,6 +54,20 @@ export function normalise(samples, triggerMs) {
   return { startMs: Math.max(0, Math.round(startMs)), durationMs: Math.round(durationMs), frames };
 }
 
+// Idle loops never settle, so treat the FIRST sample as rest instead of the
+// last. Reversing the array alone would leave timestamps descending, sending
+// normalise's durationMs negative (clamped to 1 by its own guard) and its
+// frame t values far outside 0..1; negating t too keeps the array in valid
+// ascending order while samples.at(-1) still lands on the original first
+// sample, i.e. normalise's "rest" reference.
+export function normaliseLoop(samples, triggerMs) {
+  const desiredStartMs = samples[0].t - triggerMs;
+  const reversed = [...samples].reverse().map((s) => ({ ...s, t: -s.t }));
+  const result = normalise(reversed, reversed[0].t - desiredStartMs);
+  result.frames.reverse().forEach((f, k, arr) => { f.t = k === 0 ? 0 : k === arr.length - 1 ? 1 : f.t; });
+  return result;
+}
+
 function score(node, el, x, y) {
   const drot = Math.abs((((node.rot || 0) - (el.rotation || 0)) % 360));
   return Math.abs(node.x - x) + Math.abs(node.y - y) + Math.min(drot, 20) * 0.1;
@@ -90,6 +104,59 @@ export function matchOnPage(node, pageModel, sectionLeft) {
     offsetY += section.height;
   });
   return best;
+}
+
+// Every element of a page at absolute canvas coordinates. Group children are
+// placed through their group (position + scale). `alt` carries the cumulative
+// section offset for pages whose sections Canva merged into one container.
+export function flattenPage(pageModel, sectionLeft) {
+  const out = [];
+  let offsetY = 0;
+  pageModel.sections.forEach((section, si) => {
+    const visit = (els, ox, oy, sx, sy) => {
+      for (const el of els) {
+        const x = ox + el.left * sx, y = oy + el.top * sy;
+        out.push({ el, section: si, x: x + sectionLeft, y, alt: y + offsetY });
+        if (el.kind === 'group') {
+          const gsx = sx * (el.width / (el.nativeWidth || el.width)), gsy = sy * (el.height / (el.nativeHeight || el.height));
+          visit(el.children, x, y, gsx, gsy);
+        }
+      }
+    };
+    visit(section.elements, 0, 0, 1, 1);
+    offsetY += section.height;
+  });
+  return out;
+}
+
+export function matchAbsolute(abs, flat) {
+  let best = null, bestScore = TOLERANCE;
+  for (const c of flat) {
+    const drot = Math.min(Math.abs(((abs.rot || 0) - (c.el.rotation || 0)) % 360), 20) * 0.1;
+    for (const y of [c.y, c.alt]) {
+      const s = Math.abs(abs.x - c.x) + Math.abs(abs.y - y) + drot;
+      if (s < bestScore) { best = c; bestScore = s; }
+    }
+  }
+  return best;
+}
+
+// Combine the nodes that animate one element into a single sample timeline.
+// Each CSS property is taken from the node that varies it most.
+export function mergeSamples(nodeSamples) {
+  const props = ['opacity', 'transform', 'filter', 'clip'];
+  const owner = {};
+  for (const p of props) {
+    let best = null, distinct = 1;
+    for (const samples of nodeSamples) {
+      const n = new Set(samples.map((s) => s[p])).size;
+      if (n > distinct) { distinct = n; best = samples; }
+    }
+    owner[p] = best || nodeSamples[0];
+  }
+  const times = [...new Set(nodeSamples.flat().map((s) => s.t))].sort((a, b) => a - b);
+  const at = (samples, p, t) => { let v = samples[0][p]; for (const s of samples) { if (s.t > t) break; v = s[p]; } return v; };
+  return times.map((t) => ({ t, opacity: at(owner.opacity, 'opacity', t), transform: at(owner.transform, 'transform', t), filter: at(owner.filter, 'filter', t), clip: at(owner.clip, 'clip', t) }));
 }
 
 // Start offsets relative to the first start in each burst of reveals.
@@ -141,16 +208,22 @@ const SCROLL_STEP = `(() => {
   return { before, after: sc.scrollTop, max: sc.scrollHeight - sc.clientHeight };
 })()`;
 
+// abs is computed at collect time, when entrance effects are at rest; idle
+// loops are off by their sway amplitude, which the tolerance absorbs.
 const COLLECT = `(() => {
   const S = window.__rec; clearInterval(S.timer);
-  const anchorOf = (el) => {
-    for (let p = el.parentElement; p && p.tagName !== 'MAIN'; p = p.parentElement) {
-      if (p.style && /translate\\(/.test(p.style.transform || '')) return p.style.transform;
+  const tr = (s) => { const m = /translate\\(\\s*([-\\d.e]+)px\\s*,\\s*([-\\d.e]+)px/.exec(s || ''); return m ? [parseFloat(m[1]), parseFloat(m[2])] : [0, 0]; };
+  const rot = (s) => { const m = /rotate\\(\\s*([-\\d.e]+)deg/.exec(s || ''); return m ? parseFloat(m[1]) : 0; };
+  const absOf = (el) => {
+    let x = 0, y = 0, r = 0, depth = 0;
+    for (let p = el; p && p.tagName !== 'MAIN'; p = p.parentElement, depth++) {
+      const t = p.style && p.style.transform;
+      if (t) { const [dx, dy] = tr(t); x += dx; y += dy; if (!r) r = rot(t); }
     }
-    return null;
+    return { x, y, rot: r, depth };
   };
   return S.nodes.filter(r => r.samples.length > 1).map(r => ({
-    samples: r.samples, isVideo: r.el.tagName === 'VIDEO', anchor: anchorOf(r.el),
+    samples: r.samples, isVideo: r.el.tagName === 'VIDEO', abs: absOf(r.el), tag: r.el.tagName,
   }));
 })()`;
 
@@ -170,55 +243,36 @@ export async function recordPage(browser, model, pageModel) {
     }
     const nodes = await page.evaluate(COLLECT);
 
-    // Direct match first; per-character spans (rest ≈ identity) fall back to their anchor.
-    const matched = [];
+    // Match on absolute resting position (sum of translates up the ancestor
+    // chain) against the model flattened to absolute coordinates, then merge
+    // every node that lands on the same element into one timeline.
+    const flat = flattenPage(pageModel, sectionLeft);
+    const byElement = new Map();
     const unmatched = [];
     for (const node of nodes) {
       if (node.isVideo) continue;
-      const rest = parseTransform(node.samples.at(-1).transform);
-      let m = matchOnPage(rest, pageModel, sectionLeft);
-      let viaAnchor = false;
-      if (!m.el && node.anchor) { m = matchOnPage(parseTransform(node.anchor), pageModel, sectionLeft); viaAnchor = true; }
-      if (!m.el) { unmatched.push({ page: pageModel.slug, rest, anchor: node.anchor }); continue; }
-      matched.push({ el: m.el, node, viaAnchor, start: node.samples[0].t });
+      const hit = matchAbsolute(node.abs, flat);
+      if (!hit) { unmatched.push({ page: pageModel.slug, abs: node.abs, tag: node.tag }); continue; }
+      if (!byElement.has(hit.el.id)) byElement.set(hit.el.id, { el: hit.el, nodes: [] });
+      byElement.get(hit.el.id).nodes.push(node);
     }
-
-    const starts = clusterStarts(matched.map((m) => m.start));
-    const out = {};
-    matched.forEach((m, i) => {
-      const loop = isLooping(m.node.samples);
-      // Reversing the array alone leaves absolute timestamps descending, which
-      // sends normalise's durationMs negative (clamped to 1) and its t values
-      // far outside 0..1. Negating t too keeps the array in ascending order
-      // (so the duration/fraction math holds) while still landing the FIRST
-      // original sample at samples.at(-1), i.e. normalise's "rest" reference.
-      const samples = loop ? [...m.node.samples].reverse().map((s) => ({ ...s, t: -s.t })) : m.node.samples;
-      const entry = { effect: m.el.anim?.effect ?? null, loop, ...normalise(samples, samples[0].t - starts[i]) };
-      if (loop) entry.frames.reverse().forEach((f, k, arr) => { f.t = k === 0 ? 0 : k === arr.length - 1 ? 1 : f.t; });
-      const prev = out[m.el.id];
-      if (m.viaAnchor) {
-        // merge per-character parts: earliest start wins, count and stagger recorded.
-        // prev can already exist from a direct (non-anchor) match on the same
-        // element id without .starts/.parts — initialise them rather than crash.
-        if (!prev) { out[m.el.id] = { ...entry, parts: 1, starts: [m.start] }; }
-        else {
-          if (!prev.starts) prev.starts = [];
-          prev.parts = (prev.parts || 0) + 1;
-          prev.starts.push(m.start);
-          if (m.start < Math.min(...prev.starts.slice(0, -1))) Object.assign(prev, entry, { parts: prev.parts, starts: prev.starts });
-        }
-      } else if (!prev || (prev.frames?.length ?? 0) < entry.frames.length) {
-        out[m.el.id] = { ...entry, ...(prev?.parts && { parts: prev.parts, starts: prev.starts }) };
-      }
+    const entries = [...byElement.values()].map(({ el, nodes }) => {
+      const starts = nodes.map((n) => n.samples[0].t).sort((a, b) => a - b);
+      const isText = el.kind === 'text';
+      // per-character reveals: many short-lived nodes on one text element → keep the earliest, note the stagger
+      const parts = isText && nodes.length >= 3 ? nodes.length : 0;
+      const merged = parts ? nodes.reduce((a, b) => (a.samples[0].t <= b.samples[0].t ? a : b)).samples : mergeSamples(nodes.map((n) => n.samples));
+      const gaps = starts.slice(1).map((t, i) => t - starts[i]).sort((a, b) => a - b);
+      return { el, samples: merged, start: starts[0], parts, stagger: parts ? gaps[Math.floor(gaps.length / 2)] || 0 : 0 };
     });
-    for (const e of Object.values(out)) {
-      if (e.starts) {
-        const s = [...e.starts].sort((a, b) => a - b);
-        const gaps = s.slice(1).map((t, i) => t - s[i]).sort((a, b) => a - b);
-        e.stagger = gaps.length ? gaps[Math.floor(gaps.length / 2)] : 0;
-        delete e.starts;
-      }
-    }
+    const clustered = clusterStarts(entries.map((e) => e.start));
+    const out = {};
+    entries.forEach((e, i) => {
+      const loop = isLooping(e.samples);
+      const entry = { effect: e.el.anim?.effect ?? null, loop, ...(loop ? normaliseLoop(e.samples, e.start - clustered[i]) : normalise(e.samples, e.start - clustered[i])) };
+      if (e.parts) { entry.parts = e.parts; entry.stagger = e.stagger; }
+      out[e.el.id] = entry;
+    });
     return { out, unmatched };
   } finally {
     await page.close();
