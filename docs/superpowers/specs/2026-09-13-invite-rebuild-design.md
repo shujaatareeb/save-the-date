@@ -124,9 +124,12 @@ Per section, in `invite.js`:
 ```
 contentBox = union of rects of non-background elements
              (background = element covering ≥ 90% of the section area)
-k = clamp((viewportWidth − 2·12) / contentBox.width, kMin, 1)
+k = clamp((viewportWidth − 2·12) / contentBox.width, 0.25, 1)
 section.style.height = designHeight · k
 ```
+
+The lower bound only guards against a section whose content box is wider than
+the canvas; every measured section stays well above it.
 
 One rule, no breakpoints. Phones (~390px) get k ≈ 0.78 on the envelope page
 and the content fills the width; desktops get k = 1, centred; tablets land in
