@@ -67,14 +67,15 @@ test('animation rulings: hygiene, snap, loop class, invisible skip, borrowing', 
   assert.ok(restClass, `no keyframe class on ${restId}`);
   const block = css.match(new RegExp(`@keyframes ${restClass}\\{[^]*?\\}\\}`))[0];
   assert.match(block, /100%\{opacity:calc\(var\(--op,1\)\*1\);transform:translate\(0px,0px\) rotate\(var\(--rot,0deg\)\) scale\(1\);filter:blur\(0px\)/);
-  // borrowed: element with anim.effect but no recording still animates, with zero delay
-  // (LBTsJDh8fRLwBhKl from the review's suggestion borrows effect 18, whose first-in-file
-  // entry LBwHyJnDhFdwT00m is itself skipped as invisible per ruling 4 — so that fixture
-  // would stay static, not animate. LBXZW5Svpnfy6Mmv instead borrows effect 24 from
-  // LB7KNXNdyg4sxl4b, a visible entry, so it actually gets the an class.)
-  const borrowedId = 'LBXZW5Svpnfy6Mmv';
-  assert.ok(!anims[borrowedId], 'fixture assumption: not recorded');
-  assert.match(html, new RegExp(`data-id="${borrowedId}"[^>]*--del:0ms|--del:0ms[^>]*data-id="${borrowedId}"`));
+  // borrowed: element with anim.effect but no recording still animates, with zero delay.
+  // Ruling 5 (refined) skips an invisible donor in favour of the next entry with the same
+  // effect: LBTsJDh8fRLwBhKl (effect 18) skips the invisible LBwHyJnDhFdwT00m and borrows
+  // the visible LBHF3m9B2D2zRr53 instead; LBXZW5Svpnfy6Mmv (effect 24) borrows the visible
+  // LB7KNXNdyg4sxl4b directly. Both must animate with --del:0ms.
+  for (const borrowedId of ['LBTsJDh8fRLwBhKl', 'LBXZW5Svpnfy6Mmv']) {
+    assert.ok(!anims[borrowedId], `fixture assumption: ${borrowedId} not recorded`);
+    assert.match(html, new RegExp(`data-id="${borrowedId}"[^>]*--del:0ms|--del:0ms[^>]*data-id="${borrowedId}"`), `${borrowedId} should animate with --del:0ms`);
+  }
 });
 
 test('hygiene sorts and de-duplicates frames and skips invisible entries', () => {

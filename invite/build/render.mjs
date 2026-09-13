@@ -199,30 +199,38 @@ export function render(model, assets, anims) {
 
   // Resolve each element's animation entry once: its own entry by id, or —
   // when it has none but its model anim names an effect — the first entry
-  // (in file order) with that same effect. Apply frame hygiene, snap
-  // non-loop entries to rest, and drop entries that turn out invisible.
+  // (in file order) with that same effect that is itself visible after
+  // hygiene (an invisible donor is skipped in favour of the next one with
+  // the same effect; if none is visible the element stays static).
   // animations.json itself is never modified.
+  function processEntry(entry) {
+    if (!entry.frames?.length) return null;
+    let frames = hygieneFrames(entry.frames);
+    if (!entry.loop) frames = frames.slice(0, -1).concat([RESTING_FRAME]);
+    if (isInvisible(frames)) return null;
+    return { ...entry, frames };
+  }
+  const processedById = new Map();
+  for (const [id, entry] of Object.entries(anims)) processedById.set(id, processEntry(entry));
   const byEffect = new Map();
-  for (const entry of Object.values(anims)) {
-    if (entry.effect != null && !byEffect.has(entry.effect)) byEffect.set(entry.effect, entry);
+  for (const [id, entry] of Object.entries(anims)) {
+    if (entry.effect == null || byEffect.has(entry.effect)) continue;
+    const processed = processedById.get(id);
+    if (processed) byEffect.set(entry.effect, processed);
   }
   const resolvedCache = new Map();
   function resolveAnim(el) {
     if (resolvedCache.has(el.id)) return resolvedCache.get(el.id);
-    let entry = anims[el.id];
-    let borrowed = false;
-    if (!entry && el.anim?.effect != null) {
-      entry = byEffect.get(el.anim.effect);
-      borrowed = !!entry;
-    }
     let result = null;
-    if (entry && entry.frames?.length) {
-      let frames = hygieneFrames(entry.frames);
-      if (!entry.loop) frames = frames.slice(0, -1).concat([RESTING_FRAME]);
+    if (anims[el.id]) {
+      const own = processedById.get(el.id);
+      if (own) result = { ...own, borrowed: false };
+    } else if (el.anim?.effect != null) {
+      const donor = byEffect.get(el.anim.effect);
       // A borrowed profile carries an unrelated element's timing — zero its
       // startMs so it doesn't skew this section's sectionStart, and mark it
       // so sectionStart's min-over-starts excludes it.
-      if (!isInvisible(frames)) result = { ...entry, frames, borrowed, startMs: borrowed ? 0 : entry.startMs };
+      if (donor) result = { ...donor, borrowed: true, startMs: 0 };
     }
     resolvedCache.set(el.id, result);
     return result;
