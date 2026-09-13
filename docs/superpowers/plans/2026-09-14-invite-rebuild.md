@@ -265,7 +265,8 @@ test('decodes image crops and transparency', () => {
   const bg = page('envelope').sections[0].elements[0];
   assert.equal(bg.kind, 'image');
   assert.equal(bg.media, 'MAHUE4PPVlo');
-  assert.equal(Math.round(bg.crop.left), -930);
+  assert.equal(Math.round(bg.crop.top), -930);
+  assert.equal(Math.round(bg.crop.left), 0);
   assert.equal(Math.round(bg.crop.width), 1657);
   assert.equal(Math.round(bg.crop.height), 2945);
   assert.equal(bg.opacity, 0.77);
@@ -394,10 +395,11 @@ function decodeElement(raw, ctx) {
     link: resolveLink(raw.G), anim: decodeAnim(raw.X),
   };
   if (kind === 'image') {
-    const fill = raw.a?.B;
-    if (!fill?.A?.A) throw new Error(`image ${raw._} has no media`);
-    el.media = fill.A.A;
-    el.crop = decodeCrop(fill.B, el);
+    // Stills keep their media under a.B, the one animated sticker (petals) under a.I.
+    const still = raw.a?.B, video = raw.a?.I;
+    if (still?.A?.A) { el.media = still.A.A; el.crop = decodeCrop(still.B, el); }
+    else if (video?.A) { el.media = video.A; el.crop = decodeCrop(video.B, el); }
+    else throw new Error(`image ${raw._} has no media`);
   } else if (kind === 'text') {
     Object.assign(el, decodeTextBlock(raw.a.C, raw.b?.A));
     el.effects = (raw.j?.A || []).map((e) => ({ type: e.A, ...e.B }));
@@ -433,10 +435,16 @@ function bounds(el) {
   return { left: cx - hw, top: cy - hh, right: cx + hw, bottom: cy + hh };
 }
 
+// The column the runtime fits to a phone: everything that is not a full-width
+// bleed (backgrounds, the petals layer), clamped to the canvas so decorations
+// hanging off the sides do not widen it.
 export function contentBox(section) {
-  const isBackground = (el) => el.width >= section.width * 0.9 || el.width * el.height >= section.width * section.height * 0.9;
-  const boxes = section.elements.filter((el) => !isBackground(el)).map(bounds);
-  if (!boxes.length) return { left: 0, top: 0, width: section.width, height: section.height };
+  const W = section.width;
+  const bleeds = (b) => b.left <= 0 && b.right >= W;
+  const boxes = section.elements.map(bounds).filter((b) => !bleeds(b))
+    .map((b) => ({ left: Math.max(0, b.left), right: Math.min(W, b.right), top: Math.max(0, b.top), bottom: Math.min(section.height, b.bottom) }))
+    .filter((b) => b.right > b.left && b.bottom > b.top);
+  if (!boxes.length) return { left: 0, top: 0, width: W, height: section.height };
   const left = Math.min(...boxes.map((b) => b.left)), top = Math.min(...boxes.map((b) => b.top));
   const right = Math.max(...boxes.map((b) => b.right)), bottom = Math.max(...boxes.map((b) => b.bottom));
   return { left, top, width: right - left, height: bottom - top };
@@ -1036,7 +1044,7 @@ test('renders images inside a crop frame, eager on the envelope and lazy elsewhe
   const el = model.pages[0].sections[0].elements[0];
   const eager = renderElement(el, { assets, anims: {}, eager: true, ids: new Set() });
   assert.match(eager, /<img src="assets\/[a-f0-9]+\.webp"/);
-  assert.match(eager, /left:-930(\.\d+)?px/);
+  assert.match(eager, /top:-929\.9\d?px/);
   const lazy = renderElement(el, { assets, anims: {}, eager: false, ids: new Set() });
   assert.match(lazy, /<img data-src="assets\//);
   assert.doesNotMatch(lazy, /<img src=/);
@@ -1224,7 +1232,8 @@ export function renderElement(el, ctx) {
   }
   if (el.kind === 'embed') {
     const unit = (u, label) => `<div class="cd-u"><b data-cd="${u}">00</b><i>${label}</i></div>`;
-    return `${open(el, 'cd', ctx)}<div class="cd-row">${unit('d', 'Days')}<em>:</em>${unit('h', 'Hours')}<em>:</em>${unit('m', 'Mins')}<em>:</em>${unit('s', 'Secs')}</div>${close(el)}`;
+    // --cd is the box height in design px; the stage's scale() does the rest.
+    return `${open(el, 'cd', ctx, `--cd:${px(el.height)};`)}<div class="cd-row">${unit('d', 'Days')}<em>:</em>${unit('h', 'Hours')}<em>:</em>${unit('m', 'Mins')}<em>:</em>${unit('s', 'Secs')}</div>${close(el)}`;
   }
   throw new Error(`cannot render kind ${el.kind} (${el.id})`);
 }
@@ -1281,7 +1290,8 @@ export function render(model, assets, anims) {
     sections.push(`<section class="page${eager ? ' active' : ''}" id="${page.slug}" data-page="${page.slug}" aria-label="${attr(page.title)}">\n${secs.join('\n')}\n</section>`);
   }
   const faces = Object.entries(assets.fonts).map(([key, f]) => `@font-face{font-family:'f-${key}';src:url(${f.src}) format('${path.extname(f.src) === '.woff2' ? 'woff2' : 'woff'}');font-weight:${f.weight};font-style:${f.italic ? 'italic' : 'normal'};font-display:swap}`);
-  const css = [...faces, BASE_CSS.trim(), ...[...keyframes.entries()].map(([k, name]) => keyframeCss(name, JSON.parse(k)))].join('\n');
+  const animations = [...keyframes.entries()].map(([k, name]) => `${keyframeCss(name, JSON.parse(k))}\n.${name}.in{animation-name:${name}}`);
+  const css = [...faces, BASE_CSS.trim(), ...animations].join('\n');
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -1472,7 +1482,6 @@ Expected: FAIL — `.page.active` is `envelope` (from HTML) but hash switching, 
     const tx = vw / 2 - (cl + cw / 2) * k;
     sec.style.height = `${h * k}px`;
     sec.querySelector('.stage').style.transform = `translate(${tx}px,0) scale(${k})`;
-    sec.style.setProperty('--cd', `${238 * k}px`);
   }
   function scale() {
     const active = document.querySelector('.page.active');
