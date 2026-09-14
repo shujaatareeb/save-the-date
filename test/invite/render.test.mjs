@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { chromium } from 'playwright';
-import { render, renderElement, keyframeCss, escapeHtml, splitLoop, textEffects } from '../../invite/build/render.mjs';
+import { render, renderElement, keyframeCss, escapeHtml, splitLoop, textEffects, trimLeadingHold } from '../../invite/build/render.mjs';
 import { assetKey } from '../../invite/build/assets.mjs';
 import { serve } from './serve.mjs';
 
@@ -73,6 +73,15 @@ test('an entrance followed by a wide slow sway still ends when the reveal settle
   assert.equal(i, 2);
   assert.equal(entrance.length, 3);
   assert.equal(idle.length, 5);
+});
+
+test('drops a leading hold so the entrance starts at the first change', () => {
+  const f = (t, op) => ({ t, opacity: op, dx: 0, dy: 0, scale: 1, blur: 0, clip: null });
+  const { frames, durationMs } = trimLeadingHold([f(0, 0), f(0.9, 0), f(0.95, 0.5), f(1, 1)], 10000);
+  assert.deepEqual(frames.map((x) => [x.t, x.opacity]), [[0, 0], [0.5, 0.5], [1, 1]]);
+  assert.equal(durationMs, 1000);
+  const same = trimLeadingHold([f(0, 0), f(0.5, 0.5), f(1, 1)], 1000);
+  assert.equal(same.frames.length, 3); assert.equal(same.durationMs, 1000);
 });
 
 test('a looping element gets a one-shot entrance followed by an infinite idle', () => {

@@ -229,6 +229,18 @@ a.el{display:block;text-decoration:none;color:inherit}
 
 const RESTING_FRAME = { t: 1, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null };
 
+const sameFrame = (a, b) => Math.abs(a.opacity - b.opacity) < 0.005 && Math.abs(a.dx - b.dx) < 0.5 && Math.abs(a.dy - b.dy) < 0.5 && Math.abs(a.scale - b.scale) < 0.005 && a.blur === b.blur && a.clip === b.clip;
+// A recording often opens with the hidden start state held for seconds until the
+// element scrolled into view. Start the entrance at the first real change.
+export function trimLeadingHold(frames, durationMs) {
+  let k = 0;
+  while (k + 2 < frames.length && sameFrame(frames[k], frames[k + 1])) k++;
+  if (k === 0) return { frames, durationMs };
+  const t0 = frames[k].t, span = 1 - t0 || 1;
+  const out = frames.slice(k).map((f, i, arr) => ({ ...f, t: i === 0 ? 0 : i === arr.length - 1 ? 1 : r((f.t - t0) / span, 3) }));
+  return { frames: out, durationMs: Math.max(1, Math.round(durationMs * span)) };
+}
+
 // Sort an entry's frames by t ascending and drop any frame whose t equals the
 // previous one's — the render must not depend on already-clean data.
 function hygieneFrames(frames) {
@@ -309,17 +321,18 @@ export function render(model, assets, anims) {
   // animations.json itself is never modified.
   function processEntry(entry) {
     if (!entry.frames?.length) return null;
-    const frames = hygieneFrames(entry.frames);
+    const hygiened = hygieneFrames(entry.frames);
+    const { frames, durationMs } = trimLeadingHold(hygiened, entry.durationMs);
     if (!entry.loop) {
       const snapped = frames.slice(0, -1).concat([RESTING_FRAME]);
       if (isInvisibleFrames(snapped)) return null;
-      return { ...entry, frames: snapped };
+      return { ...entry, frames: snapped, durationMs };
     }
     const { entrance, idle, i } = splitLoop(frames);
     if (!entrance && !idle) return null;
-    const entranceMs = Math.round(entry.durationMs * frames[i].t);
-    const idleMs = entry.durationMs - entranceMs;
-    return { ...entry, frames, entrance, idle, entranceMs, idleMs };
+    const entranceMs = Math.round(durationMs * frames[i].t);
+    const idleMs = durationMs - entranceMs;
+    return { ...entry, frames, entrance, idle, entranceMs, idleMs, durationMs };
   }
   const processedById = new Map();
   for (const [id, entry] of Object.entries(anims)) processedById.set(id, processEntry(entry));

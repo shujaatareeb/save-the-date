@@ -14,17 +14,27 @@ const OUT = path.join(HERE, 'out');
 const SLUGS = ['envelope', 'home', 'timeline', 'mehendi', 'nikah', 'reception', 'dress-code'];
 const run = promisify(execFile);
 
-async function thumb(file, w, h) {
-  const { stdout } = await run(ffmpegPath, ['-hide_banner', '-loglevel', 'error', '-i', file, '-vf', `scale=${w}:${h}`, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { encoding: 'buffer', maxBuffer: 1 << 24 });
+// PNG IHDR: signature (8) + length (4) + "IHDR" (4), then width (4) and height (4), big-endian.
+function pngHeight(file) {
+  const buf = fs.readFileSync(file);
+  return buf.readUInt32BE(20);
+}
+async function thumb(file, w, h, cropHeight) {
+  const vf = cropHeight != null ? `crop=1366:${cropHeight}:0:0,scale=${w}:${h}` : `scale=${w}:${h}`;
+  const { stdout } = await run(ffmpegPath, ['-hide_banner', '-loglevel', 'error', '-i', file, '-vf', vf, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { encoding: 'buffer', maxBuffer: 1 << 24 });
   return stdout;
 }
 async function meanDiff(a, b) {
-  // Both pages are forced to the same small size, so differing full-page heights only smear, not misalign.
+  // Canva pads some pages with empty background well below the design height, so the two
+  // pages can differ in full-page height. Compare only the rows both pages actually have —
+  // crop both to the shorter height before scaling down to the same small size.
   const w = 64, h = 512;
-  const [x, y] = await Promise.all([thumb(a, w, h), thumb(b, w, h)]);
+  const ha = pngHeight(a), hb = pngHeight(b);
+  const cropHeight = Math.min(ha, hb);
+  const [x, y] = await Promise.all([thumb(a, w, h, cropHeight), thumb(b, w, h, cropHeight)]);
   let sum = 0;
   for (let i = 0; i < x.length; i++) sum += Math.abs(x[i] - y[i]);
-  return sum / x.length;
+  return { diff: sum / x.length, ha, hb };
 }
 
 let browser, site;
@@ -43,8 +53,8 @@ for (const slug of SLUGS) {
     await page.evaluate(() => window.scrollTo(0, 0));
     const shot = path.join(OUT, `${slug}.png`);
     await page.screenshot({ path: shot, fullPage: true });
-    const d = await meanDiff(ref, shot);
-    assert.ok(d < 13, `${slug}: mean channel difference ${d.toFixed(1)} (see test/invite/out/${slug}.png vs test/invite/ref/${slug}.png)`);
+    const { diff: d, ha, hb } = await meanDiff(ref, shot);
+    assert.ok(d < 13, `${slug}: mean channel difference ${d.toFixed(1)} (ref ${ha}px vs out ${hb}px) (see test/invite/out/${slug}.png vs test/invite/ref/${slug}.png)`);
     await page.close();
   });
 }
