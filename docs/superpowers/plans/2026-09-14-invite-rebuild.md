@@ -1926,6 +1926,170 @@ git commit -m "Composite Canva's vector spritesheets into real images"
 
 ---
 
+### Task 10: Processed media and per-element recolours
+
+Added during execution. Two more facts from the blob, both verified on the envelope page:
+
+- 57 image elements carry a second media id under `a.B.I` — the *processed* version Canva actually displays (background removed, effects applied). Using `a.B.A` shows the raw photo (the envelope with its table backdrop, the wax seal on a white square).
+- 12 elements carry a recolour map under `a.B.C`, e.g. `{"#d3a100": "#be817c"}`: palette colours of a vector graphic replaced per element. 7 are spritesheets (their layer colours, including the implicit black of a lone `background-a`, go through the map), 5 are SVGs (fill colours in the file go through the map). Without it the CLICK TO OPEN ribbon is maroon instead of purple.
+
+Runs after Task 9 and before Task 6.
+
+**Files:**
+- Modify: `invite/build/extract.mjs`, `invite/build/assets.mjs`, `invite/build/render.mjs`
+- Test: `test/invite/extract.test.mjs`, `test/invite/assets.test.mjs`, `test/invite/render.test.mjs`
+- Regenerate: `model.json`, `assets.json`, `invite/assets/`, `index.html`, `invite.css`
+
+**Interfaces:**
+- Image elements: `media` = `a.B.I.A` when present else `a.B.A.A`; new optional `recolor: { [fromHex]: toHex }` (only when non-empty; keys and values lower-case `#rrggbb`).
+- `assets.mjs` exports `assetKey(mediaId, recolor)` → `mediaId` when no recolour, else `mediaId + '@' + first 8 hex of sha1(JSON of the map with sorted keys)`. `usedMedia` and the manifest are keyed by `assetKey`; `render.mjs` looks media up through the same function (import it).
+- Exports `applyRecolor(color: 'rgb(r, g, b)'|'#rrggbb', map) → '#rrggbb'` and `recolorSvg(svgText, map) → string`.
+
+- [ ] **Step 1: Failing tests**
+
+`test/invite/extract.test.mjs`:
+```js
+test('prefers the processed media and carries per-element recolours', () => {
+  const els = page('envelope').sections[0].elements;
+  assert.equal(els[4].media, 'MAHUFZUveVY');                       // background-removed envelope
+  assert.deepEqual(els[7].recolor, { '#000000': '#715449' });
+  assert.equal(els[0].recolor, undefined);
+});
+```
+`test/invite/assets.test.mjs`:
+```js
+import { assetKey, applyRecolor, recolorSvg } from '../../invite/build/assets.mjs';
+test('asset keys separate recoloured variants', () => {
+  assert.equal(assetKey('MAG66LCSz84', undefined), 'MAG66LCSz84');
+  const k = assetKey('MAG66LCSz84', { '#d3a100': '#be817c' });
+  assert.match(k, /^MAG66LCSz84@[0-9a-f]{8}$/);
+  assert.equal(k, assetKey('MAG66LCSz84', { '#D3A100': '#BE817C' }));
+});
+test('recolours layer colours and svg fills through the map', () => {
+  assert.equal(applyRecolor('rgb(211, 161, 0)', { '#d3a100': '#be817c' }), '#be817c');
+  assert.equal(applyRecolor('rgb(1, 2, 3)', { '#d3a100': '#be817c' }), '#010203');
+  assert.equal(recolorSvg('<path fill="#EEBAD5"/><path style="fill:#eebad5"/>', { '#eebad5': '#e8e0d3' }), '<path fill="#e8e0d3"/><path style="fill:#e8e0d3"/>');
+});
+test('the manifest carries a recoloured variant for the ribbon', () => {
+  const key = Object.keys(manifest.media).find((k) => k.startsWith('MAHStM-bLg0@') || /@/.test(k));
+  assert.ok(key, 'no recoloured variant in manifest');
+});
+```
+`test/invite/render.test.mjs`: in the "renders images inside a crop frame" test add `assert.match(eager, /assets\/[a-f0-9]+\.webp/)` unchanged, and a new assertion that the envelope's element `LBq7bt3xrnV5lSC1` (recoloured spritesheet) renders an `<img>` whose `src` equals `assets.media[assetKey('<its media>', {'#000000':'#715449'})].src` — import `assetKey` in the test.
+
+Run the three files; expect the new tests to fail.
+
+- [ ] **Step 2: extract.mjs**
+
+In the image branch:
+```js
+    const still = raw.a?.B, video = raw.a?.I;
+    if (still?.A?.A) {
+      el.media = still.I?.A || still.A.A;
+      el.crop = decodeCrop(still.B, el);
+      const map = still.C && Object.keys(still.C).length ? still.C : null;
+      if (map) el.recolor = Object.fromEntries(Object.entries(map).map(([k, v]) => [k.toLowerCase(), v.toLowerCase()]));
+    } else if (video?.A) { … unchanged … }
+```
+
+- [ ] **Step 3: assets.mjs**
+
+```js
+export function assetKey(mediaId, recolor) {
+  if (!recolor || !Object.keys(recolor).length) return mediaId;
+  const canon = JSON.stringify(Object.fromEntries(Object.entries(recolor).map(([k, v]) => [k.toLowerCase(), v.toLowerCase()]).sort()));
+  return `${mediaId}@${crypto.createHash('sha1').update(canon).digest('hex').slice(0, 8)}`;
+}
+const toHex = (c) => {
+  if (c.startsWith('#')) return c.toLowerCase();
+  const [r, g, b] = c.match(/\d+/g).map(Number);
+  return '#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('');
+};
+export function applyRecolor(color, map) { const hex = toHex(color); return (map && map[hex]) || hex; }
+export function recolorSvg(svg, map) {
+  return svg.replace(/#[0-9a-fA-F]{6}\b/g, (hex) => map[hex.toLowerCase()] || hex);
+}
+```
+`usedMedia(model)` now records `used.set(assetKey(el.media, el.recolor), { media: el.media, recolor: el.recolor || null, maxWidth })` (shape fills and anim videos have no recolour: key = media id). `buildAssets` iterates these entries; for spritesheets pass the map into the composite (layer colours via `applyRecolor(l.color, map)`, and the lone `background-a` base uses `applyRecolor('#000000', map)` instead of black); for SVGs with a map write `recolorSvg(text, map)` to a variant file named by content hash; cache composites as `<source>.<key hash>.composite.png` so variants do not collide. Manifest `media[key]`.
+
+- [ ] **Step 4: render.mjs**
+
+`import { assetKey } from './assets.mjs';` and in `renderElement`'s image branch resolve `ctx.assets.media[assetKey(el.media, el.recolor)]`; `mediaTag` takes the resolved key. Everything else unchanged.
+
+- [ ] **Step 5: Regenerate, verify, commit**
+
+`npm run invite:extract && rm -rf invite/assets && npm run invite:assets && npm run invite:render`, then `node --test test/invite/*.test.mjs` (only the `invite.js` 404 may fail). Eyeball `http://localhost:8734/invite/` with the console snippet from Task 9: envelope cut out cleanly, wax seal round, ribbon purple. Commit: `Show the processed media and honour per-element recolours`.
+
+---
+
+### Task 11: Split entrance and idle phases of looping animations
+
+Added during execution. Idle effects (sway, breathe) were recorded as `loop: true` and normalised against the FIRST sample, so when an element also slides in first, its "loop" includes the entrance: the divider parks 387 px left, the ribbon 208 px right. Fix: normalise every entry against its resting (last) sample, and let the renderer split a looping entry into a one-shot entrance followed by an infinite alternating idle.
+
+Runs after Task 10 and before Task 6.
+
+**Files:**
+- Modify: `invite/build/record.mjs`, `invite/build/render.mjs`
+- Test: `test/invite/record.test.mjs`, `test/invite/render.test.mjs`
+- Regenerate: `animations.json`, `index.html`, `invite.css`
+
+**Interfaces:**
+- `record.mjs`: `normaliseLoop` removed; `assemble` uses `normalise(samples, trigger)` for every entry; `loop` flag kept.
+- `render.mjs` exports `splitLoop(frames) → { entrance: Frame[] | null, idle: Frame[] | null }`: `entrance` = frames from 0 up to and including the settle index `i` (first index such that every later frame is within 3 px / 3 % opacity / scale 0.01 / blur 0 of the last frame), re-timed to 0..1, or `null` when `i === 0`; `idle` = frames from `i` to the end re-timed to 0..1, or `null` when fewer than 3 frames or invisible by the ruling-4 filter measured against its own last frame. CSS per looping element: entrance keyframes `kN` (once, fill both) then idle keyframes `kNi` starting at `--del + --dur` with `animation-iteration-count: infinite; animation-direction: alternate; animation-fill-mode: forwards` (no backwards fill, so it cannot pre-empt the entrance). Element gets `--idur:<idle ms>`.
+
+- [ ] **Step 1: Failing tests**
+
+`test/invite/record.test.mjs`: change the loop test to assert `normalise` (not `normaliseLoop`) on the oscillating sample set gives `frames.at(-1)` at rest and `frames[0].dy === 20` when the first sample sits 20 px above the last; remove the `normaliseLoop` import.
+`test/invite/render.test.mjs`:
+```js
+import { splitLoop } from '../../invite/build/render.mjs';
+test('splits a recorded loop into its entrance and its idle sway', () => {
+  const f = (t, dy, op = 1) => ({ t, opacity: op, dx: 0, dy, scale: 1, blur: 0, clip: null });
+  const frames = [f(0, 80, 0), f(0.1, 40, 0.5), f(0.2, 0), f(0.4, 2), f(0.6, -2), f(0.8, 2), f(1, 0)];
+  const { entrance, idle } = splitLoop(frames);
+  assert.deepEqual(entrance.map((x) => [x.t, x.dy]), [[0, 80], [0.5, 40], [1, 0]]);
+  assert.equal(idle.length, 5); assert.equal(idle[0].t, 0); assert.equal(idle.at(-1).t, 1);
+  assert.equal(splitLoop([f(0, 2), f(0.5, -2), f(1, 0)]).entrance, null);
+  assert.equal(splitLoop([f(0, 80, 0), f(1, 0)]).idle, null);
+});
+test('a looping element gets a one-shot entrance followed by an infinite idle', () => {
+  const el = model.pages[0].sections[0].elements[12];
+  const f = (t, dy, op = 1) => ({ t, opacity: op, dx: 0, dy, scale: 1, blur: 0, clip: null });
+  const anims2 = { [el.id]: { effect: 26, loop: true, startMs: 0, durationMs: 1000, frames: [f(0, 80, 0), f(0.1, 40, 0.5), f(0.2, 0), f(0.4, 2), f(0.6, -2), f(0.8, 2), f(1, 0)] } };
+  const { html, css } = render(model, assets, anims2);
+  assert.match(css, /@keyframes k1\{/); assert.match(css, /@keyframes k1i\{/);
+  assert.match(css, /\.k1\.in\{animation-name:k1,k1i;[^}]*animation-iteration-count:1,infinite;animation-direction:normal,alternate;animation-fill-mode:both,forwards/);
+  assert.match(html, new RegExp(`data-id="${el.id}"[^>]*--idur:800ms|--idur:800ms[^>]*data-id="${el.id}"`));
+});
+```
+
+- [ ] **Step 2: record.mjs**
+
+Delete `normaliseLoop`; in `assemble` use `normalise(e.samples, e.start - clustered[i])` for all entries; keep `loop: isLooping(e.samples)`. Re-run `npm run invite:record` (all pages) and confirm with the monotonic one-liner from Task 4 that it still prints 0, and that every entry's last frame is `dx:0, dy:0, scale:1, blur:0`.
+
+- [ ] **Step 3: render.mjs**
+
+```js
+const close = (a, b) => Math.abs(a.dx - b.dx) + Math.abs(a.dy - b.dy) <= 3 && Math.abs(a.opacity - b.opacity) <= 0.03 && Math.abs(a.scale - b.scale) <= 0.01 && a.blur === b.blur;
+const retime = (frames) => { const t0 = frames[0].t, span = frames.at(-1).t - t0 || 1; return frames.map((f, i) => ({ ...f, t: i === 0 ? 0 : i === frames.length - 1 ? 1 : r((f.t - t0) / span, 3) })); };
+export function splitLoop(frames) {
+  const rest = frames.at(-1);
+  let i = frames.length - 1;
+  while (i > 0 && close(frames[i - 1], rest)) i--;
+  const entrance = i > 0 ? retime(frames.slice(0, i + 1).map((f, k, arr) => (k === arr.length - 1 ? { ...rest, t: f.t } : f))) : null;
+  const tail = frames.slice(i);
+  const idle = tail.length >= 3 && !isInvisibleFrames(tail) ? retime(tail) : null;
+  return { entrance, idle };
+}
+```
+where `isInvisibleFrames` is the existing ruling-4 check factored to take a frame array. In the per-element animation resolution: non-loop → as today; loop → `splitLoop`; if both parts exist emit `kN` (entrance) and `kNi` (idle, keyframes with the idle frames), element style adds `--idur:${idleMs}ms` where `idleMs = durationMs × (1 − settleFraction)` and `--dur` becomes the entrance's share; class rule `.kN.in{animation-name:kN,kNi;animation-duration:var(--dur),var(--idur);animation-delay:var(--del),calc(var(--del) + var(--dur));animation-iteration-count:1,infinite;animation-direction:normal,alternate;animation-fill-mode:both,forwards;animation-timing-function:linear,ease-in-out}`. If only idle: `.kNi.in{animation-name:kNi;animation-iteration-count:infinite;animation-direction:alternate;…}` with `--dur` = idle duration. If only entrance: as a non-loop entry. Remove the old `.el.an.loop.in` rule and the `loop` class.
+
+- [ ] **Step 4: Regenerate, verify, commit**
+
+`npm run invite:render`, `node --test test/invite/*.test.mjs`. Eyeball: with the console snippet, the divider sits centred under the ribbon and the ribbon over the envelope, both gently swaying. Commit: `Play recorded loops as an entrance followed by an idle sway`.
+
+---
+
 ## Self-review
 
 **Spec coverage.** Fetch/extract/assets/render pipeline → Tasks 1–3, 5. model.json shape → Task 2. Scaling rule with 0.25 floor → Task 6 (`PAD` 8 instead of 12; fine, documented in Task 8). Elements (image crop, real text, groups, shapes, z-order) → Task 5. Seven slugs + hash router + back button → Tasks 2, 6. Canva footer dropped → render never emits it. Assets (referenced only, ≤2× size, WebP, hash names, fonts with fallback stack, petals, budget, lazy per page) → Tasks 3, 5, 6, 8. Animations per element from recordings + fallback → Tasks 4, 5 (unrecorded elements simply have no `an` class, i.e. shown static; the spec's "fade+rise fallback" is dropped in favour of static — noted for Task 8's spec update). Countdown native → Tasks 5, 6. Failure handling (missing media throws, unknown kind throws) → Tasks 2, 3, 5. Tests at three widths, diff vs references, shots, build checks → Tasks 2, 7. No-JS fallback → `<noscript>` in Task 5.
