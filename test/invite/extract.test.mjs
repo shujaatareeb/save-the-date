@@ -109,6 +109,13 @@ test('every text run carries the full run interface', () => {
   }
 });
 
+test('prefers the processed media and carries per-element recolours', () => {
+  const els = page('envelope').sections[0].elements;
+  assert.equal(els[4].media, 'MAHUFZUveVY');                       // background-removed envelope
+  assert.deepEqual(els[7].recolor, { '#000000': '#715449' });
+  assert.equal(els[0].recolor, undefined);
+});
+
 test('keeps the largest variant of a media id and carries spritesheet layers', () => {
   const m = model.media['MAG66LCSz84'];
   assert.equal(m.type, 'vector');

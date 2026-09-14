@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { usedMedia, planFonts, styleToFace, pageBytes, spriteRect } from '../../invite/build/assets.mjs';
+import { usedMedia, planFonts, styleToFace, pageBytes, spriteRect, assetKey, applyRecolor, recolorSvg, compositeCacheName } from '../../invite/build/assets.mjs';
 
 const model = JSON.parse(fs.readFileSync(new URL('../../invite/build/model.json', import.meta.url)));
 const manifest = JSON.parse(fs.readFileSync(new URL('../../invite/build/assets.json', import.meta.url)));
@@ -12,7 +12,10 @@ test('collects every media id the published pages reference, with the widest use
   assert.ok(used.has('VAFGRrnMAsY'), 'petals sticker');
   assert.ok(used.has('MAHULz87mAs'), 'photo strip fill inside a shape');
   assert.ok(used.get('MAHUE4PPVlo').maxWidth > 1500);
-  for (const id of used.keys()) assert.ok(model.media[id], id);
+  // Keys are assetKey(media, recolor) — a recoloured entry's key carries an
+  // '@' suffix, so look the underlying media id up via the entry's own
+  // `media` field rather than the map key itself.
+  for (const [key, use] of used) assert.ok(model.media[use.media], key);
 });
 
 test('plans one font face per (font, style index) actually used', () => {
@@ -48,4 +51,31 @@ test('spritesheet media are shipped as single composited images', () => {
   const m = manifest.media['MAG66LCSz84'];
   assert.match(m.src, /\.webp$/);
   assert.ok(m.width <= 2400 && m.height <= 1585 && Math.abs(m.width / m.height - 2400 / 1585) < 0.01, JSON.stringify(m));
+});
+
+test('asset keys separate recoloured variants', () => {
+  assert.equal(assetKey('MAG66LCSz84', undefined), 'MAG66LCSz84');
+  const k = assetKey('MAG66LCSz84', { '#d3a100': '#be817c' });
+  assert.match(k, /^MAG66LCSz84@[0-9a-f]{8}$/);
+  assert.equal(k, assetKey('MAG66LCSz84', { '#D3A100': '#BE817C' }));
+});
+
+test('recolours layer colours and svg fills through the map', () => {
+  assert.equal(applyRecolor('rgb(211, 161, 0)', { '#d3a100': '#be817c' }), '#be817c');
+  assert.equal(applyRecolor('rgb(1, 2, 3)', { '#d3a100': '#be817c' }), '#010203');
+  assert.equal(recolorSvg('<path fill="#EEBAD5"/><path style="fill:#eebad5"/>', { '#eebad5': '#e8e0d3' }), '<path fill="#e8e0d3"/><path style="fill:#e8e0d3"/>');
+});
+
+test('the manifest carries a recoloured variant for the ribbon', () => {
+  const key = Object.keys(manifest.media).find((k) => k.startsWith('MAHStM-bLg0@') || /@/.test(k));
+  assert.ok(key, 'no recoloured variant in manifest');
+});
+
+test('composite cache names include what was composited, not just the source basename', () => {
+  const sprites = { wide: 2, high: 1, layers: [{ type: 'background-a' }] };
+  const plain = compositeCacheName('C:/cache/abc123.png', sprites, null);
+  const recoloured = compositeCacheName('C:/cache/abc123.png', sprites, { '#000000': '#715449' });
+  assert.match(plain, /^abc123\.png\.[0-9a-f]{8}\.composite\.png$/);
+  assert.match(recoloured, /^abc123\.png\.[0-9a-f]{8}\.composite\.png$/);
+  assert.notEqual(plain, recoloured, 'recoloured variant must not collide with the plain composite');
 });

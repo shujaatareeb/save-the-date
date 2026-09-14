@@ -7,6 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { BUILD, INVITE, isMain, round as r } from './lib.mjs';
+import { assetKey } from './assets.mjs';
 
 const TITLE = 'Misbah &amp; Areeb — Wedding Invitation';
 const DESCRIPTION = 'Misbah &amp; Areeb invite you to celebrate their wedding. Mehfil-e-Mehendi 8 October, Nikah and Dawat-e-Khaas 10 October 2026, Mumbai.';
@@ -39,9 +40,9 @@ function open(el, cls, ctx, extraStyle = '') {
 }
 const close = (el) => (el.link ? '</a>' : '</div>');
 
-function mediaTag(id, crop, ctx, extra = '') {
-  const m = ctx.assets.media[id];
-  if (!m) throw new Error(`no asset for media ${id}`);
+function mediaTag(key, crop, ctx, extra = '') {
+  const m = ctx.assets.media[key];
+  if (!m) throw new Error(`no asset for media ${key}`);
   const style = `left:${px(crop.left)};top:${px(crop.top)};width:${px(crop.width)};height:${px(crop.height)};`;
   if (m.kind === 'video') {
     const src = ctx.eager ? `src="${m.src}"` : `data-src="${m.src}"`;
@@ -98,7 +99,7 @@ export function renderElement(el, ctx) {
     const overlay = el.anim?.params?.video && ctx.assets.media[el.anim.params.video]
       ? mediaTag(el.anim.params.video, { left: 0, top: 0, width: el.width, height: el.height }, ctx, 'mix-blend-mode:screen;pointer-events:none;')
       : '';
-    return `${open(el, 'img', ctx)}${mediaTag(el.media, el.crop, ctx)}${overlay}${close(el)}`;
+    return `${open(el, 'img', ctx)}${mediaTag(assetKey(el.media, el.recolor), el.crop, ctx)}${overlay}${close(el)}`;
   }
   if (el.kind === 'text') {
     const { style, html } = renderTextBlock(el, el.effects);

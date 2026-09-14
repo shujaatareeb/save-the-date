@@ -75,8 +75,12 @@ function decodeElement(raw) {
   if (kind === 'image') {
     // Stills keep their media under a.B, the one animated sticker (petals) under a.I.
     const still = raw.a?.B, video = raw.a?.I;
-    if (still?.A?.A) { el.media = still.A.A; el.crop = decodeCrop(still.B, el); }
-    else if (video?.A) { el.media = video.A; el.crop = decodeCrop(video.B, el); }
+    if (still?.A?.A) {
+      el.media = still.I?.A || still.A.A;
+      el.crop = decodeCrop(still.B, el);
+      const map = still.C && Object.keys(still.C).length ? still.C : null;
+      if (map) el.recolor = Object.fromEntries(Object.entries(map).map(([k, v]) => [k.toLowerCase(), v.toLowerCase()]));
+    } else if (video?.A) { el.media = video.A; el.crop = decodeCrop(video.B, el); }
     else throw new Error(`image ${raw._} has no media`);
   } else if (kind === 'text') {
     Object.assign(el, decodeTextBlock(raw.a.C, raw.b?.A));

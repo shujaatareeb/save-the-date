@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { chromium } from 'playwright';
 import { render, renderElement, keyframeCss, escapeHtml } from '../../invite/build/render.mjs';
+import { assetKey } from '../../invite/build/assets.mjs';
 import { serve } from './serve.mjs';
 
 const read = (f) => JSON.parse(fs.readFileSync(new URL(`../../invite/build/${f}`, import.meta.url)));
@@ -26,10 +27,19 @@ test('renders images inside a crop frame, eager on the envelope and lazy elsewhe
   const el = model.pages[0].sections[0].elements[0];
   const eager = renderElement(el, { assets, anims: {}, eager: true, ids: new Set() });
   assert.match(eager, /<img src="assets\/[a-f0-9]+\.webp"/);
+  assert.match(eager, /assets\/[a-f0-9]+\.webp/);
   assert.match(eager, /top:-929\.9\d?px/);
   const lazy = renderElement(el, { assets, anims: {}, eager: false, ids: new Set() });
   assert.match(lazy, /<img data-src="assets\//);
   assert.doesNotMatch(lazy, /<img src=/);
+
+  // LBq7bt3xrnV5lSC1: the CLICK TO OPEN ribbon, a recoloured spritesheet.
+  const ribbon = model.pages[0].sections[0].elements[7];
+  assert.equal(ribbon.id, 'LBq7bt3xrnV5lSC1');
+  const ribbonHtml = renderElement(ribbon, { assets, anims: {}, eager: true, ids: new Set() });
+  const key = assetKey(ribbon.media, { '#000000': '#715449' });
+  const src = assets.media[key].src;
+  assert.match(ribbonHtml, new RegExp(`<img src="${src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`));
 });
 
 test('renders a linked image as an anchor', () => {

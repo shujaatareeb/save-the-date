@@ -210,7 +210,7 @@
        "opacity": 1,
        "link": "#home",
        "anim": null,
-       "media": "MAHUFM2vCFk",
+       "media": "MAHUFZUveVY",
        "crop": {
         "top": -123.4693383484902,
         "left": -43.00137477397607,
@@ -229,7 +229,7 @@
        "opacity": 1,
        "link": "#home",
        "anim": null,
-       "media": "MAHUFIjk25o",
+       "media": "MAHUFKRwZAs",
        "crop": {
         "top": -14.665749133771918,
         "left": -33.206010007903934,
@@ -283,6 +283,9 @@
         "left": -2.842170943040401e-14,
         "height": 20.0937796905489,
         "width": 211.51347042683048
+       },
+       "recolor": {
+        "#000000": "#715449"
        }
       },
       {
@@ -312,6 +315,9 @@
         "left": 0,
         "height": 25.140576658035847,
         "width": 386.77810243132075
+       },
+       "recolor": {
+        "#d3a100": "#be817c"
        }
       },
       {
@@ -325,7 +331,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MAG7YfJd25I",
+       "media": "MAHUQhQVPJM",
        "crop": {
         "top": 7.105427357601002e-15,
         "left": 0,
@@ -582,7 +588,7 @@
            "video": null
           }
          },
-         "media": "MAHUFM2vCFk",
+         "media": "MAHUFZUveVY",
          "crop": {
           "top": -20.2047162236928,
           "left": -622.4905284777001,
@@ -601,7 +607,7 @@
          "opacity": 1,
          "link": null,
          "anim": null,
-         "media": "MAHUFvqWuPI",
+         "media": "MAHUFpcHwF8",
          "crop": {
           "top": 0,
           "left": 0,
@@ -675,7 +681,7 @@
            "video": null
           }
          },
-         "media": "MAHNgtbiVic",
+         "media": "MAHUcYJFck4",
          "crop": {
           "top": 5.684341886080802e-14,
           "left": 0,
@@ -806,7 +812,7 @@
          "video": null
         }
        },
-       "media": "MAHULSK2buI",
+       "media": "MAHULd6YUoE",
        "crop": {
         "top": -181.93462480147576,
         "left": -74.2296056814719,
@@ -825,7 +831,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MAHULMFqbnM",
+       "media": "MAHULJd7XYU",
        "crop": {
         "top": 0,
         "left": 0,
@@ -926,7 +932,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MAHULMFqbnM",
+       "media": "MAHULJd7XYU",
        "crop": {
         "top": 0,
         "left": -1.1368683772161603e-13,
@@ -955,7 +961,7 @@
          "video": null
         }
        },
-       "media": "MAHUFM2vCFk",
+       "media": "MAHUFuP77wI",
        "crop": {
         "top": -265.6863591335469,
         "left": -769.7625258305084,
@@ -998,7 +1004,7 @@
          "opacity": 1,
          "link": null,
          "anim": null,
-         "media": "MAHULX6rb8M",
+         "media": "MAHULfkY6fU",
          "crop": {
           "top": 0,
           "left": -2.842170943040401e-14,
@@ -1147,7 +1153,7 @@
            "video": null
           }
          },
-         "media": "MAHULV-w1hU",
+         "media": "MAHULbE2AhM",
          "crop": {
           "top": -5.684341886080802e-14,
           "left": 0,
@@ -1182,6 +1188,9 @@
           "left": 0,
           "height": 36.54153902241756,
           "width": 39.08185991702413
+         },
+         "recolor": {
+          "#000000": "#c50544"
          }
         }
        ]
@@ -1265,7 +1274,7 @@
          "video": "VAGS99Gv5aE"
         }
        },
-       "media": "MAFG-D2M1p4",
+       "media": "MAHUc9EFKYo",
        "crop": {
         "top": 1.4210854715202004e-14,
         "left": 5.684341886080802e-14,
@@ -1294,7 +1303,7 @@
          "video": null
         }
        },
-       "media": "MAHUoHbkUcM",
+       "media": "MAHUoPmj_SA",
        "crop": {
         "top": -75.373722772587,
         "left": -102.1699923215179,
@@ -1323,7 +1332,7 @@
          "video": null
         }
        },
-       "media": "MAHNZGmTMtM",
+       "media": "MAHUpAnPfXU",
        "crop": {
         "top": -7.105427357601002e-14,
         "left": -1.4210854715202004e-14,
@@ -1403,7 +1412,7 @@
          "video": null
         }
        },
-       "media": "MAHUQ-gH07c",
+       "media": "MAHUcXPcGR8",
        "crop": {
         "top": -5.684341886080802e-14,
         "left": -5.684341886080802e-14,
@@ -1462,7 +1471,7 @@
        "opacity": 1,
        "link": "#timeline",
        "anim": null,
-       "media": "MAHULhdVvyE",
+       "media": "MAHULo3Y7Po",
        "crop": {
         "top": -154.50603449851656,
         "left": -90.68832459695545,
@@ -1481,7 +1490,7 @@
        "opacity": 1,
        "link": "#timeline",
        "anim": null,
-       "media": "MAHULuN6Vkc",
+       "media": "MAHULto4YPU",
        "crop": {
         "top": 0,
         "left": 0,
@@ -1506,6 +1515,9 @@
         "left": 0,
         "height": 663.695346406621,
         "width": 481.17912614480014
+       },
+       "recolor": {
+        "#eebad5": "#e8e0d3"
        }
       },
       {
@@ -1917,7 +1929,7 @@
          "video": null
         }
        },
-       "media": "MAHNgJr_n1o",
+       "media": "MAHUpEYH8L8",
        "crop": {
         "top": 5.684341886080802e-14,
         "left": 2.842170943040401e-14,
@@ -1946,7 +1958,7 @@
          "video": null
         }
        },
-       "media": "MAHUpA4Z9c8",
+       "media": "MAHUpAB9OIo",
        "crop": {
         "top": 0,
         "left": 0,
@@ -2008,7 +2020,7 @@
          "opacity": 1,
          "link": null,
          "anim": null,
-         "media": "MAHUd_PhbAY",
+         "media": "MAHUqIJRAqY",
          "crop": {
           "top": -90.49314311191353,
           "left": -5.684341886080802e-14,
@@ -2093,7 +2105,7 @@
          "opacity": 1,
          "link": null,
          "anim": null,
-         "media": "MAHU1hanmDw",
+         "media": "MAHU7ck7YEM",
          "crop": {
           "top": -0.41807847287709166,
           "left": 2.842170943040401e-14,
@@ -2178,7 +2190,7 @@
          "opacity": 1,
          "link": null,
          "anim": null,
-         "media": "MAHUpqCHBP0",
+         "media": "MAHUpodq_K8",
          "crop": {
           "top": -1.4210854715202004e-14,
           "left": -2.842170943040401e-14,
@@ -2263,7 +2275,7 @@
            "video": null
           }
          },
-         "media": "MAFlBcg5k_M",
+         "media": "MAHUcWjIOZo",
          "crop": {
           "top": 2.842170943040401e-14,
           "left": 5.684341886080802e-14,
@@ -2382,7 +2394,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MAHNYuRbg9A",
+       "media": "MAHU7zRzOiQ",
        "crop": {
         "top": 0,
         "left": 2.842170943040401e-14,
@@ -2590,7 +2602,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MAHULX6rb8M",
+       "media": "MAHULfkY6fU",
        "crop": {
         "top": 0,
         "left": 0,
@@ -2891,6 +2903,9 @@
         "left": 0,
         "height": 28.27806620283258,
         "width": 207.54544002078956
+       },
+       "recolor": {
+        "#ddae48": "#927248"
        }
       },
       {
@@ -2981,6 +2996,9 @@
           "left": 0,
           "height": 51.86862960966715,
           "width": 223.09088004157914
+         },
+         "recolor": {
+          "#db9c47": "#927248"
          }
         },
         {
@@ -3100,7 +3118,7 @@
          "opacity": 1,
          "link": null,
          "anim": null,
-         "media": "MAHU1hanmDw",
+         "media": "MAHU7ck7YEM",
          "crop": {
           "top": -0.4103122346348016,
           "left": 2.842170943040401e-14,
@@ -3297,6 +3315,9 @@
         "left": 0,
         "height": 52.78461556136119,
         "width": 390.99715230637923
+       },
+       "recolor": {
+        "#ddae48": "#d8b765"
        }
       },
       {
@@ -3677,6 +3698,9 @@
         "left": 5.684341886080802e-14,
         "height": 438.2024109041189,
         "width": 405.33723008630994
+       },
+       "recolor": {
+        "#000000": "#ddc1a4"
        }
       },
       {
@@ -3696,6 +3720,9 @@
         "left": 5.684341886080802e-14,
         "height": 456.4681463277584,
         "width": 422.2330353531765
+       },
+       "recolor": {
+        "#000000": "#ddc1a4"
        }
       },
       {
@@ -3715,6 +3742,9 @@
         "left": 0,
         "height": 269.69547938435954,
         "width": 268.3470019874377
+       },
+       "recolor": {
+        "#000000": "#ddc1a4"
        }
       },
       {
@@ -3734,6 +3764,9 @@
         "left": 0,
         "height": 182.75785410733982,
         "width": 181.84406483680308
+       },
+       "recolor": {
+        "#000000": "#ddc1a4"
        }
       },
       {
@@ -4442,7 +4475,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MAHU1qcm1GM",
+       "media": "MAHU12MIlGk",
        "crop": {
         "top": -12.224162794806944,
         "left": 0,
@@ -4461,7 +4494,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MAHU1pbRPII",
+       "media": "MAHU10vOWOU",
        "crop": {
         "top": -12.224162794806887,
         "left": 0,
@@ -4480,7 +4513,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MAHU1ooCoh8",
+       "media": "MAHU108KaWg",
        "crop": {
         "top": -12.224162794806944,
         "left": -5.684341886080802e-14,
@@ -5301,7 +5334,7 @@
          "opacity": 1,
          "link": null,
          "anim": null,
-         "media": "MAHUdZVP0UY",
+         "media": "MAHUdX04Ab0",
          "crop": {
           "top": -15.229936853910942,
           "left": -4.263256414560601e-13,
@@ -5419,7 +5452,7 @@
          "video": null
         }
        },
-       "media": "MAHUdlCYcjg",
+       "media": "MAHUdv-yhPc",
        "crop": {
         "top": -122.88408946652811,
         "left": 5.684341886080802e-14,
@@ -5452,7 +5485,7 @@
          "opacity": 1,
          "link": null,
          "anim": null,
-         "media": "MAHU1hanmDw",
+         "media": "MAHU104NJ1A",
          "crop": {
           "top": 0,
           "left": 0,
@@ -5524,7 +5557,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MAHVGPu94rI",
+       "media": "MAHVGb6381U",
        "crop": {
         "top": -17.651025788573293,
         "left": -27.762632091287514,
@@ -5783,7 +5816,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MAHU7ktCN1Q",
+       "media": "MAHU7k7HYHw",
        "crop": {
         "top": -170.1507492573694,
         "left": 1.1368683772161603e-13,
@@ -5835,7 +5868,7 @@
          "opacity": 1,
          "link": null,
          "anim": null,
-         "media": "MAHU1hanmDw",
+         "media": "MAHU7g5auOo",
          "crop": {
           "top": 0,
           "left": 0,
@@ -5907,6 +5940,9 @@
         "left": 0,
         "height": 111.57282009858189,
         "width": 119.3292193567721
+       },
+       "recolor": {
+        "#000000": "#c50544"
        }
       }
      ],
@@ -5941,7 +5977,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MADFiE_qH0U",
+       "media": "MAHU1DP09vg",
        "crop": {
         "top": -16.896945935928557,
         "left": -97.00618628581788,
@@ -5960,7 +5996,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MADFiE_qH0U",
+       "media": "MAHU1DP09vg",
        "crop": {
         "top": -17.278823555126223,
         "left": -187.86471043975894,
@@ -6150,7 +6186,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MAHU7ntjFeo",
+       "media": "MAHU7j1uk9I",
        "crop": {
         "top": -32.975874952942945,
         "left": -75.59920974124282,
@@ -6335,7 +6371,7 @@
          "opacity": 1,
          "link": null,
          "anim": null,
-         "media": "MAHU1hanmDw",
+         "media": "MAHU7nhFU78",
          "crop": {
           "top": 0,
           "left": 0,
@@ -6412,7 +6448,7 @@
        "opacity": 1,
        "link": null,
        "anim": null,
-       "media": "MAHUd7t3J_k",
+       "media": "MAHUpQXkIH4",
        "crop": {
         "top": -133.79145265736952,
         "left": 0,
