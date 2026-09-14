@@ -126,7 +126,9 @@ export function spriteRect(sheetWidth, sheetHeight, wide, high, k) {
 // `recolor` (a plain hex->hex map, or null) travels with the page.evaluate
 // argument since this function is re-serialised into the browser and cannot
 // close over assets.mjs's own applyRecolor — so hex handling is reimplemented
-// locally here.
+// locally here. NOTE: recolorHex/hexToRgb below are a hand-copy of
+// applyRecolor/toHex's logic for the hex-already-lower-case case; if
+// applyRecolor's hex handling ever changes, update this in-page copy too.
 const COMPOSITE = async ({ dataUrl, sprites, recolor }) => {
   const img = new Image(); img.src = dataUrl; await img.decode();
   const W = img.naturalWidth / sprites.wide, H = img.naturalHeight / sprites.high;
@@ -226,6 +228,13 @@ export async function buildAssets(model) {
   try {
     for (const [key, use] of usedMedia(model)) {
       const m = model.media[use.media];
+      // Recolouring is only implemented for spritesheets (layer colours) and
+      // SVGs (fill hex replacement) — a plain raster still, a GIF or a video
+      // has no recolour path, so fail loud instead of silently shipping the
+      // un-recoloured image.
+      if (use.recolor && m.mime !== 'image/svg+xml' && !m.sprites) {
+        throw new Error(`recolour on a plain raster ${key} is not supported`);
+      }
       const src = await download(m.url);
       let out, kind = 'image', poster = null;
       if (m.mime === 'image/svg+xml') out = use.recolor ? writeRecoloredSvg(src, use.recolor) : await copyThrough(src, '.svg');

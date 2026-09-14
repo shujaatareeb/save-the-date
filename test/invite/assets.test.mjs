@@ -66,9 +66,21 @@ test('recolours layer colours and svg fills through the map', () => {
   assert.equal(recolorSvg('<path fill="#EEBAD5"/><path style="fill:#eebad5"/>', { '#eebad5': '#e8e0d3' }), '<path fill="#e8e0d3"/><path style="fill:#e8e0d3"/>');
 });
 
-test('the manifest carries a recoloured variant for the ribbon', () => {
-  const key = Object.keys(manifest.media).find((k) => k.startsWith('MAHStM-bLg0@') || /@/.test(k));
-  assert.ok(key, 'no recoloured variant in manifest');
+test('the manifest carries a recoloured variant for the heart flourish', () => {
+  // LBq7bt3xrnV5lSC1 is the small heart-and-squiggle flourish under "WE ARE
+  // GETTING MARRIED!" (not the purple ribbon plate, which is a separate,
+  // unrecoloured element) — it's the one element in the envelope page whose
+  // a.B.C recolour map is { '#000000': '#715449' }.
+  const el = model.pages.find((p) => p.slug === 'envelope').sections[0].elements
+    .find((e) => e.id === 'LBq7bt3xrnV5lSC1');
+  assert.ok(el, 'fixture assumption: LBq7bt3xrnV5lSC1 exists on the envelope page');
+  const key = assetKey(el.media, el.recolor);
+  assert.notEqual(key, el.media, 'fixture assumption: this element carries a recolour');
+  assert.ok(manifest.media[key], `no recoloured variant ${key} in manifest`);
+  assert.match(manifest.media[key].src, /\.webp$/);
+  // Its media id is used only by this one (always-recoloured) element, so the
+  // plain, unrecoloured key must not appear in the manifest.
+  assert.equal(manifest.media[el.media], undefined, `unexpected unrecoloured ${el.media} in manifest`);
 });
 
 test('composite cache names include what was composited, not just the source basename', () => {

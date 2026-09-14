@@ -33,13 +33,15 @@ test('renders images inside a crop frame, eager on the envelope and lazy elsewhe
   assert.match(lazy, /<img data-src="assets\//);
   assert.doesNotMatch(lazy, /<img src=/);
 
-  // LBq7bt3xrnV5lSC1: the CLICK TO OPEN ribbon, a recoloured spritesheet.
-  const ribbon = model.pages[0].sections[0].elements[7];
-  assert.equal(ribbon.id, 'LBq7bt3xrnV5lSC1');
-  const ribbonHtml = renderElement(ribbon, { assets, anims: {}, eager: true, ids: new Set() });
-  const key = assetKey(ribbon.media, { '#000000': '#715449' });
+  // LBq7bt3xrnV5lSC1: the small heart-and-squiggle flourish under "WE ARE
+  // GETTING MARRIED!", a recoloured spritesheet (not the purple ribbon plate,
+  // which is a separate, unrecoloured element).
+  const flourish = model.pages[0].sections[0].elements[7];
+  assert.equal(flourish.id, 'LBq7bt3xrnV5lSC1');
+  const flourishHtml = renderElement(flourish, { assets, anims: {}, eager: true, ids: new Set() });
+  const key = assetKey(flourish.media, { '#000000': '#715449' });
   const src = assets.media[key].src;
-  assert.match(ribbonHtml, new RegExp(`<img src="${src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`));
+  assert.match(flourishHtml, new RegExp(`<img src="${src.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}"`));
 });
 
 test('renders a linked image as an anchor', () => {
