@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { chromium } from 'playwright';
-import { render, renderElement, keyframeCss, escapeHtml, splitLoop, textEffects, trimLeadingHold } from '../../invite/build/render.mjs';
+import { render, renderElement, keyframeCss, escapeHtml, splitLoop, textEffects, trimLeadingHold, blockLeading } from '../../invite/build/render.mjs';
 import { assetKey } from '../../invite/build/assets.mjs';
 import { serve } from './serve.mjs';
 
@@ -266,8 +266,32 @@ test('marks superscript runs', () => {
   const home = model.pages.find((p) => p.slug === 'home');
   const date = (function find(els) { for (const e of els) { if (e.kind === 'text' && /10th October/.test(e.text)) return e; if (e.children) { const f = find(e.children); if (f) return f; } } })(home.sections[1].elements);
   const html = renderElement(date, { assets, anims: {}, eager: false, groupFor: () => ({ name: 'k1' }), sectionStart: 0 });
-  assert.match(html, /vertical-align:super;font-size:0\.6em[^>]*>th</);
+  // 0.6em here would resolve against the parent .ln, not this run's 25.1px.
+  assert.match(html, /font-size:15\.06px[^>]*vertical-align:super[^>]*>th</);
 });
+
+test('leads a block against its own run size, not the wrapper', () => {
+  // The .tin wrapper carries no font size, so an em resolves against 16px.
+  assert.equal(blockLeading({ lineHeight: '0.74em', size: 159.815 }), '118.26px');
+  assert.equal(blockLeading({ lineHeight: '0.87em', size: 86.4996 }), '75.25px');
+});
+
+test('leaves a block with no stored leading to the face', () => {
+  assert.equal(blockLeading({ size: 30.0004 }), 'normal');
+});
+
+test('refuses a line height in a unit it cannot convert', () => {
+  assert.throws(() => blockLeading({ lineHeight: '18px', size: 30 }), /unsupported line height/);
+});
+
+test('names each font format by its real extension', () => {
+  const { css } = render(model, assets, {});
+  // This file is a bare sfnt; calling it woff lets a browser skip the source.
+  assert.match(css, /url\(assets\/fonts\/bc7c5d4e6abe\.otf\) format\('opentype'\)/);
+  assert.doesNotMatch(css, /\.otf\) format\('woff'\)/);
+  assert.match(css, /\.woff\) format\('woff'\)/);
+});
+
 test('keeps text effects at sane sizes', () => {
   const fx = textEffects([{ type: 'shadow', angle: '-45', blur: '2', color: '#000000', offset: '1.74', transparency: '0.33' }], 86.5);
   const m = fx.shadow.match(/text-shadow:([-\d.]+)px ([-\d.]+)px ([\d.]+)px rgba\(0,0,0,0\.67\)/);

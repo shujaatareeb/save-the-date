@@ -9,6 +9,15 @@ import path from 'node:path';
 import { BUILD, INVITE, isMain, round as r } from './lib.mjs';
 import { assetKey } from './assets.mjs';
 
+const FONT_FORMATS = { '.woff2': 'woff2', '.woff': 'woff', '.ttf': 'truetype', '.otf': 'opentype' };
+// A wrong format() hint lets a browser skip the source outright, so an unknown
+// extension throws rather than guessing 'woff' at a file that is not woff.
+function fontFormat(src) {
+  const fmt = FONT_FORMATS[path.extname(src).toLowerCase()];
+  if (!fmt) throw new Error(`unknown font format: ${src}`);
+  return fmt;
+}
+
 const TITLE = 'Misbah &amp; Areeb — Wedding Invitation';
 const DESCRIPTION = 'Misbah &amp; Areeb invite you to celebrate their wedding. Mehfil-e-Mehendi 8 October, Nikah and Dawat-e-Khaas 10 October 2026, Mumbai.';
 const COUNTDOWN_FACE = 'YAFcfiBZ5y0-0'; // Fry's Baskerville, the closest face to the Canva widget
@@ -116,12 +125,27 @@ export function textEffects(effects, fontSize) {
   return { shadow: shadowParts.length ? `text-shadow:${shadowParts.join(',')};` : '', stroke, background };
 }
 
+// Canva stores leading as a multiplier of the run's own font size ("0.74em").
+// The .tin wrapper carries no font size, so an em value there resolves against
+// the inherited 16px and collapses the lines onto each other — emit it in
+// pixels against the first run instead. With nothing stored, `normal` lets
+// each face supply its own metrics rather than inventing a flat multiplier.
+export function blockLeading(first) {
+  if (!first.lineHeight) return 'normal';
+  const m = /^([\d.]+)em$/.exec(String(first.lineHeight).trim());
+  if (!m) throw new Error(`unsupported line height: ${first.lineHeight}`);
+  return px(parseFloat(m[1]) * (first.size || 16));
+}
+
 function runStyle(run, backgroundCss) {
-  let s = `font-family:'f-${run.font}-${run.styleIndex}',serif;font-size:${px(run.size)};font-weight:${run.weight};font-style:${run.italic ? 'italic' : 'normal'};color:${run.color};`;
+  // A superscript run draws at 60% of its own size. As `0.6em` that would
+  // resolve against the parent .ln rather than this run, so fold it in here.
+  const size = run.super ? run.size * 0.6 : run.size;
+  let s = `font-family:'f-${run.font}-${run.styleIndex}',serif;font-size:${px(size)};font-weight:${run.weight};font-style:${run.italic ? 'italic' : 'normal'};color:${run.color};`;
   if (run.letterSpacing) s += `letter-spacing:${run.letterSpacing};`;
   if (run.decoration && run.decoration !== 'none') s += `text-decoration:${run.decoration};`;
   if (run.transform && run.transform !== 'none') s += `text-transform:${run.transform};`;
-  if (run.super) s += `vertical-align:super;font-size:0.6em;`;
+  if (run.super) s += `vertical-align:super;`;
   if (backgroundCss) s += backgroundCss;
   return s;
 }
@@ -149,7 +173,7 @@ export function renderTextBlock(block, effects) {
     }
     lines.push(`<span class="ln">${line || '&nbsp;'}</span>`);
   }
-  const style = `text-align:${first.align || 'center'};line-height:${first.lineHeight || '1.2em'};${fx.shadow}${fx.stroke}`;
+  const style = `text-align:${first.align || 'center'};line-height:${blockLeading(first)};${fx.shadow}${fx.stroke}`;
   const sx = block.naturalWidth ? r(block.width / block.naturalWidth, 4) : null;
   const sy = block.naturalHeight ? r(block.height / block.naturalHeight, 4) : null;
   const inner = sx && sy ? `width:${px(block.naturalWidth)};height:${px(block.naturalHeight)};transform:scale(${sx},${sy});` : 'width:100%;';
@@ -383,7 +407,7 @@ export function render(model, assets, anims) {
     });
     sections.push(`<section class="page${eager ? ' active' : ''}" id="${page.slug}" data-page="${page.slug}" aria-label="${attr(page.title)}">\n${secs.join('\n')}\n</section>`);
   }
-  const faces = Object.entries(assets.fonts).map(([key, f]) => `@font-face{font-family:'f-${key}';src:url(${f.src}) format('${path.extname(f.src) === '.woff2' ? 'woff2' : 'woff'}');font-weight:${f.weight};font-style:${f.italic ? 'italic' : 'normal'};font-display:swap}`);
+  const faces = Object.entries(assets.fonts).map(([key, f]) => `@font-face{font-family:'f-${key}';src:url(${f.src}) format('${fontFormat(f.src)}');font-weight:${f.weight};font-style:${f.italic ? 'italic' : 'normal'};font-display:swap}`);
   const animations = [...animGroups.values()].map((g) => {
     if (g.kind === 'split') {
       return `${keyframeCss(g.name, g.entrance)}\n${keyframeCss(`${g.name}i`, g.idle)}\n.${g.name}.in{animation-name:${g.name},${g.name}i;animation-duration:var(--dur),var(--idur);animation-delay:var(--del),calc(var(--del) + var(--dur));animation-iteration-count:1,infinite;animation-direction:normal,alternate;animation-fill-mode:both,forwards;animation-timing-function:linear,ease-in-out}`;
