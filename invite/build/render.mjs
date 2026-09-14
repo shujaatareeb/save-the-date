@@ -90,7 +90,8 @@ export function textEffects(effects, fontSize) {
       const d = Math.min(parseFloat(e.offset) || 0, 1) * 0.5 * fontSize;
       const dx = r(Math.cos(rad) * d), dy = r(-Math.sin(rad) * d);
       const blurPx = r((parseFloat(e.blur) || 0) * 0.1 * fontSize);
-      const alpha = 1 - (parseFloat(e.transparency) || 0);
+      const transparency = parseFloat(e.transparency);
+      const alpha = Number.isFinite(transparency) ? Math.min(Math.max(1 - transparency, 0), 1) : 1;
       shadowParts.push(`${dx}px ${dy}px ${blurPx}px ${toRgba(e.color, alpha)}`);
     } else if (e.type === 'lift') {
       const i = parseFloat(e.intensity) || 1;
@@ -103,10 +104,10 @@ export function textEffects(effects, fontSize) {
       shadowParts.push(`${r(dx * 2)}px ${r(dy * 2)}px ${toRgba(e.color, 0.5)}`);
     } else if (e.type === 'outline') {
       const thick = r((parseFloat(e.thickness) || 0) * 0.05 * fontSize, 2);
-      stroke = `-webkit-text-stroke:${thick}px ${e.color || '#000'};paint-order:stroke fill;`;
+      stroke = `-webkit-text-stroke:${thick}px ${attr(e.color || '#000')};paint-order:stroke fill;`;
     } else if (e.type === 'background') {
-      const alpha = parseFloat(e.transparency);
-      const a = Number.isFinite(alpha) ? Math.min(Math.max(alpha, 0), 1) : 1;
+      const transparency = parseFloat(e.transparency);
+      const a = Number.isFinite(transparency) ? Math.min(Math.max(1 - transparency, 0), 1) : 1;
       const spread = parseFloat(e.spread) || 0;
       const roundness = parseFloat(e.roundness) || 0;
       background = `background:${toRgba(e.color, a)};padding:${r(0.1 * spread, 3)}em ${r(0.25 * spread, 3)}em;border-radius:${r(0.5 * roundness, 3)}em;box-decoration-break:clone;`;
@@ -219,7 +220,7 @@ main{position:relative;min-height:100vh}
 .txt>.tin{position:absolute;left:0;top:0;transform-origin:0 0;white-space:pre-wrap}
 a.el{display:block;text-decoration:none;color:inherit}
 .grp>.gin{position:absolute;left:0;top:0;transform-origin:0 0}
-.shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center}
+.shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;white-space:pre-wrap}
 .el.an{opacity:0;animation-fill-mode:both;animation-timing-function:linear;animation-duration:var(--dur,800ms);animation-delay:var(--del,0ms)}
 .cd{display:flex;align-items:center;justify-content:center;color:#4b3822;font-family:'f-${COUNTDOWN_FACE}',serif}
 .cd-row{display:flex;align-items:flex-start;gap:.15em;font-size:calc(var(--cd,238px)*.27);font-weight:700;line-height:1}

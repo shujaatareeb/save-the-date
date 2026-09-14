@@ -274,5 +274,34 @@ test('keeps text effects at sane sizes', () => {
   assert.ok(m, fx.shadow);
   assert.ok(Math.abs(+m[1]) <= 43.25 && Math.abs(+m[2]) <= 43.25 && +m[3] <= 17.3, fx.shadow);
   assert.match(textEffects([{ type: 'outline', color: '#614124', thickness: '0.11' }], 68).stroke, /-webkit-text-stroke:0\.37px #614124;paint-order:stroke fill/);
-  assert.match(textEffects([{ type: 'background', color: '#800d09', roundness: '1', spread: '1', transparency: '1' }], 20).background, /background:rgba\(128,13,9,1\);/);
+  assert.match(textEffects([{ type: 'background', color: '#800d09', roundness: '1', spread: '1', transparency: '1' }], 20).background, /background:rgba\(128,13,9,0\);/);
+  assert.match(textEffects([{ type: 'background', color: '#800d09', transparency: '0.25' }], 20).background, /background:rgba\(128,13,9,0\.75\);/);
+});
+
+test('clamps shadow alpha after converting transparency', () => {
+  const fx = textEffects([
+    { type: 'shadow', color: '#000000', transparency: '-1' },
+    { type: 'shadow', color: '#000000', transparency: '2' },
+    { type: 'shadow', color: '#000000', transparency: 'invalid' },
+    { type: 'shadow', color: '#000000' },
+  ], 20);
+  assert.deepEqual(fx.shadow.match(/rgba\(0,0,0,[01]\)/g), [
+    'rgba(0,0,0,1)',
+    'rgba(0,0,0,0)',
+    'rgba(0,0,0,1)',
+    'rgba(0,0,0,1)',
+  ]);
+});
+
+test('escapes outline colour before placing it in inline CSS', () => {
+  const fx = textEffects([{ type: 'outline', color: '#614124\";content:\'<svg/onload=alert(1)>', thickness: '0.11' }], 68);
+  assert.match(fx.stroke, /&quot;/);
+  assert.match(fx.stroke, /&#39;/);
+  assert.match(fx.stroke, /&lt;svg\/onload=alert\(1\)&gt;/);
+  assert.doesNotMatch(fx.stroke, /\"|<|>/);
+});
+
+test('preserves whitespace in shape text blocks', () => {
+  const { css } = render(model, assets, {});
+  assert.match(css, /\.stxt\{[^}]*white-space:pre-wrap/);
 });
