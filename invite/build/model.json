@@ -6561,11 +6561,32 @@
    "mime": "image/png"
   },
   "MAF9WGKMO00": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/b316242bb4ec1c3d9543923fc8ca30a6.png",
    "width": 2257,
    "height": 2400,
-   "mime": "image/png"
+   "mime": "image/png",
+   "sprites": {
+    "wide": 4,
+    "high": 1,
+    "layers": [
+     {
+      "type": "background-a"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(243, 218, 190)"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(228, 154, 132)"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(0, 0, 0)"
+     }
+    ]
+   }
   },
   "MAFWhSAQnl4": {
    "type": "raster",
@@ -6575,7 +6596,7 @@
    "mime": "image/jpeg"
   },
   "MAFX5TO27FQ": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/c7a7f8227ca59929697ef876a857bb92.svg",
    "width": 480,
    "height": 128,
@@ -6603,11 +6624,32 @@
    "mime": "image/png"
   },
   "MAHStM-bLg0": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/d6c058f5b174e422a940ffb245546790.png",
    "width": 2400,
    "height": 615,
-   "mime": "image/png"
+   "mime": "image/png",
+   "sprites": {
+    "wide": 4,
+    "high": 1,
+    "layers": [
+     {
+      "type": "background-a"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(166, 167, 144)"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(245, 194, 195)"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(246, 240, 233)"
+     }
+    ]
+   }
   },
   "MAHU1INOJ7o": {
    "type": "raster",
@@ -6715,11 +6757,33 @@
    "mime": "image/jpeg"
   },
   "MAEqEZzehI0": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/aa7dda72b9437328d5550e764a75b29d.png",
    "width": 800,
    "height": 109,
-   "mime": "image/png"
+   "mime": "image/png",
+   "sprites": {
+    "wide": 3,
+    "high": 2,
+    "layers": [
+     {
+      "type": "background-r"
+     },
+     {
+      "type": "background-g"
+     },
+     {
+      "type": "background-b"
+     },
+     {
+      "type": "background-a"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(221, 174, 72)"
+     }
+    ]
+   }
   },
   "MAE2rGDVgqw": {
    "type": "raster",
@@ -6792,7 +6856,7 @@
    "mime": "image/png"
   },
   "MAHCLd6KCzs": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/6cfa3755351014d8cb55cfe72f240f84.png",
    "width": 2400,
    "height": 2400,
@@ -6967,11 +7031,37 @@
    "mime": "image/png"
   },
   "MAE7CYTlWjE": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/733c251db574a2ea63ee85e4c6567bab.png",
    "width": 2400,
    "height": 547,
-   "mime": "image/png"
+   "mime": "image/png",
+   "sprites": {
+    "wide": 3,
+    "high": 2,
+    "layers": [
+     {
+      "type": "background-r"
+     },
+     {
+      "type": "background-g"
+     },
+     {
+      "type": "background-b"
+     },
+     {
+      "type": "background-a"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(221, 193, 164)"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(0, 0, 0)"
+     }
+    ]
+   }
   },
   "MAGIc4AMLrs": {
    "type": "raster",
@@ -6988,7 +7078,7 @@
    "mime": "image/png"
   },
   "MAEuA2KJdH8": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/8e177bc13cb891b51d504d19ab460fdb.svg",
    "width": 779,
    "height": 186,
@@ -7079,11 +7169,24 @@
    "mime": "image/png"
   },
   "MAGWoucuIDg": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/51071a2cf402012f3a36270091d5ea40.png",
    "width": 2400,
    "height": 2240,
-   "mime": "image/png"
+   "mime": "image/png",
+   "sprites": {
+    "wide": 2,
+    "high": 1,
+    "layers": [
+     {
+      "type": "background-a"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(0, 0, 0)"
+     }
+    ]
+   }
   },
   "MAHUQ-gH07c": {
    "type": "raster",
@@ -7212,7 +7315,7 @@
    "mime": "image/jpeg"
   },
   "MAFUokgMSc8": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/02425da8ae0e431a4c5cc06b0951dd0c.svg",
    "width": 462,
    "height": 500,
@@ -7233,11 +7336,33 @@
    "mime": "image/png"
   },
   "MAEqEVJs_gc": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/7423fa745eec9b2a448117e7130f6b29.png",
    "width": 800,
    "height": 109,
-   "mime": "image/png"
+   "mime": "image/png",
+   "sprites": {
+    "wide": 3,
+    "high": 2,
+    "layers": [
+     {
+      "type": "background-r"
+     },
+     {
+      "type": "background-g"
+     },
+     {
+      "type": "background-b"
+     },
+     {
+      "type": "background-a"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(221, 174, 72)"
+     }
+    ]
+   }
   },
   "MAFuTpOYKnM": {
    "type": "raster",
@@ -7282,7 +7407,7 @@
    "mime": "image/jpeg"
   },
   "MAFf9rRCXVk": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/095ea22b9355e55575fe78e66df41c99.svg",
    "width": 261,
    "height": 359,
@@ -7331,11 +7456,33 @@
    "mime": "image/png"
   },
   "MAD_MV3hNoc": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/1c604a5a26955aceedba58641b59df39.png",
    "width": 1600,
    "height": 107,
-   "mime": "image/png"
+   "mime": "image/png",
+   "sprites": {
+    "wide": 3,
+    "high": 2,
+    "layers": [
+     {
+      "type": "background-r"
+     },
+     {
+      "type": "background-g"
+     },
+     {
+      "type": "background-b"
+     },
+     {
+      "type": "background-a"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(211, 161, 0)"
+     }
+    ]
+   }
   },
   "MAGXygsoD3E": {
    "type": "raster",
@@ -7401,7 +7548,7 @@
    "mime": "image/png"
   },
   "MAGR0VF6BgU": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/b5016fbac74794310e5c8e68ad314ddc.svg",
    "width": 1630,
    "height": 1635,
@@ -7415,18 +7562,53 @@
    "mime": "image/jpeg"
   },
   "MAFpOUv7lJE": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/b30cfeade7441caba70f7e838175c14a.png",
    "width": 2400,
    "height": 2355,
-   "mime": "image/png"
+   "mime": "image/png",
+   "sprites": {
+    "wide": 5,
+    "high": 1,
+    "layers": [
+     {
+      "type": "background-r"
+     },
+     {
+      "type": "background-g"
+     },
+     {
+      "type": "background-b"
+     },
+     {
+      "type": "background-a"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(0, 0, 0)"
+     }
+    ]
+   }
   },
   "MAGtnmwmqEE": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/61635d5e4bb20d2c32f3d3b56256da7a.png",
    "width": 2400,
    "height": 231,
-   "mime": "image/png"
+   "mime": "image/png",
+   "sprites": {
+    "wide": 2,
+    "high": 1,
+    "layers": [
+     {
+      "type": "background-a"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(0, 0, 0)"
+     }
+    ]
+   }
   },
   "MAHU1vx-7iQ": {
    "type": "raster",
@@ -7443,18 +7625,60 @@
    "mime": "image/png"
   },
   "MAGDH1bklmY": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/f226cc14203aa8da7d529f33d6e35215.png",
    "width": 2400,
    "height": 558,
-   "mime": "image/png"
+   "mime": "image/png",
+   "sprites": {
+    "wide": 2,
+    "high": 1,
+    "layers": [
+     {
+      "type": "background-a"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(219, 156, 71)"
+     }
+    ]
+   }
   },
   "MAG66LCSz84": {
-   "type": "raster",
+   "type": "vector",
    "url": "_assets/media/04b96c29e37cb326424520cdf4b4ae8f.png",
    "width": 2400,
    "height": 1585,
-   "mime": "image/png"
+   "mime": "image/png",
+   "sprites": {
+    "wide": 6,
+    "high": 1,
+    "layers": [
+     {
+      "type": "background-a"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(250, 249, 216)"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(242, 188, 38)"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(227, 184, 78)"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(165, 124, 59)"
+     },
+     {
+      "type": "recolor",
+      "color": "rgb(181, 129, 1)"
+     }
+    ]
+   }
   },
   "MAHU1p3z4aw": {
    "type": "raster",

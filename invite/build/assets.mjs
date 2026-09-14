@@ -12,6 +12,7 @@ import crypto from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import ffmpegPath from 'ffmpeg-static';
+import { chromium } from 'playwright';
 import { BUILD, ASSETS, CACHE, INVITE, isMain } from './lib.mjs';
 import { SITE } from './fetch.mjs';
 
@@ -87,6 +88,47 @@ async function copyThrough(src, ext) {
   return out;
 }
 
+export function spriteRect(sheetWidth, sheetHeight, wide, high, k) {
+  const w = sheetWidth / wide, h = sheetHeight / high;
+  return { x: (k % wide) * w, y: Math.floor(k / wide) * h, w, h };
+}
+
+// Runs in a browser page: luminance of each sprite is that layer's alpha.
+const COMPOSITE = async ({ dataUrl, sprites }) => {
+  const img = new Image(); img.src = dataUrl; await img.decode();
+  const W = img.naturalWidth / sprites.wide, H = img.naturalHeight / sprites.high;
+  const out = document.createElement('canvas'); out.width = W; out.height = H; const ctx = out.getContext('2d');
+  const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H; const t = tmp.getContext('2d');
+  const read = (k) => { t.clearRect(0, 0, W, H); t.drawImage(img, (k % sprites.wide) * W, Math.floor(k / sprites.wide) * H, W, H, 0, 0, W, H); return t.getImageData(0, 0, W, H); };
+  const channels = {};
+  sprites.layers.forEach((l, k) => { if (l.type.startsWith('background-')) channels[l.type.slice(-1)] = read(k).data; });
+  if (channels.a) {
+    const d = t.createImageData(W, H), p = d.data;
+    for (let i = 0; i < p.length; i += 4) { p[i] = channels.r ? channels.r[i] : 0; p[i + 1] = channels.g ? channels.g[i] : 0; p[i + 2] = channels.b ? channels.b[i] : 0; p[i + 3] = channels.a[i]; }
+    t.putImageData(d, 0, 0); ctx.drawImage(tmp, 0, 0);
+  }
+  sprites.layers.forEach((l, k) => {
+    if (l.type !== 'recolor') return;
+    const [r, g, b] = l.color.match(/\d+/g).map(Number);
+    const d = read(k), p = d.data;
+    for (let i = 0; i < p.length; i += 4) { const lum = p[i]; p[i] = r; p[i + 1] = g; p[i + 2] = b; p[i + 3] = lum; }
+    t.putImageData(d, 0, 0); ctx.drawImage(tmp, 0, 0);
+  });
+  return out.toDataURL('image/png');
+};
+
+let browserPromise = null;
+export async function compositeSheet(pngPath, sprites, outPath) {
+  browserPromise ||= chromium.launch();
+  const page = await (await browserPromise).newPage();
+  try {
+    const dataUrl = `data:image/png;base64,${fs.readFileSync(pngPath).toString('base64')}`;
+    const result = await page.evaluate(COMPOSITE, { dataUrl, sprites });
+    fs.writeFileSync(outPath, Buffer.from(result.split(',')[1], 'base64'));
+  } finally { await page.close(); }
+}
+export async function closeCompositor() { if (browserPromise) { await (await browserPromise).close(); browserPromise = null; } }
+
 async function encodeStill(src, maxWidth, naturalWidth) {
   const out = path.join(ASSETS, hashName(src, '.webp'));
   if (!fs.existsSync(out)) {
@@ -129,7 +171,15 @@ export async function buildAssets(model) {
     const src = await download(m.url);
     let out, kind = 'image', poster = null;
     if (m.mime === 'image/svg+xml') out = await copyThrough(src, '.svg');
-    else if (m.type === 'raster') out = await encodeStill(src, use.maxWidth, m.width);
+    else if (m.type === 'raster' || m.type === 'vector') {
+      let stillSrc = src;
+      if (m.sprites) {
+        const flat = path.join(CACHE, path.basename(src, '.png') + '.composite.png');
+        if (!fs.existsSync(flat)) await compositeSheet(src, m.sprites, flat);
+        stillSrc = flat;
+      }
+      out = await encodeStill(stillSrc, use.maxWidth, m.width);
+    }
     else if (m.url.endsWith('.gif')) { out = await encodeAnimated(src); kind = 'anim'; }
     else {
       out = await encodeVideo(src); kind = 'video';
@@ -144,6 +194,7 @@ export async function buildAssets(model) {
     if (!fs.existsSync(out)) fs.copyFileSync(src, out);
     manifest.fonts[face.key] = { family: face.family, src: path.relative(INVITE, out).replace(/\\/g, '/'), weight: face.weight, italic: face.italic };
   }
+  await closeCompositor();
   fs.writeFileSync(path.join(BUILD, 'assets.json'), JSON.stringify(manifest, null, 1));
   return manifest;
 }

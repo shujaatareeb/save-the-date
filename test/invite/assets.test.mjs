@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { usedMedia, planFonts, styleToFace, pageBytes } from '../../invite/build/assets.mjs';
+import { usedMedia, planFonts, styleToFace, pageBytes, spriteRect } from '../../invite/build/assets.mjs';
 
 const model = JSON.parse(fs.readFileSync(new URL('../../invite/build/model.json', import.meta.url)));
 const manifest = JSON.parse(fs.readFileSync(new URL('../../invite/build/assets.json', import.meta.url)));
@@ -37,4 +37,15 @@ test('maps Canva style names onto weight and italic', () => {
 test('the envelope page stays under its 1.5 MB budget', () => {
   const bytes = pageBytes(model, manifest, 'envelope');
   assert.ok(bytes > 200_000 && bytes < 1_500_000, `${bytes} bytes`);
+});
+
+test('locates sprite k in a wide-by-high sheet', () => {
+  assert.deepEqual(spriteRect(14400, 1585, 6, 1, 2), { x: 4800, y: 0, w: 2400, h: 1585 });
+  assert.deepEqual(spriteRect(2400, 218, 3, 2, 4), { x: 800, y: 109, w: 800, h: 109 });
+});
+
+test('spritesheet media are shipped as single composited images', () => {
+  const m = manifest.media['MAG66LCSz84'];
+  assert.match(m.src, /\.webp$/);
+  assert.ok(m.width <= 2400 && m.height <= 1585 && Math.abs(m.width / m.height - 2400 / 1585) < 0.01, JSON.stringify(m));
 });

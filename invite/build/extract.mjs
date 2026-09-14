@@ -146,9 +146,22 @@ export function extractModel(canva) {
     return page;
   });
   const media = {};
+  const LAYER_TYPES = { BACKGROUND_A: 'background-a', BACKGROUND_R: 'background-r', BACKGROUND_G: 'background-g', BACKGROUND_B: 'background-b', RECOLORABLE: 'recolor' };
   for (const m of doc.E) {
     const f = m.files[0];
-    media[m.id] = { type: 'raster', url: f.url, width: f.width, height: f.height, mime: f.mimeType };
+    const prev = media[m.id];
+    if (prev && prev.width >= f.width) continue;           // keep the largest variant
+    const entry = { type: m.type === 'VECTOR' ? 'vector' : 'raster', url: f.url, width: f.width, height: f.height, mime: f.mimeType };
+    if (f.spritesheet) {
+      const meta = m.spritesheetMetadata;
+      if (!meta) throw new Error(`spritesheet ${m.id} without metadata`);
+      entry.sprites = { wide: meta.spritesWide, high: meta.spritesHigh, layers: meta.layers.map((l) => {
+        const type = LAYER_TYPES[l.type];
+        if (!type) throw new Error(`unknown sprite layer ${l.type} on ${m.id}`);
+        return l.color ? { type, color: l.color } : { type };
+      }) };
+    }
+    media[m.id] = entry;
   }
   for (const v of doc.F) {
     const f = v.files[v.files.length - 1];

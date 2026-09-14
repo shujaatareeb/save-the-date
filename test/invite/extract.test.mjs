@@ -108,3 +108,14 @@ test('every text run carries the full run interface', () => {
     for (const b of blocks) for (const r of b.runs) for (const k of keys) assert.ok(k in r, `${k} missing on ${e.id}`);
   }
 });
+
+test('keeps the largest variant of a media id and carries spritesheet layers', () => {
+  const m = model.media['MAG66LCSz84'];
+  assert.equal(m.type, 'vector');
+  assert.equal(m.width, 2400);
+  assert.deepEqual(m.sprites.layers[0], { type: 'background-a' });
+  assert.deepEqual(m.sprites.layers[1], { type: 'recolor', color: 'rgb(250, 249, 216)' });
+  assert.equal(m.sprites.wide, 6);
+  assert.equal(m.sprites.high, 1);
+  assert.equal(model.media['MAHKwKua_Z8'].sprites, undefined);
+});
