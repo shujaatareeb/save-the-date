@@ -20,7 +20,8 @@ main{position:relative;min-height:100vh}
 .stage{position:absolute;left:0;top:0;width:1366px;transform-origin:0 0}
 .el{position:absolute;box-sizing:border-box;transform:rotate(var(--rot,0deg));opacity:var(--op,1)}
 .img{overflow:hidden}.img>img,.img>video{position:absolute;max-width:none;display:block}
-.txt{white-space:pre-wrap;overflow-wrap:break-word}.txt a{color:inherit;text-decoration:inherit}.ln{display:block}
+.txt{overflow-wrap:break-word}.txt a{color:inherit;text-decoration:inherit}.ln{display:block}
+.txt>.tin{position:absolute;left:0;top:0;transform-origin:0 0;white-space:pre-wrap}
 a.el{display:block;text-decoration:none;color:inherit}
 .grp>.gin{position:absolute;left:0;top:0;transform-origin:0 0}
 .shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center}

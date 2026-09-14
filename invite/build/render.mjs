@@ -67,29 +67,72 @@ function mediaTag(key, crop, ctx, extra = '') {
   return `<img ${src} width="${m.width}" height="${m.height}" alt="" decoding="async" style="${style}${extra}">`;
 }
 
-function textShadow(effects, size) {
-  const out = [];
+// #rrggbb -> [r,g,b]; also accepts the 3-digit shorthand.
+function hexToRgb(hex) {
+  const h = (hex || '#000000').replace('#', '');
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const n = parseInt(full, 16) || 0;
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+const toRgba = (hex, alpha) => { const [rr, g, b] = hexToRgb(hex); return `rgba(${rr},${g},${b},${r(alpha, 2)})`; };
+
+// Approximates Canva's five text effects at sane sizes (fontSize is the run's
+// declared size — the block's own scale-to-box transform applies on top).
+// shadow/echo offsets are capped at 1 (Canva stores them well past 1) before
+// being scaled down to at most half an em; lift and its blur are plain em
+// units so they track font-size for free.
+export function textEffects(effects, fontSize) {
+  const shadowParts = [];
+  let stroke = '', background = '';
   for (const e of effects || []) {
-    const rad = ((parseFloat(e.angle) || 0) * Math.PI) / 180;
-    const off = (parseFloat(e.offset) || 0) * size;
-    const dx = r(Math.cos(rad) * off), dy = r(Math.sin(rad) * off);
-    if (e.type === 'shadow') out.push(`${dx}px ${dy}px ${r((parseFloat(e.blur) || 0) * size * 0.1)}px ${e.color || '#000'}`);
-    if (e.type === 'lift') { const i = parseFloat(e.intensity) || 1; out.push(`0 ${r(0.05 * size)}px ${r(0.12 * size * i)}px rgba(0,0,0,${r(0.35 * i)})`); }
-    if (e.type === 'echo') out.push(`${dx}px ${dy}px ${e.color || '#000'},${dx * 2}px ${dy * 2}px ${e.color || '#000'}80`);
+    if (e.type === 'shadow') {
+      const rad = ((parseFloat(e.angle) || 0) * Math.PI) / 180;
+      const d = Math.min(parseFloat(e.offset) || 0, 1) * 0.5 * fontSize;
+      const dx = r(Math.cos(rad) * d), dy = r(-Math.sin(rad) * d);
+      const blurPx = r((parseFloat(e.blur) || 0) * 0.1 * fontSize);
+      const alpha = 1 - (parseFloat(e.transparency) || 0);
+      shadowParts.push(`${dx}px ${dy}px ${blurPx}px ${toRgba(e.color, alpha)}`);
+    } else if (e.type === 'lift') {
+      const i = parseFloat(e.intensity) || 1;
+      shadowParts.push(`0 0.05em 0.12em rgba(0,0,0,${r(0.35 * i, 2)})`);
+    } else if (e.type === 'echo') {
+      const rad = ((parseFloat(e.angle) || 0) * Math.PI) / 180;
+      const d = Math.min(parseFloat(e.offset) || 0, 1) * 0.5 * fontSize;
+      const dx = r(Math.cos(rad) * d), dy = r(-Math.sin(rad) * d);
+      shadowParts.push(`${dx}px ${dy}px ${toRgba(e.color, 1)}`);
+      shadowParts.push(`${r(dx * 2)}px ${r(dy * 2)}px ${toRgba(e.color, 0.5)}`);
+    } else if (e.type === 'outline') {
+      const thick = r((parseFloat(e.thickness) || 0) * 0.05 * fontSize, 2);
+      stroke = `-webkit-text-stroke:${thick}px ${e.color || '#000'};paint-order:stroke fill;`;
+    } else if (e.type === 'background') {
+      const alpha = parseFloat(e.transparency);
+      const a = Number.isFinite(alpha) ? Math.min(Math.max(alpha, 0), 1) : 1;
+      const spread = parseFloat(e.spread) || 0;
+      const roundness = parseFloat(e.roundness) || 0;
+      background = `background:${toRgba(e.color, a)};padding:${r(0.1 * spread, 3)}em ${r(0.25 * spread, 3)}em;border-radius:${r(0.5 * roundness, 3)}em;box-decoration-break:clone;`;
+    }
   }
-  return out.length ? `text-shadow:${out.join(',')};` : '';
+  return { shadow: shadowParts.length ? `text-shadow:${shadowParts.join(',')};` : '', stroke, background };
 }
 
-function runStyle(run) {
+function runStyle(run, backgroundCss) {
   let s = `font-family:'f-${run.font}-${run.styleIndex}',serif;font-size:${px(run.size)};font-weight:${run.weight};font-style:${run.italic ? 'italic' : 'normal'};color:${run.color};`;
   if (run.letterSpacing) s += `letter-spacing:${run.letterSpacing};`;
   if (run.decoration && run.decoration !== 'none') s += `text-decoration:${run.decoration};`;
   if (run.transform && run.transform !== 'none') s += `text-transform:${run.transform};`;
+  if (run.super) s += `vertical-align:super;font-size:0.6em;`;
+  if (backgroundCss) s += backgroundCss;
   return s;
 }
 
+// Returns the block's `.tin`-ready pieces: `style` (text-align/line-height/
+// shadow/stroke, meant for the `.tin` wrapper) and `inner` (the `.tin`
+// wrapper's own width/height/scale, laying the block out at its natural size
+// and scaling it into its box — Canva's exact line breaks then hold). A block
+// with no naturals (shape text) gets `width:100%` and no transform.
 export function renderTextBlock(block, effects) {
   const first = block.runs[0] || {};
+  const fx = textEffects(effects, first.size || 16);
   const lines = [];
   let pos = 0;
   for (const count of block.lines) {
@@ -100,13 +143,16 @@ export function renderTextBlock(block, effects) {
       if (b <= a) continue;
       const piece = block.text.slice(a, b).replace(/\n$/, '');
       if (!piece) continue;
-      const span = `<span style="${runStyle(run)}">${escapeHtml(piece)}</span>`;
+      const span = `<span style="${runStyle(run, fx.background)}">${escapeHtml(piece)}</span>`;
       line += run.link ? `<a href="${attr(run.link)}">${span}</a>` : span;
     }
     lines.push(`<span class="ln">${line || '&nbsp;'}</span>`);
   }
-  const style = `text-align:${first.align || 'center'};line-height:${first.lineHeight || '1.2em'};${textShadow(effects, first.size || 16)}`;
-  return { style, html: lines.join('') };
+  const style = `text-align:${first.align || 'center'};line-height:${first.lineHeight || '1.2em'};${fx.shadow}${fx.stroke}`;
+  const sx = block.naturalWidth ? r(block.width / block.naturalWidth, 4) : null;
+  const sy = block.naturalHeight ? r(block.height / block.naturalHeight, 4) : null;
+  const inner = sx && sy ? `width:${px(block.naturalWidth)};height:${px(block.naturalHeight)};transform:scale(${sx},${sy});` : 'width:100%;';
+  return { style, html: lines.join(''), inner };
 }
 
 export function renderElement(el, ctx) {
@@ -117,8 +163,8 @@ export function renderElement(el, ctx) {
     return `${open(el, 'img', ctx)}${mediaTag(assetKey(el.media, el.recolor), el.crop, ctx)}${overlay}${close(el)}`;
   }
   if (el.kind === 'text') {
-    const { style, html } = renderTextBlock(el, el.effects);
-    return `${open(el, 'txt', ctx, style)}${html}${close(el)}`;
+    const { style, html, inner } = renderTextBlock(el, el.effects);
+    return `${open(el, 'txt', ctx)}<div class="tin" style="${inner}${style}">${html}</div>${close(el)}`;
   }
   if (el.kind === 'group') {
     const sx = r(el.width / (el.nativeWidth || el.width), 4), sy = r(el.height / (el.nativeHeight || el.height), 4);
@@ -169,7 +215,8 @@ main{position:relative;min-height:100vh}
 .stage{position:absolute;left:0;top:0;width:1366px;transform-origin:0 0}
 .el{position:absolute;box-sizing:border-box;transform:rotate(var(--rot,0deg));opacity:var(--op,1)}
 .img{overflow:hidden}.img>img,.img>video{position:absolute;max-width:none;display:block}
-.txt{white-space:pre-wrap;overflow-wrap:break-word}.txt a{color:inherit;text-decoration:inherit}.ln{display:block}
+.txt{overflow-wrap:break-word}.txt a{color:inherit;text-decoration:inherit}.ln{display:block}
+.txt>.tin{position:absolute;left:0;top:0;transform-origin:0 0;white-space:pre-wrap}
 a.el{display:block;text-decoration:none;color:inherit}
 .grp>.gin{position:absolute;left:0;top:0;transform-origin:0 0}
 .shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center}

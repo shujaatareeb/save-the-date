@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { chromium } from 'playwright';
-import { render, renderElement, keyframeCss, escapeHtml, splitLoop } from '../../invite/build/render.mjs';
+import { render, renderElement, keyframeCss, escapeHtml, splitLoop, textEffects } from '../../invite/build/render.mjs';
 import { assetKey } from '../../invite/build/assets.mjs';
 import { serve } from './serve.mjs';
 
@@ -213,4 +213,26 @@ test('rendered elements land where the model puts them at 1366 wide', async () =
     }
     assert.deepEqual(failed, []);
   } finally { await browser.close(); await close(); }
+});
+
+test('scales a text block from its natural size to its box and keeps Canva line breaks', () => {
+  const home = model.pages.find((p) => p.slug === 'home');
+  const days = (function find(els) { for (const e of els) { if (e.kind === 'text' && /Days left/.test(e.text)) return e; if (e.children) { const f = find(e.children); if (f) return f; } } })(home.sections[2].elements);
+  const html = renderElement(days, { assets, anims: {}, eager: false, groupFor: () => ({ name: 'k1' }), sectionStart: 0 });
+  assert.match(html, /<div class="tin" style="[^"]*width:186(\.\d+)?px[^"]*transform:scale\(5\.0\d+,[\d.]+\)/);
+  assert.match(html, /font-size:25\.1px/);
+});
+test('marks superscript runs', () => {
+  const home = model.pages.find((p) => p.slug === 'home');
+  const date = (function find(els) { for (const e of els) { if (e.kind === 'text' && /10th October/.test(e.text)) return e; if (e.children) { const f = find(e.children); if (f) return f; } } })(home.sections[1].elements);
+  const html = renderElement(date, { assets, anims: {}, eager: false, groupFor: () => ({ name: 'k1' }), sectionStart: 0 });
+  assert.match(html, /vertical-align:super;font-size:0\.6em[^>]*>th</);
+});
+test('keeps text effects at sane sizes', () => {
+  const fx = textEffects([{ type: 'shadow', angle: '-45', blur: '2', color: '#000000', offset: '1.74', transparency: '0.33' }], 86.5);
+  const m = fx.shadow.match(/text-shadow:([-\d.]+)px ([-\d.]+)px ([\d.]+)px rgba\(0,0,0,0\.67\)/);
+  assert.ok(m, fx.shadow);
+  assert.ok(Math.abs(+m[1]) <= 43.25 && Math.abs(+m[2]) <= 43.25 && +m[3] <= 17.3, fx.shadow);
+  assert.match(textEffects([{ type: 'outline', color: '#614124', thickness: '0.11' }], 68).stroke, /-webkit-text-stroke:0\.37px #614124;paint-order:stroke fill/);
+  assert.match(textEffects([{ type: 'background', color: '#800d09', roundness: '1', spread: '1', transparency: '1' }], 20).background, /background:rgba\(128,13,9,1\);/);
 });
