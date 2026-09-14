@@ -16,12 +16,14 @@
 
   // --- scaling -------------------------------------------------------------
   function scaleSection(sec) {
+    const stage = sec.querySelector('.stage');
+    if (!stage) return;
     const vw = document.documentElement.clientWidth;
     const cw = +sec.dataset.cw, cl = +sec.dataset.cl, h = +sec.dataset.h;
     const k = Math.min(1, Math.max(0.25, (vw - 2 * PAD) / cw));
     const tx = vw / 2 - (cl + cw / 2) * k;
     sec.style.height = `${h * k}px`;
-    sec.querySelector('.stage').style.transform = `translate(${tx}px,0) scale(${k})`;
+    stage.style.transform = `translate(${tx}px,0) scale(${k})`;
   }
   function scale() {
     const active = document.querySelector('.page.active');
@@ -60,7 +62,7 @@
     window.scrollTo(0, 0);
     watch(page);
   }
-  const current = () => decodeURIComponent(location.hash.slice(1)) || DEFAULT;
+  const current = () => { try { return decodeURIComponent(location.hash.slice(1)) || DEFAULT; } catch { return DEFAULT; } };
 
   // --- countdown ----------------------------------------------------------------------
   const slots = { d: document.querySelectorAll('[data-cd="d"]'), h: document.querySelectorAll('[data-cd="h"]'), m: document.querySelectorAll('[data-cd="m"]'), s: document.querySelectorAll('[data-cd="s"]') };

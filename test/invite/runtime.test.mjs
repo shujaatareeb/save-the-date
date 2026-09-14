@@ -80,3 +80,11 @@ test('the countdown ticks toward 10 October 2026 IST', async () => {
   assert.ok(Math.abs(Number(a[0]) - expectedDays) <= 1, `days ${a[0]} vs ${expectedDays}`);
   await page.close();
 });
+
+test('survives a malformed hash by falling back to the envelope', async () => {
+  const { page, errors } = await open(390, '#home%');
+  assert.equal(await page.$eval('.page.active', (n) => n.id), 'envelope');
+  assert.equal(await page.evaluate(() => typeof window.__invite), 'object');
+  assert.deepEqual(errors, []);
+  await page.close();
+});
