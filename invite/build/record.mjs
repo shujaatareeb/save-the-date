@@ -27,10 +27,11 @@ export function parseTransform(str) {
   return { x: num(/translate\(\s*([-\d.e]+)px/, 0), y: num(/translate\([^,]+,\s*([-\d.e]+)px/, 0), rot: num(/rotate\(\s*([-\d.e]+)deg/, 0), scale: num(/scale\(\s*([-\d.e]+)/, 1) };
 }
 
-// Frames relative to the sample at refIndex: the last one for an entrance
-// (it settles at rest), the first one for an idle loop (it never settles).
-export function normalise(samples, triggerMs, refIndex = samples.length - 1) {
-  const rest = samples[refIndex];
+// Frames relative to the last sample, which is always treated as the resting
+// state — including for a loop, so its "entrance" (if any) reads relative to
+// where it settles rather than to wherever it happened to start.
+export function normalise(samples, triggerMs) {
+  const rest = samples.at(-1);
   const restT = parseTransform(rest.transform);
   const first = samples[0], last = samples.at(-1);
   const startMs = first.t - triggerMs;
@@ -61,8 +62,6 @@ export function normalise(samples, triggerMs, refIndex = samples.length - 1) {
 // onto an end's pinned 0 or 1); keep the first of each run so t is strictly
 // increasing, and always keep both ends.
 const distinctT = (frames) => frames.filter((f, i, arr) => i === 0 || i === arr.length - 1 || (f.t > arr[i - 1].t && f.t < 1));
-
-export const normaliseLoop = (samples, triggerMs) => normalise(samples, triggerMs, 0);
 
 function score(node, el, x, y) {
   const drot = Math.abs((((node.rot || 0) - (el.rotation || 0)) % 360));
@@ -246,7 +245,7 @@ export function assemble(nodes, pageModel, sectionLeft) {
   const out = {};
   entries.forEach((e, i) => {
     const loop = isLooping(e.samples);
-    const entry = { effect: e.el.anim?.effect ?? null, loop, ...(loop ? normaliseLoop(e.samples, e.start - clustered[i]) : normalise(e.samples, e.start - clustered[i])) };
+    const entry = { effect: e.el.anim?.effect ?? null, loop, ...normalise(e.samples, e.start - clustered[i]) };
     if (e.parts) { entry.parts = e.parts; entry.stagger = e.stagger; }
     out[e.el.id] = entry;
   });

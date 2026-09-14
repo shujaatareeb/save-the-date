@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseTransform, normalise, normaliseLoop, matchElement, matchOnPage, clusterStarts, flattenPage, matchAbsolute, mergeSamples, assemble } from '../../invite/build/record.mjs';
+import { parseTransform, normalise, matchElement, matchOnPage, clusterStarts, flattenPage, matchAbsolute, mergeSamples, assemble } from '../../invite/build/record.mjs';
 
 test('parses translate, rotate and scale out of an inline transform', () => {
   assert.deepEqual(parseTransform('translate(87.9885px, 63.8488px) rotate(-17.5069deg) scale(0.738, 0.738)'), { x: 87.9885, y: 63.8488, rot: -17.5069, scale: 0.738 });
@@ -101,22 +101,22 @@ test('drops a frame whose t rounds onto its neighbour over a long timeline', () 
   assert.ok(frames.every((f, i) => i === 0 || f.t > frames[i - 1].t), 't must increase strictly');
 });
 
-test('times a loop forward, relative to its first sample', () => {
+test('normalises an oscillating (loop-flagged) sample set against its resting last sample', () => {
   const samples = [
-    { t: 1000, opacity: '', transform: 'translate(50px, 100px)', filter: '', clip: '' },
-    { t: 1500, opacity: '', transform: 'translate(50px, 120px)', filter: '', clip: '' },
-    { t: 2000, opacity: '', transform: 'translate(50px, 100px)', filter: '', clip: '' },
+    { t: 1000, opacity: '', transform: 'translate(50px, 120px)', filter: '', clip: '' },
+    { t: 1500, opacity: '', transform: 'translate(50px, 140px)', filter: '', clip: '' },
+    { t: 2000, opacity: '', transform: 'translate(50px, 120px)', filter: '', clip: '' },
     { t: 2500, opacity: '', transform: 'translate(50px, 80px)', filter: '', clip: '' },
     { t: 3000, opacity: '', transform: 'translate(50px, 100px)', filter: '', clip: '' },
   ];
-  const { startMs, durationMs, frames } = normaliseLoop(samples, 800);
+  const { startMs, durationMs, frames } = normalise(samples, 800);
   assert.equal(startMs, 200);
   assert.equal(durationMs, 2000);
   assert.deepEqual(frames.map((f) => f.t), [0, 0.25, 0.5, 0.75, 1]);
   assert.ok(frames.every((f, i) => i === 0 || f.t > frames[i - 1].t), 't must increase strictly');
-  assert.deepEqual([frames[0].dx, frames[0].dy], [0, 0]);
-  assert.deepEqual(frames.map((f) => f.dy), [0, 20, 0, -20, 0]);
-  assert.equal(frames.at(-1).t, 1);
+  // the first sample sits 20 px above the last (rest): 120 - 100
+  assert.equal(frames[0].dy, 20);
+  assert.deepEqual(frames.at(-1), { t: 1, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null });
 });
 
 test('assembles sampled nodes into one entry per matched element', () => {
