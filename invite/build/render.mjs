@@ -26,10 +26,28 @@ function baseStyle(el) {
 
 function animAttrs(el, ctx) {
   const a = ctx.anims[el.id];
-  if (!a || !a.frames?.length) return { cls: '', style: '' };
-  const name = ctx.keyframeName(a.frames);
-  const loopCls = a.loop ? ' loop' : '';
-  return { cls: ` an ${name}${loopCls}`, style: `--dur:${a.durationMs}ms;--del:${Math.max(0, a.startMs - (ctx.sectionStart || 0))}ms;` };
+  if (!a) return { cls: '', style: '' };
+  const del = `--del:${Math.max(0, a.startMs - (ctx.sectionStart || 0))}ms;`;
+  if (!a.loop) {
+    const name = ctx.keyframeName(a.frames);
+    return { cls: ` an ${name}`, style: `--dur:${a.durationMs}ms;${del}` };
+  }
+  // A loop splits into an entrance (played once) and an idle sway (played
+  // forever, alternating) — either part may be absent (see splitLoop).
+  if (a.entrance && a.idle) {
+    const name = ctx.keyframeName(a.entrance);
+    ctx.loopKinds.set(name, 'split');
+    ctx.loopIdle.set(name, a.idle);
+    return { cls: ` an ${name}`, style: `--dur:${a.entranceMs}ms;--idur:${a.idleMs}ms;${del}` };
+  }
+  if (a.entrance) {
+    // Nothing to sway once settled: play the entrance and hold, like a non-loop entry.
+    const name = ctx.keyframeName(a.entrance);
+    return { cls: ` an ${name}`, style: `--dur:${a.entranceMs}ms;${del}` };
+  }
+  const name = ctx.keyframeName(a.idle);
+  ctx.loopKinds.set(name, 'idleOnly');
+  return { cls: ` an ${name}i`, style: `--dur:${a.idleMs}ms;${del}` };
 }
 
 function open(el, cls, ctx, extraStyle = '') {
@@ -159,7 +177,6 @@ a.el{display:block;text-decoration:none;color:inherit}
 .grp>.gin{position:absolute;left:0;top:0;transform-origin:0 0}
 .shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center}
 .el.an{opacity:0;animation-fill-mode:both;animation-timing-function:linear;animation-duration:var(--dur,800ms);animation-delay:var(--del,0ms)}
-.el.an.loop.in{animation-iteration-count:infinite;animation-direction:alternate}
 .cd{display:flex;align-items:center;justify-content:center;color:#4b3822;font-family:'f-${COUNTDOWN_FACE}',serif}
 .cd-row{display:flex;align-items:flex-start;gap:.15em;font-size:calc(var(--cd,238px)*.27);font-weight:700;line-height:1}
 .cd-u{display:flex;flex-direction:column;align-items:center;min-width:1.3em}.cd-u b{font-weight:700;font-variant-numeric:tabular-nums}
@@ -175,10 +192,11 @@ function hygieneFrames(frames) {
   return sorted.filter((f, i) => i === 0 || f.t !== sorted[i - 1].t);
 }
 
-// After hygiene, an entry counts as invisible (and is skipped) when its
-// frames never move more than 0.5px, never scale outside 0.99..1.01, never
-// blur, and opacity stays within 0.02 of its final value.
-function isInvisible(frames) {
+// After hygiene, a frame array counts as invisible (and is skipped) when it
+// never moves more than 0.5px, never scales outside 0.99..1.01, never blurs,
+// and opacity stays within 0.02 of its final value. Shared by non-loop entries
+// (against their whole timeline) and splitLoop (against just the idle tail).
+function isInvisibleFrames(frames) {
   const finalOpacity = frames[frames.length - 1].opacity;
   let moved = false, scaled = false, blurred = false, opacityDrifted = false;
   for (const f of frames) {
@@ -190,8 +208,35 @@ function isInvisible(frames) {
   return !moved && !scaled && !blurred && !opacityDrifted;
 }
 
+// A recorded loop's frames read forward from wherever the sampler first saw
+// them, but they always end at rest (record.mjs normalises every entry, loops
+// included, against their last sample). Split them at the point they first
+// settle within tolerance of that rest, so a slide-in-then-sway loop plays its
+// slide once instead of looping the whole thing and parking at the slide's
+// start. frameClose/retime/settleIndex are its private helpers.
+const frameClose = (a, b) => Math.abs(a.dx - b.dx) + Math.abs(a.dy - b.dy) <= 3 && Math.abs(a.opacity - b.opacity) <= 0.03 && Math.abs(a.scale - b.scale) <= 0.01 && a.blur === b.blur;
+const retime = (frames) => { const t0 = frames[0].t, span = frames.at(-1).t - t0 || 1; return frames.map((f, i) => ({ ...f, t: i === 0 ? 0 : i === frames.length - 1 ? 1 : r((f.t - t0) / span, 3) })); };
+function settleIndex(frames) {
+  const rest = frames.at(-1);
+  let i = frames.length - 1;
+  while (i > 0 && frameClose(frames[i - 1], rest)) i--;
+  return i;
+}
+// entrance: frames 0..i re-timed to 0..1, or null when i is 0 (nothing to settle from).
+// idle: frames i..end re-timed to 0..1, or null when the tail is too short or invisible.
+export function splitLoop(frames) {
+  const rest = frames.at(-1);
+  const i = settleIndex(frames);
+  const entrance = i > 0 ? retime(frames.slice(0, i + 1).map((f, k, arr) => (k === arr.length - 1 ? { ...rest, t: f.t } : f))) : null;
+  const tail = frames.slice(i);
+  const idle = tail.length >= 3 && !isInvisibleFrames(tail) ? retime(tail) : null;
+  return { entrance, idle };
+}
+
 export function render(model, assets, anims) {
   const keyframes = new Map();
+  const loopKinds = new Map(); // keyframe name -> 'split' | 'idleOnly'
+  const loopIdle = new Map(); // 'split' name -> its idle frame array
   const keyframeName = (frames) => {
     const key = JSON.stringify(frames);
     if (!keyframes.has(key)) keyframes.set(key, `k${keyframes.size + 1}`);
@@ -206,10 +251,18 @@ export function render(model, assets, anims) {
   // animations.json itself is never modified.
   function processEntry(entry) {
     if (!entry.frames?.length) return null;
-    let frames = hygieneFrames(entry.frames);
-    if (!entry.loop) frames = frames.slice(0, -1).concat([RESTING_FRAME]);
-    if (isInvisible(frames)) return null;
-    return { ...entry, frames };
+    const frames = hygieneFrames(entry.frames);
+    if (!entry.loop) {
+      const snapped = frames.slice(0, -1).concat([RESTING_FRAME]);
+      if (isInvisibleFrames(snapped)) return null;
+      return { ...entry, frames: snapped };
+    }
+    const { entrance, idle } = splitLoop(frames);
+    if (!entrance && !idle) return null;
+    const settleFraction = frames[settleIndex(frames)].t;
+    const entranceMs = Math.round(entry.durationMs * settleFraction);
+    const idleMs = Math.round(entry.durationMs * (1 - settleFraction));
+    return { ...entry, frames, entrance, idle, entranceMs, idleMs };
   }
   const processedById = new Map();
   for (const [id, entry] of Object.entries(anims)) processedById.set(id, processEntry(entry));
@@ -249,7 +302,7 @@ export function render(model, assets, anims) {
       });
       walk(s.elements);
       const starts = Object.values(elementAnims).filter((a) => !a.borrowed).map((a) => a.startMs).filter((n) => n != null);
-      const ctx = { assets, anims: elementAnims, eager, keyframeName, sectionStart: starts.length ? Math.min(...starts) : 0 };
+      const ctx = { assets, anims: elementAnims, eager, keyframeName, loopKinds, loopIdle, sectionStart: starts.length ? Math.min(...starts) : 0 };
       const bg = s.background ? `background:${s.background};` : '';
       const c = s.content;
       const els = s.elements.map((e) => renderElement(e, ctx)).join('\n');
@@ -258,7 +311,18 @@ export function render(model, assets, anims) {
     sections.push(`<section class="page${eager ? ' active' : ''}" id="${page.slug}" data-page="${page.slug}" aria-label="${attr(page.title)}">\n${secs.join('\n')}\n</section>`);
   }
   const faces = Object.entries(assets.fonts).map(([key, f]) => `@font-face{font-family:'f-${key}';src:url(${f.src}) format('${path.extname(f.src) === '.woff2' ? 'woff2' : 'woff'}');font-weight:${f.weight};font-style:${f.italic ? 'italic' : 'normal'};font-display:swap}`);
-  const animations = [...keyframes.entries()].map(([k, name]) => `${keyframeCss(name, JSON.parse(k))}\n.${name}.in{animation-name:${name}}`);
+  const animations = [...keyframes.entries()].map(([k, name]) => {
+    const kind = loopKinds.get(name);
+    if (kind === 'split') {
+      return `${keyframeCss(name, JSON.parse(k))}\n${keyframeCss(`${name}i`, loopIdle.get(name))}\n.${name}.in{animation-name:${name},${name}i;animation-duration:var(--dur),var(--idur);animation-delay:var(--del),calc(var(--del) + var(--dur));animation-iteration-count:1,infinite;animation-direction:normal,alternate;animation-fill-mode:both,forwards;animation-timing-function:linear,ease-in-out}`;
+    }
+    if (kind === 'idleOnly') {
+      // Only animation-name/-iteration-count/-direction/-fill-mode/-timing-function are
+      // overridden here; duration and delay fall through to the .el.an base rule's --dur/--del.
+      return `${keyframeCss(`${name}i`, JSON.parse(k))}\n.${name}i.in{animation-name:${name}i;animation-iteration-count:infinite;animation-direction:alternate;animation-fill-mode:forwards;animation-timing-function:ease-in-out}`;
+    }
+    return `${keyframeCss(name, JSON.parse(k))}\n.${name}.in{animation-name:${name}}`;
+  });
   const css = [...faces, BASE_CSS.trim(), ...animations].join('\n');
   const html = `<!doctype html>
 <html lang="en">

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { chromium } from 'playwright';
-import { render, renderElement, keyframeCss, escapeHtml } from '../../invite/build/render.mjs';
+import { render, renderElement, keyframeCss, escapeHtml, splitLoop } from '../../invite/build/render.mjs';
 import { assetKey } from '../../invite/build/assets.mjs';
 import { serve } from './serve.mjs';
 
@@ -56,6 +56,26 @@ test('turns recorded frames into keyframes that keep rotation and static opacity
   assert.match(css, /100%\{opacity:calc\(var\(--op,1\)\*1\);transform:translate\(0px,0px\) rotate\(var\(--rot,0deg\)\) scale\(1\)/);
 });
 
+test('splits a recorded loop into its entrance and its idle sway', () => {
+  const f = (t, dy, op = 1) => ({ t, opacity: op, dx: 0, dy, scale: 1, blur: 0, clip: null });
+  const frames = [f(0, 80, 0), f(0.1, 40, 0.5), f(0.2, 0), f(0.4, 2), f(0.6, -2), f(0.8, 2), f(1, 0)];
+  const { entrance, idle } = splitLoop(frames);
+  assert.deepEqual(entrance.map((x) => [x.t, x.dy]), [[0, 80], [0.5, 40], [1, 0]]);
+  assert.equal(idle.length, 5); assert.equal(idle[0].t, 0); assert.equal(idle.at(-1).t, 1);
+  assert.equal(splitLoop([f(0, 2), f(0.5, -2), f(1, 0)]).entrance, null);
+  assert.equal(splitLoop([f(0, 80, 0), f(1, 0)]).idle, null);
+});
+
+test('a looping element gets a one-shot entrance followed by an infinite idle', () => {
+  const el = model.pages[0].sections[0].elements[12];
+  const f = (t, dy, op = 1) => ({ t, opacity: op, dx: 0, dy, scale: 1, blur: 0, clip: null });
+  const anims2 = { [el.id]: { effect: 26, loop: true, startMs: 0, durationMs: 1000, frames: [f(0, 80, 0), f(0.1, 40, 0.5), f(0.2, 0), f(0.4, 2), f(0.6, -2), f(0.8, 2), f(1, 0)] } };
+  const { html, css } = render(model, assets, anims2);
+  assert.match(css, /@keyframes k1\{/); assert.match(css, /@keyframes k1i\{/);
+  assert.match(css, /\.k1\.in\{animation-name:k1,k1i;[^}]*animation-iteration-count:1,infinite;animation-direction:normal,alternate;animation-fill-mode:both,forwards/);
+  assert.match(html, new RegExp(`data-id="${el.id}"[^>]*--idur:800ms|--idur:800ms[^>]*data-id="${el.id}"`));
+});
+
 test('the full render has seven pages, fonts and no unresolved media', () => {
   const { html, css } = render(model, assets, anims);
   assert.equal((html.match(/<section class="page/g) || []).length, 7);
@@ -65,19 +85,17 @@ test('the full render has seven pages, fonts and no unresolved media', () => {
   assert.match(html, /data-cd="s"/);
 });
 
-test('animation rulings: hygiene, snap, loop class, invisible skip, borrowing', () => {
-  const home = model.pages.find((p) => p.slug === 'home');
-  const homeIds = new Set(); (function walk(els) { for (const e of els) { homeIds.add(e.id); if (e.children) walk(e.children); } })(home.sections.flatMap((s) => s.elements));
-  const loopId = Object.entries(anims).find(([id, a]) => a.loop && homeIds.has(id))[0];
-  // Pick a recorded non-loop entry whose raw last frame is NOT already at rest (no homeIds
-  // filter here — any page): otherwise the snap-to-rest assertion below would pass vacuously
-  // against an entry that was already resting before the snap ever touched it.
+test('animation rulings: hygiene, snap, invisible skip, borrowing', () => {
+  // Pick a recorded non-loop entry whose raw last frame is NOT already at rest (any page):
+  // otherwise the snap-to-rest assertion below would pass vacuously against an entry that was
+  // already resting before the snap ever touched it.
   const restId = 'LBmGP6J3tmzZBvKq';
   assert.notEqual(anims[restId].frames.at(-1).opacity, 1, 'fixture assumption: raw last frame not already at rest');
   const { html, css } = render(model, assets, anims);
-  // loop class present on a looping element
-  assert.match(html, new RegExp(`data-id="${loopId}"[^>]*class="[^"]*\\ban\\b[^"]*\\bloop\\b|class="[^"]*\\bloop\\b[^"]*"[^>]*data-id="${loopId}"`));
-  assert.match(css, /\.el\.an\.loop\.in\{animation-iteration-count:infinite;animation-direction:alternate\}/);
+  // the old always-on "loop" class and its blanket CSS rule are gone — a looping element now
+  // splits into a one-shot entrance plus an infinite idle (or an idle-only class); see the
+  // dedicated splitLoop tests above.
+  assert.doesNotMatch(css, /\.el\.an\.loop\.in/);
   // non-loop keyframes end at rest
   const restClass = html.match(new RegExp(`data-id="${restId}"[^>]*class="el [^"]*\\b(k\\d+)\\b`))?.[1] || html.match(new RegExp(`class="el [^"]*\\b(k\\d+)\\b[^"]*"[^>]*data-id="${restId}"`))?.[1];
   assert.ok(restClass, `no keyframe class on ${restId}`);
