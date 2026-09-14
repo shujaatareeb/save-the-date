@@ -2090,6 +2090,182 @@ where `isInvisibleFrames` is the existing ruling-4 check factored to take a fram
 
 ---
 
+### Task 12: Hidden sections and the real text model
+
+Added during execution, from the Task 7 diff failures. Three decoding gaps in `extract.mjs`:
+
+- Sections carry the same hidden flag as pages: `R: true` means Canva does not render them (Timeline has two; we rendered a duplicate "Wedding Events" block).
+- Text runs: `a.C.D` is a list of run **lengths** (`[0, 8, 1, 6, 1]` for `"Misbah \n" "&\n" "Areeb\n"`), not boundaries; run 0 has length 0 and carries the base style; later `a.C.C[i]` entries are deltas (string keys override, boolean keys mean "same as previous"). Reading them as boundaries produced `Misbah ` + `isbah`.
+- Text lines: `b.A` may be empty (`Wedding\nTimeline`), in which case the paragraphs in `a.C.A` are the lines.
+- Text scale: `e`/`f` are the text's natural width/height at the declared font size; Canva scales the block to the box (`D / e`), e.g. "Days left until our Wedding" is declared at 25 px and shown at ×5.03.
+- Superscript runs: style keys `6` (font-size factor, e.g. `0.6em`) and `8` (baseline shift, e.g. `0.43em`) mark the `th` in `10th`.
+
+**Files:** modify `invite/build/extract.mjs`; test `test/invite/extract.test.mjs`; regenerate `model.json`.
+
+**Interfaces:**
+- `Section` objects for hidden sections are dropped (`page.sections` shrinks; Timeline goes from 3 to 1).
+- Text element gains `naturalWidth: number|null`, `naturalHeight: number|null`; `runs[]` gain `super: boolean` (true when key `6` or `8` present) and are built from cumulative lengths; zero-length runs are dropped; `lines` falls back to paragraph lengths (`a.C.A.map(p => p.length)`) when `b.A` is empty.
+
+- [ ] **Step 1: Failing tests** (append to `test/invite/extract.test.mjs`)
+```js
+test('drops sections Canva hides and keeps the rest in order', () => {
+  assert.equal(page('timeline').sections.length, 1);
+  assert.equal(page('home').sections.length, 4);
+});
+test('reads multi-run text as cumulative run lengths with delta styles', () => {
+  const names = flat(page('home').sections[1].elements).find((e) => e.kind === 'text' && e.text.startsWith('Misbah'));
+  assert.equal(names.text, 'Misbah \n&\nAreeb\n');
+  assert.deepEqual(names.runs.map((r) => [r.start, r.end]), [[0, 8], [8, 9], [9, 15], [15, 16]]);
+  assert.deepEqual(names.lines, [8, 2, 6]);
+  for (const r of names.runs) assert.equal(r.font, names.runs[0].font);
+});
+test('falls back to paragraphs when Canva stored no wrapped lines', () => {
+  const title = flat(page('timeline').sections[0].elements).find((e) => e.kind === 'text' && e.text.startsWith('Wedding'));
+  assert.deepEqual(title.lines, [8, 10]);
+});
+test('carries the natural text size and superscript runs', () => {
+  const days = flat(page('home').sections[2].elements).find((e) => e.kind === 'text' && /Days left/.test(e.text));
+  assert.ok(Math.abs(days.naturalWidth - 186) < 2, String(days.naturalWidth));
+  const date = flat(page('home').sections[1].elements).find((e) => e.kind === 'text' && /10th October/.test(e.text));
+  const sup = date.runs.find((r) => date.text.slice(r.start, r.end) === 'th');
+  assert.equal(sup.super, true);
+  assert.equal(date.runs[0].super, false);
+});
+```
+
+- [ ] **Step 2: extract.mjs**
+
+In `extractModel`, filter sections: `for (const s of p.t) { if (s.R === true) continue; … }`.
+
+Replace `decodeTextBlock`:
+```js
+function decodeTextBlock(t, lines, natural) {
+  const text = t.A.join('');
+  const lengths = t.D || [text.length];
+  const runs = [];
+  let prev = { font: null, styleIndex: 0, size: 16, weight: 400, italic: false, color: '#000000', decoration: 'none', link: null, letterSpacing: null, lineHeight: null, align: 'center', transform: 'none', super: false };
+  let pos = 0;
+  lengths.forEach((len, i) => {
+    const delta = t.C[i] || {};
+    prev = { ...prev, ...pickStyle(delta), super: Boolean(delta['6'] || delta['8']) };
+    if (len > 0) runs.push({ start: pos, end: pos + len, ...prev });
+    pos += len;
+  });
+  for (const r of runs) if (!r.font) throw new Error('text run without a font');
+  const lineLengths = lines?.length ? lines : t.A.map((p) => p.length);
+  return { text, lines: lineLengths, runs, naturalWidth: natural?.width ?? null, naturalHeight: natural?.height ?? null };
+}
+```
+Call sites: `decodeTextBlock(raw.a.C, raw.b?.A, { width: raw.e, height: raw.f })` for text elements; shape text `decodeTextBlock(inner, undefined, null)`. `pickStyle` unchanged except: `super` is not a style key (handled above).
+
+- [ ] **Step 3: Regenerate, verify, commit**
+
+`npm run invite:extract`, `node --test test/invite/extract.test.mjs` (all passing), then `npm run invite:render` and the full suite — render tests still pass (they pin single-run text). Commit: `Skip hidden sections and read text runs, lines and scale the way Canva stores them`.
+
+---
+
+### Task 13: Render text at its scaled size with its effects
+
+Added during execution. With Task 12's model the renderer must: lay the text out at its natural size and scale the block to the box (Canva's exact line breaks then hold); render superscripts; approximate the five text effects seen in the data (`shadow`, `lift`, `echo`, `outline`, `background`) at sane sizes — the current shadow math emits `106px -106px` offsets.
+
+**Files:** modify `invite/build/render.mjs`; test `test/invite/render.test.mjs`; regenerate `index.html`, `invite.css`.
+
+**Interfaces:**
+- Text element markup: `<div class="el txt" style="left;top;width;height;…"><div class="tin" style="width:<natural>px;height:<natural>px;transform:scale(sx,sy);text-align;line-height;text-shadow…">…lines…</div></div>` where `sx = width/naturalWidth`, `sy = height/naturalHeight` when both naturals are present; otherwise `.tin` has `width:100%` and no transform. CSS `.txt>.tin{position:absolute;left:0;top:0;transform-origin:0 0;white-space:pre-wrap}`.
+- Superscript run spans get `vertical-align:super;font-size:0.6em`.
+- Effects (fontSize = the run's declared size, so the block scale applies on top):
+  - `shadow {angle, blur, color, offset, transparency}` → `text-shadow: dx dy blurPx rgba` with `d = min(parseFloat(offset), 1) × 0.5 × fontSize`, `dx = cos(angle°)·d`, `dy = −sin(angle°)·d`, `blurPx = parseFloat(blur) × 0.1 × fontSize`, alpha `1 − parseFloat(transparency)` (0..1, default 1).
+  - `lift {intensity}` → `0 0.05em 0.12em rgba(0,0,0, 0.35·i)`.
+  - `echo {angle, color, offset}` → two copies at `d` and `2d` with `d = min(offset,1) × 0.5 × fontSize`, second at 50% alpha.
+  - `outline {color, thickness}` → `-webkit-text-stroke: (thickness × 0.05 × fontSize)px color; paint-order: stroke fill`.
+  - `background {color, roundness, spread, transparency}` → on each run span: `background: rgba(color, 1 − transparency); padding: (0.1·spread)em (0.25·spread)em; border-radius: (0.5·roundness)em; box-decoration-break: clone`.
+- Exports `textEffects(effects, fontSize) → { shadow: string|'', stroke: string|'', background: string|'' }` for unit testing.
+
+- [ ] **Step 1: Failing tests** (append to `test/invite/render.test.mjs`)
+```js
+import { textEffects } from '../../invite/build/render.mjs';
+test('scales a text block from its natural size to its box and keeps Canva line breaks', () => {
+  const home = model.pages.find((p) => p.slug === 'home');
+  const days = (function find(els) { for (const e of els) { if (e.kind === 'text' && /Days left/.test(e.text)) return e; if (e.children) { const f = find(e.children); if (f) return f; } } })(home.sections[2].elements);
+  const html = renderElement(days, { assets, anims: {}, eager: false, groupFor: () => ({ name: 'k1' }), sectionStart: 0 });
+  assert.match(html, /<div class="tin" style="[^"]*width:186(\.\d+)?px[^"]*transform:scale\(5\.0\d+,[\d.]+\)/);
+  assert.match(html, /font-size:25\.1px/);
+});
+test('marks superscript runs', () => {
+  const home = model.pages.find((p) => p.slug === 'home');
+  const date = (function find(els) { for (const e of els) { if (e.kind === 'text' && /10th October/.test(e.text)) return e; if (e.children) { const f = find(e.children); if (f) return f; } } })(home.sections[1].elements);
+  const html = renderElement(date, { assets, anims: {}, eager: false, groupFor: () => ({ name: 'k1' }), sectionStart: 0 });
+  assert.match(html, /vertical-align:super;font-size:0\.6em[^>]*>th</);
+});
+test('keeps text effects at sane sizes', () => {
+  const fx = textEffects([{ type: 'shadow', angle: '-45', blur: '2', color: '#000000', offset: '1.74', transparency: '0.33' }], 86.5);
+  const m = fx.shadow.match(/text-shadow:([-\d.]+)px ([-\d.]+)px ([\d.]+)px rgba\(0,0,0,0\.67\)/);
+  assert.ok(m, fx.shadow);
+  assert.ok(Math.abs(+m[1]) <= 43.25 && Math.abs(+m[2]) <= 43.25 && +m[3] <= 17.3, fx.shadow);
+  assert.match(textEffects([{ type: 'outline', color: '#614124', thickness: '0.11' }], 68).stroke, /-webkit-text-stroke:0\.37px #614124;paint-order:stroke fill/);
+  assert.match(textEffects([{ type: 'background', color: '#800d09', roundness: '1', spread: '1', transparency: '1' }], 20).background, /background:rgba\(128,13,9,1\);/);
+});
+```
+(If `renderElement`'s ctx now needs other fields — e.g. `anims` lookups — pass what the current signature requires; the assertions are what matter.)
+
+- [ ] **Step 2: render.mjs**
+
+`renderTextBlock(block, effects)` returns `{ style, html, inner }` where `inner` is the `.tin` opening style; in `renderElement`'s text branch:
+```js
+    const sx = el.naturalWidth ? r(el.width / el.naturalWidth, 4) : null;
+    const sy = el.naturalHeight ? r(el.height / el.naturalHeight, 4) : null;
+    const inner = sx && sy ? `width:${px(el.naturalWidth)};height:${px(el.naturalHeight)};transform:scale(${sx},${sy});` : 'width:100%;';
+    return `${open(el, 'txt', ctx)}<div class="tin" style="${inner}${style}">${html}</div>${close(el)}`;
+```
+Run spans add `vertical-align:super;font-size:0.6em;` when `run.super`. Move `text-shadow`/stroke onto `.tin` (from `textEffects(effects, firstRun.size)`), background onto run spans. Add `.txt>.tin{position:absolute;left:0;top:0;transform-origin:0 0;white-space:pre-wrap}` to `BASE_CSS` and drop `white-space` from `.txt`.
+
+- [ ] **Step 3: Regenerate, verify, commit**
+
+`npm run invite:render`, full suite, eyeball `#home` and `#timeline`: "Days left until our Wedding" large script, "Misbah & Areeb" on the card, "10th October 2026" with a small `th`, no giant black shadows. Commit: `Lay text out at its natural size and scale it into its box`.
+
+---
+
+### Task 14: Find the entrance by the reveal, not by the sway
+
+Added during execution. `splitLoop` settles on translate within 3 px of rest; an idle sway larger than that never settles, so a 40-second recording plays as one 40-second fade (elements look missing for tens of seconds). The entrance ends when the *reveal* properties settle — opacity, blur, scale — and translate is within the idle amplitude (measured on the tail) plus 3 px.
+
+**Files:** modify `invite/build/render.mjs`; test `test/invite/render.test.mjs`; regenerate.
+
+- [ ] **Step 1: Failing test**
+```js
+test('an entrance followed by a wide slow sway still ends when the reveal settles', () => {
+  const f = (t, dy, op, dx = 0) => ({ t, opacity: op, dx, dy, scale: 1, blur: 0, clip: null });
+  const frames = [f(0, 80, 0), f(0.02, 40, 0.5), f(0.04, 0, 1), f(0.3, 12, 1), f(0.55, -12, 1), f(0.8, 12, 1), f(1, 0, 1)];
+  const { entrance, idle, i } = splitLoop(frames);
+  assert.equal(i, 2);
+  assert.equal(entrance.length, 3);
+  assert.equal(idle.length, 5);
+});
+```
+
+- [ ] **Step 2: render.mjs**
+```js
+function tailAmplitude(frames) {
+  const tail = frames.slice(Math.floor(frames.length * 0.6));
+  return Math.max(0, ...tail.map((f) => Math.max(Math.abs(f.dx), Math.abs(f.dy))));
+}
+function settleIndex(frames) {
+  const rest = frames.at(-1);
+  const amp = tailAmplitude(frames) + 3;
+  const revealed = (f) => Math.abs(f.opacity - rest.opacity) <= 0.03 && Math.abs(f.scale - rest.scale) <= 0.01 && f.blur === rest.blur && Math.abs(f.dx) <= amp && Math.abs(f.dy) <= amp;
+  let i = 0;
+  while (i < frames.length - 1 && !revealed(frames[i])) i++;
+  return i;
+}
+```
+`splitLoop` uses this `settleIndex` (first frame from the start that counts as revealed) instead of walking back from the end. Keep the existing tests passing (re-check the earlier `splitLoop` fixture: `[80,0]→[40,.5]→[0,1]→2→−2→2→0` still splits at index 2).
+
+- [ ] **Step 3: Regenerate, verify, commit**
+
+`npm run invite:render`, full suite. Then re-run `node --test test/invite/diff.test.mjs`: expected to move all seven pages under the threshold; report each page's value. Eyeball `#home`: the invitation card, "Dress code" label, banner and bouquet appear within ~2 s of scrolling to them. Commit: `End an entrance when the reveal settles, not when the sway does`.
+
+---
+
 ## Self-review
 
 **Spec coverage.** Fetch/extract/assets/render pipeline → Tasks 1–3, 5. model.json shape → Task 2. Scaling rule with 0.25 floor → Task 6 (`PAD` 8 instead of 12; fine, documented in Task 8). Elements (image crop, real text, groups, shapes, z-order) → Task 5. Seven slugs + hash router + back button → Tasks 2, 6. Canva footer dropped → render never emits it. Assets (referenced only, ≤2× size, WebP, hash names, fonts with fallback stack, petals, budget, lazy per page) → Tasks 3, 5, 6, 8. Animations per element from recordings + fallback → Tasks 4, 5 (unrecorded elements simply have no `an` class, i.e. shown static; the spec's "fade+rise fallback" is dropped in favour of static — noted for Task 8's spec update). Countdown native → Tasks 5, 6. Failure handling (missing media throws, unknown kind throws) → Tasks 2, 3, 5. Tests at three widths, diff vs references, shots, build checks → Tasks 2, 7. No-JS fallback → `<noscript>` in Task 5.
