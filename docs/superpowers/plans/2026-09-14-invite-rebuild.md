@@ -2266,6 +2266,56 @@ function settleIndex(frames) {
 
 ---
 
+### Task 15: Trim the leading hold and compare only the rows both pages have
+
+Added during execution, from Task 14's report. Two residuals:
+
+- Home: several recordings begin with a long hold — Canva sets the hidden start state at render time, the element scrolls into view seconds later, so `frames[0]` (t = 0) and `frames[1]` (t ≈ 0.9) are identical and the reveal lives in the last tenth of a 9–10 s keyframe set. The entrance must start at the first change.
+- Mehendi / Nikah / Reception: Canva renders those pages 600–700 px taller than their design height (empty background below the card, e.g. 2846 vs 2255). Our heights are the design heights; the diff must compare the rows both pages have rather than squash different heights onto each other.
+
+**Files:** modify `invite/build/render.mjs`, `test/invite/diff.test.mjs`; test `test/invite/render.test.mjs`; regenerate `index.html`, `invite.css`.
+
+- [ ] **Step 1: Failing tests**
+
+`test/invite/render.test.mjs`:
+```js
+import { trimLeadingHold } from '../../invite/build/render.mjs';
+test('drops a leading hold so the entrance starts at the first change', () => {
+  const f = (t, op) => ({ t, opacity: op, dx: 0, dy: 0, scale: 1, blur: 0, clip: null });
+  const { frames, durationMs } = trimLeadingHold([f(0, 0), f(0.9, 0), f(0.95, 0.5), f(1, 1)], 10000);
+  assert.deepEqual(frames.map((x) => [x.t, x.opacity]), [[0, 0], [0.5, 0.5], [1, 1]]);
+  assert.equal(durationMs, 1000);
+  const same = trimLeadingHold([f(0, 0), f(0.5, 0.5), f(1, 1)], 1000);
+  assert.equal(same.frames.length, 3); assert.equal(same.durationMs, 1000);
+});
+```
+
+- [ ] **Step 2: render.mjs**
+```js
+const sameFrame = (a, b) => Math.abs(a.opacity - b.opacity) < 0.005 && Math.abs(a.dx - b.dx) < 0.5 && Math.abs(a.dy - b.dy) < 0.5 && Math.abs(a.scale - b.scale) < 0.005 && a.blur === b.blur && a.clip === b.clip;
+// A recording often opens with the hidden start state held for seconds until the
+// element scrolled into view. Start the entrance at the first real change.
+export function trimLeadingHold(frames, durationMs) {
+  let k = 0;
+  while (k + 2 < frames.length && sameFrame(frames[k], frames[k + 1])) k++;
+  if (k === 0) return { frames, durationMs };
+  const t0 = frames[k].t, span = 1 - t0 || 1;
+  const out = frames.slice(k).map((f, i, arr) => ({ ...f, t: i === 0 ? 0 : i === arr.length - 1 ? 1 : r((f.t - t0) / span, 3) }));
+  return { frames: out, durationMs: Math.max(1, Math.round(durationMs * span)) };
+}
+```
+Apply it in `processEntry` right after hygiene, before snapping/splitting, for every entry (loop or not), and use the returned `durationMs` downstream.
+
+- [ ] **Step 3: diff.test.mjs**
+
+Compare the top `min(hRef, hOut)` rows at the same scale: read each PNG's height (ffmpeg `-i` stderr or a tiny PNG header read: bytes 20–23 big-endian), crop both to that height (`-vf crop=1366:H:0:0,scale=64:512`), then compute the mean difference as now. Keep the threshold at 13. Add to the assertion message both heights so a future height regression is visible.
+
+- [ ] **Step 4: Regenerate, verify, commit**
+
+`npm run invite:render`, `node --test test/invite/*.test.mjs` — expect all seven diff pages under 13; report each value. Commit: `Start entrances at the first change and diff only the rows both pages have`.
+
+---
+
 ## Self-review
 
 **Spec coverage.** Fetch/extract/assets/render pipeline → Tasks 1–3, 5. model.json shape → Task 2. Scaling rule with 0.25 floor → Task 6 (`PAD` 8 instead of 12; fine, documented in Task 8). Elements (image crop, real text, groups, shapes, z-order) → Task 5. Seven slugs + hash router + back button → Tasks 2, 6. Canva footer dropped → render never emits it. Assets (referenced only, ≤2× size, WebP, hash names, fonts with fallback stack, petals, budget, lazy per page) → Tasks 3, 5, 6, 8. Animations per element from recordings + fallback → Tasks 4, 5 (unrecorded elements simply have no `an` class, i.e. shown static; the spec's "fade+rise fallback" is dropped in favour of static — noted for Task 8's spec update). Countdown native → Tasks 5, 6. Failure handling (missing media throws, unknown kind throws) → Tasks 2, 3, 5. Tests at three widths, diff vs references, shots, build checks → Tasks 2, 7. No-JS fallback → `<noscript>` in Task 5.
