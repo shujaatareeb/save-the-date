@@ -76,6 +76,28 @@ test('a looping element gets a one-shot entrance followed by an infinite idle', 
   assert.match(html, new RegExp(`data-id="${el.id}"[^>]*--idur:800ms|--idur:800ms[^>]*data-id="${el.id}"`));
 });
 
+test('two loops with an identical entrance but different idle sways never share a keyframe', () => {
+  const home = model.pages.find((p) => p.slug === 'home');
+  const s0 = home.sections[0];
+  const idA = s0.elements[0].id, idB = s0.elements[1].id;
+  const f = (t, dy, op = 1) => ({ t, opacity: op, dx: 0, dy, scale: 1, blur: 0, clip: null });
+  const entrance = [f(0, 80, 0), f(0.1, 40, 0.5), f(0.2, 0)];
+  const synth = {
+    [idA]: { effect: 501, loop: true, startMs: 0, durationMs: 1000, frames: [...entrance, f(0.4, 2), f(0.6, -2), f(0.8, 2), f(1, 0)] },
+    [idB]: { effect: 502, loop: true, startMs: 0, durationMs: 1000, frames: [...entrance, f(0.4, 3), f(0.6, -3), f(0.8, 3), f(1, 0)] },
+  };
+  const { html, css } = render(model, assets, synth);
+  const classOf = (id) => (html.match(new RegExp(`data-id="${id}"[^>]*class="el [^"]*\\b(k\\d+)\\b`)) || html.match(new RegExp(`class="el [^"]*\\b(k\\d+)\\b[^"]*"[^>]*data-id="${id}"`)))?.[1];
+  const nameA = classOf(idA), nameB = classOf(idB);
+  assert.ok(nameA && nameB, 'both elements should carry a keyframe class');
+  assert.notEqual(nameA, nameB, 'identical entrances but different idle sways must not share a name');
+  const idleBlock = (name) => css.match(new RegExp(`@keyframes ${name}i\\{[^]*?\\}\\}`))[0];
+  assert.notEqual(idleBlock(nameA), idleBlock(nameB), 'each element\'s idle keyframes should reflect its own sway');
+  // each element's class points at its own rule, not the other's
+  assert.match(html, new RegExp(`data-id="${idA}"[^>]*class="[^"]*\\b${nameA}\\b|class="[^"]*\\b${nameA}\\b[^"]*"[^>]*data-id="${idA}"`));
+  assert.match(html, new RegExp(`data-id="${idB}"[^>]*class="[^"]*\\b${nameB}\\b|class="[^"]*\\b${nameB}\\b[^"]*"[^>]*data-id="${idB}"`));
+});
+
 test('the full render has seven pages, fonts and no unresolved media', () => {
   const { html, css } = render(model, assets, anims);
   assert.equal((html.match(/<section class="page/g) || []).length, 7);
@@ -96,6 +118,13 @@ test('animation rulings: hygiene, snap, invisible skip, borrowing', () => {
   // splits into a one-shot entrance plus an infinite idle (or an idle-only class); see the
   // dedicated splitLoop tests above.
   assert.doesNotMatch(css, /\.el\.an\.loop\.in/);
+  // the split mechanism actually fires on the real recording: at least one entry gets a real
+  // paired entrance+idle rule (the .kN.in selector referencing both kN and kNi), and some
+  // element in the page actually carries that class.
+  assert.match(css, /animation-iteration-count:1,infinite/);
+  const splitRule = css.match(/\.(k\d+)\.in\{animation-name:\1,\1i;/);
+  assert.ok(splitRule, 'expected at least one real entrance+idle split rule');
+  assert.match(html, new RegExp(`class="[^"]*\\b${splitRule[1]}\\b[^"]*"`), `${splitRule[1]} should actually be used by an element`);
   // non-loop keyframes end at rest
   const restClass = html.match(new RegExp(`data-id="${restId}"[^>]*class="el [^"]*\\b(k\\d+)\\b`))?.[1] || html.match(new RegExp(`class="el [^"]*\\b(k\\d+)\\b[^"]*"[^>]*data-id="${restId}"`))?.[1];
   assert.ok(restClass, `no keyframe class on ${restId}`);
