@@ -133,9 +133,10 @@ test('animation rulings: hygiene, snap, invisible skip, borrowing', () => {
   // borrowed: element with anim.effect but no recording still animates, with zero delay.
   // Ruling 5 (refined) skips an invisible donor in favour of the next entry with the same
   // effect: LBTsJDh8fRLwBhKl (effect 18) skips the invisible LBwHyJnDhFdwT00m and borrows
-  // the visible LBHF3m9B2D2zRr53 instead; LBXZW5Svpnfy6Mmv (effect 24) borrows the visible
-  // LB7KNXNdyg4sxl4b directly. Both must animate with --del:0ms.
-  for (const borrowedId of ['LBTsJDh8fRLwBhKl', 'LBXZW5Svpnfy6Mmv']) {
+  // the visible LBHF3m9B2D2zRr53 instead; LBx2hFJCMqCggSF4 (effect 2) borrows the visible
+  // LBBcjtxjzZv8KTTD directly (the effect-24 example this used to be, LBXZW5Svpnfy6Mmv, lived
+  // in a Timeline section Canva hides — task 12 stopped extracting it). Both must animate with --del:0ms.
+  for (const borrowedId of ['LBTsJDh8fRLwBhKl', 'LBx2hFJCMqCggSF4']) {
     assert.ok(!anims[borrowedId], `fixture assumption: ${borrowedId} not recorded`);
     assert.match(html, new RegExp(`data-id="${borrowedId}"[^>]*--del:0ms|--del:0ms[^>]*data-id="${borrowedId}"`), `${borrowedId} should animate with --del:0ms`);
   }

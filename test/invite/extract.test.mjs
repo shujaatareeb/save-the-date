@@ -102,7 +102,7 @@ test('computes a content box that excludes full-bleed backgrounds', () => {
 });
 
 test('every text run carries the full run interface', () => {
-  const keys = ['start', 'end', 'font', 'styleIndex', 'size', 'weight', 'italic', 'color', 'decoration', 'link', 'letterSpacing', 'lineHeight', 'align', 'transform'];
+  const keys = ['start', 'end', 'font', 'styleIndex', 'size', 'weight', 'italic', 'color', 'decoration', 'link', 'letterSpacing', 'lineHeight', 'align', 'transform', 'super'];
   for (const p of model.pages) for (const s of p.sections) for (const e of flat(s.elements)) {
     const blocks = e.kind === 'text' ? [e] : e.kind === 'shape' && e.text ? [e.text] : [];
     for (const b of blocks) for (const r of b.runs) for (const k of keys) assert.ok(k in r, `${k} missing on ${e.id}`);
@@ -125,4 +125,28 @@ test('keeps the largest variant of a media id and carries spritesheet layers', (
   assert.equal(m.sprites.wide, 6);
   assert.equal(m.sprites.high, 1);
   assert.equal(model.media['MAHKwKua_Z8'].sprites, undefined);
+});
+
+test('drops sections Canva hides and keeps the rest in order', () => {
+  assert.equal(page('timeline').sections.length, 1);
+  assert.equal(page('home').sections.length, 4);
+});
+test('reads multi-run text as cumulative run lengths with delta styles', () => {
+  const names = flat(page('home').sections[1].elements).find((e) => e.kind === 'text' && e.text.startsWith('Misbah'));
+  assert.equal(names.text, 'Misbah \n&\nAreeb\n');
+  assert.deepEqual(names.runs.map((r) => [r.start, r.end]), [[0, 8], [8, 9], [9, 15], [15, 16]]);
+  assert.deepEqual(names.lines, [8, 2, 6]);
+  for (const r of names.runs) assert.equal(r.font, names.runs[0].font);
+});
+test('falls back to paragraphs when Canva stored no wrapped lines', () => {
+  const title = flat(page('timeline').sections[0].elements).find((e) => e.kind === 'text' && e.text.startsWith('Wedding'));
+  assert.deepEqual(title.lines, [8, 10]);
+});
+test('carries the natural text size and superscript runs', () => {
+  const days = flat(page('home').sections[2].elements).find((e) => e.kind === 'text' && /Days left/.test(e.text));
+  assert.ok(Math.abs(days.naturalWidth - 186) < 2, String(days.naturalWidth));
+  const date = flat(page('home').sections[1].elements).find((e) => e.kind === 'text' && /10th October/.test(e.text));
+  const sup = date.runs.find((r) => date.text.slice(r.start, r.end) === 'th');
+  assert.equal(sup.super, true);
+  assert.equal(date.runs[0].super, false);
 });

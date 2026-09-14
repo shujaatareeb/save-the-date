@@ -50,17 +50,28 @@ function pickStyle(o) {
   return s;
 }
 
-function decodeTextBlock(t, lines) {
+// t.D holds run *lengths*, not boundaries: run 0 always has length 0 and its
+// delta (t.C[0]) carries the base style, which is why we merge each delta
+// into `prev` only *after* pushing the run it describes the length of — the
+// style a delta announces takes effect for the text that follows it, not the
+// text a.C.D already counted off before it appeared (that is what makes the
+// superscript delta on "10th" land on "th" rather than "10"). A delta's
+// string keys override; boolean keys mean "same as previous".
+function decodeTextBlock(t, lines, natural) {
   const text = t.A.join('');
-  const bounds = t.D || [0, text.length];
+  const lengths = t.D || [0, text.length];
   const runs = [];
-  let prev = { font: null, styleIndex: 0, size: 16, weight: 400, italic: false, color: '#000000', decoration: 'none', link: null, letterSpacing: null, lineHeight: null, align: 'center', transform: 'none' };
-  for (let i = 0; i + 1 < bounds.length; i++) {
-    prev = { ...prev, ...pickStyle(t.C[i] || {}) };
-    runs.push({ start: bounds[i], end: bounds[i + 1], ...prev });
-  }
+  let prev = { font: null, styleIndex: 0, size: 16, weight: 400, italic: false, color: '#000000', decoration: 'none', link: null, letterSpacing: null, lineHeight: null, align: 'center', transform: 'none', super: false };
+  let pos = 0;
+  lengths.forEach((len, i) => {
+    if (len > 0) runs.push({ start: pos, end: pos + len, ...prev });
+    pos += len;
+    const delta = t.C[i] || {};
+    prev = { ...prev, ...pickStyle(delta), super: Boolean(delta['6'] || delta['8']) };
+  });
   for (const r of runs) if (!r.font) throw new Error('text run without a font');
-  return { text, lines: lines?.length ? lines : [text.length], runs };
+  const lineLengths = lines?.length ? lines : t.A.map((p) => p.length);
+  return { text, lines: lineLengths, runs, naturalWidth: natural?.width ?? null, naturalHeight: natural?.height ?? null };
 }
 
 function decodeElement(raw) {
@@ -83,7 +94,7 @@ function decodeElement(raw) {
     } else if (video?.A) { el.media = video.A; el.crop = decodeCrop(video.B, el); }
     else throw new Error(`image ${raw._} has no media`);
   } else if (kind === 'text') {
-    Object.assign(el, decodeTextBlock(raw.a.C, raw.b?.A));
+    Object.assign(el, decodeTextBlock(raw.a.C, raw.b?.A, { width: raw.e, height: raw.f }));
     el.effects = (raw.j?.A || []).map((e) => ({ type: e.A, ...e.B }));
   } else if (kind === 'group') {
     if (raw.z) {
@@ -101,7 +112,7 @@ function decodeElement(raw) {
       fill: p.B?.A ? { media: p.B.B.A.A, crop: decodeCrop(p.B.B.B, el.viewBox) } : { color: p.B?.C || 'none' },
     }));
     const inner = raw.f?.[0]?.A?.C;
-    if (inner && inner.A.join('').trim()) el.text = decodeTextBlock(inner);
+    if (inner && inner.A.join('').trim()) el.text = decodeTextBlock(inner, undefined, null);
   } else if (kind === 'embed') {
     el.url = raw.a || '';
   }
@@ -143,6 +154,7 @@ export function extractModel(canva) {
     if (!slug) throw new Error(`page ${p.P} "${p.B}" has no slug`);
     const page = { id: p.a, number: String(p.P), slug, title: p.B, sections: [] };
     for (const s of p.t) {
+      if (s.R === true) continue; // Canva does not render this section (e.g. a duplicate hidden variant)
       const section = { width: s.C.A, height: s.C.B, background: s.D?.C || null, elements: s.E.map((e) => decodeElement(e)) };
       section.content = contentBox(section);
       page.sections.push(section);
