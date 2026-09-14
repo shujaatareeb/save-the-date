@@ -254,16 +254,24 @@ function isInvisibleFrames(frames) {
 
 // A recorded loop's frames read forward from wherever the sampler first saw
 // them, but they always end at rest (record.mjs normalises every entry, loops
-// included, against their last sample). Split them at the point they first
-// settle within tolerance of that rest, so a slide-in-then-sway loop plays its
-// slide once instead of looping the whole thing and parking at the slide's
-// start. frameClose/retime/settleIndex are its private helpers.
-const frameClose = (a, b) => Math.abs(a.dx - b.dx) + Math.abs(a.dy - b.dy) <= 3 && Math.abs(a.opacity - b.opacity) <= 0.03 && Math.abs(a.scale - b.scale) <= 0.01 && a.blur === b.blur;
+// included, against their last sample). Split them at the point the entrance
+// is *revealed* — opacity, scale and blur at rest, and translate no wider
+// than the idle sway itself gets (measured on the tail) plus a little slop —
+// so a slide-in-then-slow-wide-sway loop plays its slide once instead of
+// treating the whole sway as still-arriving because it never gets as close to
+// rest as a fixed tolerance would demand. retime/tailAmplitude/settleIndex
+// are its private helpers.
 const retime = (frames) => { const t0 = frames[0].t, span = frames.at(-1).t - t0 || 1; return frames.map((f, i) => ({ ...f, t: i === 0 ? 0 : i === frames.length - 1 ? 1 : r((f.t - t0) / span, 3) })); };
+function tailAmplitude(frames) {
+  const tail = frames.slice(Math.floor(frames.length * 0.6));
+  return Math.max(0, ...tail.map((f) => Math.max(Math.abs(f.dx), Math.abs(f.dy))));
+}
 function settleIndex(frames) {
   const rest = frames.at(-1);
-  let i = frames.length - 1;
-  while (i > 0 && frameClose(frames[i - 1], rest)) i--;
+  const amp = tailAmplitude(frames) + 3;
+  const revealed = (f) => Math.abs(f.opacity - rest.opacity) <= 0.03 && Math.abs(f.scale - rest.scale) <= 0.01 && f.blur === rest.blur && Math.abs(f.dx) <= amp && Math.abs(f.dy) <= amp;
+  let i = 0;
+  while (i < frames.length - 1 && !revealed(frames[i])) i++;
   return i;
 }
 // entrance: frames 0..i re-timed to 0..1, or null when i is 0 (nothing to settle from).

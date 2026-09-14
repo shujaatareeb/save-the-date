@@ -66,6 +66,15 @@ test('splits a recorded loop into its entrance and its idle sway', () => {
   assert.equal(splitLoop([f(0, 80, 0), f(1, 0)]).idle, null);
 });
 
+test('an entrance followed by a wide slow sway still ends when the reveal settles', () => {
+  const f = (t, dy, op, dx = 0) => ({ t, opacity: op, dx, dy, scale: 1, blur: 0, clip: null });
+  const frames = [f(0, 80, 0), f(0.02, 40, 0.5), f(0.04, 0, 1), f(0.3, 12, 1), f(0.55, -12, 1), f(0.8, 12, 1), f(1, 0, 1)];
+  const { entrance, idle, i } = splitLoop(frames);
+  assert.equal(i, 2);
+  assert.equal(entrance.length, 3);
+  assert.equal(idle.length, 5);
+});
+
 test('a looping element gets a one-shot entrance followed by an infinite idle', () => {
   const el = model.pages[0].sections[0].elements[12];
   const f = (t, dy, op = 1) => ({ t, opacity: op, dx: 0, dy, scale: 1, blur: 0, clip: null });
