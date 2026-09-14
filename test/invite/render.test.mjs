@@ -57,7 +57,11 @@ test('animation rulings: hygiene, snap, loop class, invisible skip, borrowing', 
   const home = model.pages.find((p) => p.slug === 'home');
   const homeIds = new Set(); (function walk(els) { for (const e of els) { homeIds.add(e.id); if (e.children) walk(e.children); } })(home.sections.flatMap((s) => s.elements));
   const loopId = Object.entries(anims).find(([id, a]) => a.loop && homeIds.has(id))[0];
-  const restId = Object.entries(anims).find(([id, a]) => !a.loop && homeIds.has(id))[0];
+  // Pick a recorded non-loop entry whose raw last frame is NOT already at rest (no homeIds
+  // filter here — any page): otherwise the snap-to-rest assertion below would pass vacuously
+  // against an entry that was already resting before the snap ever touched it.
+  const restId = 'LBmGP6J3tmzZBvKq';
+  assert.notEqual(anims[restId].frames.at(-1).opacity, 1, 'fixture assumption: raw last frame not already at rest');
   const { html, css } = render(model, assets, anims);
   // loop class present on a looping element
   assert.match(html, new RegExp(`data-id="${loopId}"[^>]*class="[^"]*\\ban\\b[^"]*\\bloop\\b|class="[^"]*\\bloop\\b[^"]*"[^>]*data-id="${loopId}"`));
@@ -81,7 +85,7 @@ test('animation rulings: hygiene, snap, loop class, invisible skip, borrowing', 
 test('hygiene sorts and de-duplicates frames and skips invisible entries', () => {
   const el = model.pages[0].sections[0].elements[12];
   const messy = { [el.id]: { effect: 8, loop: false, startMs: 0, durationMs: 500, frames: [
-    { t: 1, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null },
+    { t: 1, opacity: 0.9, dx: 0, dy: 4, scale: 1, blur: 1, clip: null },
     { t: 0.5, opacity: 0.5, dx: 0, dy: 40, scale: 1, blur: 0, clip: null },
     { t: 0.5, opacity: 0.6, dx: 0, dy: 40, scale: 1, blur: 0, clip: null },
     { t: 0, opacity: 0, dx: 0, dy: 80, scale: 1, blur: 0, clip: null },
@@ -89,6 +93,9 @@ test('hygiene sorts and de-duplicates frames and skips invisible entries', () =>
   const { css } = render(model, assets, messy);
   const block = css.match(/@keyframes k1\{[^]*?\}\}/)[0];
   assert.deepEqual([...block.matchAll(/(\d+(?:\.\d+)?)%\{/g)].map((m) => Number(m[1])), [0, 50, 100]);
+  // The un-rested t:1 frame (opacity 0.9, dy 4, blur 1) must have been replaced by the snap,
+  // not merely sorted into place — assert the 100% stop is exactly the rest stop.
+  assert.match(block, /100%\{opacity:calc\(var\(--op,1\)\*1\);transform:translate\(0px,0px\) rotate\(var\(--rot,0deg\)\) scale\(1\);filter:blur\(0px\)\}\}$/);
   const still = { [el.id]: { effect: 8, loop: true, startMs: 0, durationMs: 30000, frames: [
     { t: 0, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null },
     { t: 1, opacity: 0.995, dx: 0.1, dy: 0, scale: 1.001, blur: 0, clip: null },
@@ -99,6 +106,31 @@ test('hygiene sorts and de-duplicates frames and skips invisible entries', () =>
   // only after data-id (where an animated element's class token never appears).
   assert.doesNotMatch(out.html, new RegExp(`data-id="${el.id}"[^>]*\\ban\\b|class="[^"]*\\ban\\b[^"]*"[^>]*data-id="${el.id}"`));
   assert.doesNotMatch(out.css, /@keyframes/);
+});
+
+test('a borrowed startMs:0 does not drag the section delay baseline down', () => {
+  const home = model.pages.find((p) => p.slug === 'home');
+  const s0 = home.sections[0];
+  // Home section 0, elements 0 and 1: arbitrary picks (any two distinct elements in the
+  // section would do) to carry synthetic recorded entries. Element 10 (LBx2hFJCMqCggSF4)
+  // is hard-coded because its real model anim.effect is 2, matching the effect we give
+  // the two synthetic entries below, so it borrows one of them.
+  const idA = s0.elements[0].id, idB = s0.elements[1].id, idC = s0.elements[10].id;
+  assert.equal(s0.elements[10].anim?.effect, 2, 'fixture assumption: idC borrows effect 2');
+  const visibleFrames = [
+    { t: 0, opacity: 0, dx: 0, dy: 40, scale: 1, blur: 0, clip: null },
+    { t: 1, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null },
+  ];
+  const synth = {
+    [idA]: { effect: 2, loop: false, startMs: 500, durationMs: 400, frames: visibleFrames },
+    [idB]: { effect: 2, loop: false, startMs: 800, durationMs: 400, frames: visibleFrames },
+  };
+  const { html } = render(model, assets, synth);
+  // sectionStart must be min(500, 800) = 500 over the recorded pair only — idC's forced
+  // startMs:0 (it borrows) must not pull that baseline down to 0.
+  assert.match(html, new RegExp(`data-id="${idA}"[^>]*--del:0ms|--del:0ms[^>]*data-id="${idA}"`), 'recorded startMs:500 should get --del:0ms');
+  assert.match(html, new RegExp(`data-id="${idB}"[^>]*--del:300ms|--del:300ms[^>]*data-id="${idB}"`), 'recorded startMs:800 should get --del:300ms');
+  assert.match(html, new RegExp(`data-id="${idC}"[^>]*--del:0ms|--del:0ms[^>]*data-id="${idC}"`), 'borrower should get --del:0ms');
 });
 
 test('rendered elements land where the model puts them at 1366 wide', async () => {
