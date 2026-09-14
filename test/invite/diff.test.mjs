@@ -19,19 +19,19 @@ function pngHeight(file) {
   const buf = fs.readFileSync(file);
   return buf.readUInt32BE(20);
 }
-async function thumb(file, w, h, cropHeight) {
-  const vf = cropHeight != null ? `crop=1366:${cropHeight}:0:0,scale=${w}:${h}` : `scale=${w}:${h}`;
-  const { stdout } = await run(ffmpegPath, ['-hide_banner', '-loglevel', 'error', '-i', file, '-vf', vf, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { encoding: 'buffer', maxBuffer: 1 << 24 });
+async function thumb(file, w, h) {
+  const { stdout } = await run(ffmpegPath, ['-hide_banner', '-loglevel', 'error', '-i', file, '-vf', `scale=${w}:${h}`, '-f', 'rawvideo', '-pix_fmt', 'rgb24', '-'], { encoding: 'buffer', maxBuffer: 1 << 24 });
   return stdout;
 }
 async function meanDiff(a, b) {
-  // Canva pads some pages with empty background well below the design height, so the two
-  // pages can differ in full-page height. Compare only the rows both pages actually have —
-  // crop both to the shorter height before scaling down to the same small size.
+  // Both pages are forced to the same small size, so differing full-page heights only smear, not
+  // misalign. (A min-height top-crop was tried here — it fixed the smear but introduced its own
+  // problems: aliasing on busy/thin-line art at this resolution, and asymmetric inclusion of
+  // bottom-anchored footers whose absolute position differs between the two heights. Reverted;
+  // both heights are still surfaced in the assertion message below so a regression is visible.)
   const w = 64, h = 512;
   const ha = pngHeight(a), hb = pngHeight(b);
-  const cropHeight = Math.min(ha, hb);
-  const [x, y] = await Promise.all([thumb(a, w, h, cropHeight), thumb(b, w, h, cropHeight)]);
+  const [x, y] = await Promise.all([thumb(a, w, h), thumb(b, w, h)]);
   let sum = 0;
   for (let i = 0; i < x.length; i++) sum += Math.abs(x[i] - y[i]);
   return { diff: sum / x.length, ha, hb };

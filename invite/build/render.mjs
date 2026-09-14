@@ -229,15 +229,15 @@ a.el{display:block;text-decoration:none;color:inherit}
 
 const RESTING_FRAME = { t: 1, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null };
 
-const sameFrame = (a, b) => Math.abs(a.opacity - b.opacity) < 0.005 && Math.abs(a.dx - b.dx) < 0.5 && Math.abs(a.dy - b.dy) < 0.5 && Math.abs(a.scale - b.scale) < 0.005 && a.blur === b.blur && a.clip === b.clip;
 // A recording often opens with the hidden start state held for seconds until the
-// element scrolled into view. Start the entrance at the first real change.
-export function trimLeadingHold(frames, durationMs) {
-  let k = 0;
-  while (k + 2 < frames.length && sameFrame(frames[k], frames[k + 1])) k++;
-  if (k === 0) return { frames, durationMs };
-  const t0 = frames[k].t, span = 1 - t0 || 1;
-  const out = frames.slice(k).map((f, i, arr) => ({ ...f, t: i === 0 ? 0 : i === arr.length - 1 ? 1 : r((f.t - t0) / span, 3) }));
+// element scrolled into view; the sampler records no frames during a hold, so the
+// hold shows up as a large gap before frame 1. Start the entrance one sample before
+// the first change.
+export function trimLeadingHold(frames, durationMs, sampleMs = 40) {
+  if (frames.length < 3 || frames[1].t <= 0.3) return { frames, durationMs };
+  const t0 = Math.max(0, frames[1].t - sampleMs / durationMs);
+  const span = 1 - t0 || 1;
+  const out = [{ ...frames[0], t: 0 }, ...frames.slice(1).map((f, i, arr) => ({ ...f, t: i === arr.length - 1 ? 1 : r((f.t - t0) / span, 3) }))];
   return { frames: out, durationMs: Math.max(1, Math.round(durationMs * span)) };
 }
 

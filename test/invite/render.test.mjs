@@ -75,13 +75,17 @@ test('an entrance followed by a wide slow sway still ends when the reveal settle
   assert.equal(idle.length, 5);
 });
 
-test('drops a leading hold so the entrance starts at the first change', () => {
+test('drops a leading hold, keyed on the time gap, so the entrance starts one sample before the first change', () => {
   const f = (t, op) => ({ t, opacity: op, dx: 0, dy: 0, scale: 1, blur: 0, clip: null });
-  const { frames, durationMs } = trimLeadingHold([f(0, 0), f(0.9, 0), f(0.95, 0.5), f(1, 1)], 10000);
-  assert.deepEqual(frames.map((x) => [x.t, x.opacity]), [[0, 0], [0.5, 0.5], [1, 1]]);
-  assert.equal(durationMs, 1000);
-  const same = trimLeadingHold([f(0, 0), f(0.5, 0.5), f(1, 1)], 1000);
-  assert.equal(same.frames.length, 3); assert.equal(same.durationMs, 1000);
+  const { frames, durationMs } = trimLeadingHold([f(0, 0), f(0.9, 0.2), f(0.95, 0.5), f(1, 1)], 10000);
+  // t0 = 0.9 - 40/10000 = 0.896, span = 0.104: frame[1] (the first real change, originally
+  // t=0.9) lands one 40ms sample after the new zero, not exactly at it — (0.9-0.896)/0.104 = 0.038.
+  assert.deepEqual(frames.map((x) => [x.t, x.opacity]), [[0, 0], [0.038, 0.2], [0.519, 0.5], [1, 1]]);
+  assert.equal(durationMs, 1040);
+  // frames[1].t <= 0.3: no gap worth trimming, left untouched.
+  const same = trimLeadingHold([f(0, 0), f(0.2, 0.5), f(1, 1)], 1000);
+  assert.deepEqual(same.frames.map((x) => [x.t, x.opacity]), [[0, 0], [0.2, 0.5], [1, 1]]);
+  assert.equal(same.durationMs, 1000);
 });
 
 test('a looping element gets a one-shot entrance followed by an infinite idle', () => {
@@ -162,15 +166,18 @@ test('animation rulings: hygiene, snap, invisible skip, borrowing', () => {
 
 test('hygiene sorts and de-duplicates frames and skips invisible entries', () => {
   const el = model.pages[0].sections[0].elements[12];
+  // The dedup'd middle frame sits at t:0.2 (not 0.5) so this fixture stays under
+  // trimLeadingHold's frames[1].t <= 0.3 no-op threshold — this test is about
+  // hygiene's sort/dedupe/snap, not about the leading-hold trim.
   const messy = { [el.id]: { effect: 8, loop: false, startMs: 0, durationMs: 500, frames: [
     { t: 1, opacity: 0.9, dx: 0, dy: 4, scale: 1, blur: 1, clip: null },
-    { t: 0.5, opacity: 0.5, dx: 0, dy: 40, scale: 1, blur: 0, clip: null },
-    { t: 0.5, opacity: 0.6, dx: 0, dy: 40, scale: 1, blur: 0, clip: null },
+    { t: 0.2, opacity: 0.5, dx: 0, dy: 40, scale: 1, blur: 0, clip: null },
+    { t: 0.2, opacity: 0.6, dx: 0, dy: 40, scale: 1, blur: 0, clip: null },
     { t: 0, opacity: 0, dx: 0, dy: 80, scale: 1, blur: 0, clip: null },
   ] } };
   const { css } = render(model, assets, messy);
   const block = css.match(/@keyframes k1\{[^]*?\}\}/)[0];
-  assert.deepEqual([...block.matchAll(/(\d+(?:\.\d+)?)%\{/g)].map((m) => Number(m[1])), [0, 50, 100]);
+  assert.deepEqual([...block.matchAll(/(\d+(?:\.\d+)?)%\{/g)].map((m) => Number(m[1])), [0, 20, 100]);
   // The un-rested t:1 frame (opacity 0.9, dy 4, blur 1) must have been replaced by the snap,
   // not merely sorted into place — assert the 100% stop is exactly the rest stop.
   assert.match(block, /100%\{opacity:calc\(var\(--op,1\)\*1\);transform:translate\(0px,0px\) rotate\(var\(--rot,0deg\)\) scale\(1\);filter:blur\(0px\)\}\}$/);
