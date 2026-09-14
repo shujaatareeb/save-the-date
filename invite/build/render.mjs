@@ -326,13 +326,15 @@ export function render(model, assets, anims) {
     if (!entry.loop) {
       const snapped = frames.slice(0, -1).concat([RESTING_FRAME]);
       if (isInvisibleFrames(snapped)) return null;
-      return { ...entry, frames: snapped, durationMs };
+      const cappedDurationMs = frames.length === 2 && durationMs > 2000 ? 800 : durationMs;
+      return { ...entry, frames: snapped, durationMs: cappedDurationMs };
     }
     const { entrance, idle, i } = splitLoop(frames);
     if (!entrance && !idle) return null;
     const entranceMs = Math.round(durationMs * frames[i].t);
     const idleMs = durationMs - entranceMs;
-    return { ...entry, frames, entrance, idle, entranceMs, idleMs, durationMs };
+    const cappedEntranceMs = entrance?.length === 2 && entranceMs > 2000 ? 800 : entranceMs;
+    return { ...entry, frames, entrance, idle, entranceMs: cappedEntranceMs, idleMs, durationMs };
   }
   const processedById = new Map();
   for (const [id, entry] of Object.entries(anims)) processedById.set(id, processEntry(entry));

@@ -88,6 +88,21 @@ test('drops a leading hold, keyed on the time gap, so the entrance starts one sa
   assert.equal(same.durationMs, 1000);
 });
 
+test('caps a long two-frame entrance at 800ms', () => {
+  const { html } = render(model, assets, anims);
+  assert.match(html, /data-id="LB7KNXNdyg4sxl4b"[^>]*--dur:800ms|--dur:800ms[^>]*data-id="LB7KNXNdyg4sxl4b"/);
+});
+
+test('caps a long two-frame loop entrance without changing its idle duration', () => {
+  const el = model.pages[1].sections[0].elements[0];
+  const f = (t, dy, opacity = 1) => ({ t, opacity, dx: 0, dy, scale: 1, blur: 0, clip: null });
+  const synth = { [el.id]: { effect: 501, loop: true, startMs: 0, durationMs: 10000, frames: [
+    f(0, 80, 0), f(0.3, 0), f(0.6, 2), f(1, 0),
+  ] } };
+  const { html } = render(model, assets, synth);
+  assert.match(html, new RegExp(`data-id="${el.id}"[^>]*--dur:800ms[^;]*;--idur:7000ms`));
+});
+
 test('a looping element gets a one-shot entrance followed by an infinite idle', () => {
   const el = model.pages[0].sections[0].elements[12];
   const f = (t, dy, op = 1) => ({ t, opacity: op, dx: 0, dy, scale: 1, blur: 0, clip: null });
