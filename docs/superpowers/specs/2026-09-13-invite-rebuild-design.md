@@ -202,3 +202,65 @@ Existing Playwright harness, same port (8734) and style as `test/screenshots.mjs
   (personal use of the couple's own published design).
 - The vinyl record on the home page is decorative unless the model shows an
   audio element; if it does, it becomes tap-to-play.
+
+## As built
+
+Where the shipped `invite/` departs from the sections above, and why. Every
+item was checked against the live Canva page rather than assumed.
+
+- **Scaling.** `PAD` is 8, not 12, and `k` on the envelope page at 390 wide is
+  0.831. On a desktop the whole 1366 canvas is centred when it fits the
+  viewport, as Canva does — centring the content column there put every page
+  62 px right of the original and was most of what the home-page diff saw.
+  The column is centred only when the viewport is narrower than the canvas
+  (tablets), which is the case that rule was for.
+- **Fonts.** All 13 faces are self-hosted from Canva's own files, kept as the
+  WOFF (one OTF) they were served as rather than re-encoded to WOFF2; none
+  are mapped to Google Fonts. Canva's run style names a font as `"<id>,<n>"`
+  and `n` is not an index into the style list — the live page registers every
+  style of a font under one family and lets `font-weight`/`font-style` choose.
+  The build does the same: one `f-<id>` family per Canva font, each face in
+  use declared under it with its weight and slant.
+- **Text effects.** Shadow, echo and lift are sized as the live page computes
+  them: offset and blur in sixteenths of the run's font size, the angle
+  measured from straight down (`dx = −sin`, `dy = cos`), the stored
+  `transparency` used as the alpha, echo as two copies at one and two steps
+  (α .5 / .3), lift a straight drop of 3/80 of the size with blur and alpha
+  growing linearly with intensity. Outline and background remain
+  approximations. Canva also disables `calt`/`liga` and isolates every glyph
+  in its own span; at 1:1 the glyphs and advances matched without that, so
+  the build leaves the browser's defaults.
+- **Effect 30 is a matte, not a sparkle.** The video on an effect-30 element
+  is a luma matte (black to white) that Canva composites the picture through
+  on a canvas. The runtime does the same: the matte plays off-DOM (VP9 WebM,
+  with a baseline H.264 MP4 for iPhones), each frame's luma becomes the alpha
+  of a small mask, and the picture is drawn onto a canvas over the element
+  and cut to it; when the matte ends or cannot play, the plain `<img>` takes
+  over. `mix-blend-mode` was never an option — WebKit ignores it on `<video>`.
+- **Stickers.** The one animated sticker (petals) ships as an animated WebP at
+  15 fps / 480 px, not a `<video>` — WebP carries alpha where VP9 in a
+  `<video>` does not on Safari. No posters: the only videos are mattes and
+  are never shown.
+- **Animations.** Entrances come from recordings of the live page (Task 4),
+  not from an effect-id → keyframe table, and an element the recorder has
+  nothing for is simply shown static — the "fade + rise" fallback was
+  dropped. Canva's button pulse (opacity .35↔1 every 1.1 s, scale .85↔1.14
+  every .9 s, on eleven buttons that have no animation of their own) is too
+  fast for the recorder and aliased into a slow drift; the build recognises
+  its signature and emits the pulse as CSS instead.
+- **SVG recolours.** Canva's vector stickers mostly leave paths unfilled and
+  key the colour map on the default black; a mapping for `#000000` therefore
+  also goes on the root `<svg>`.
+- **Composited spritesheets** are named after their source and recipe, not
+  the PNG Chromium happened to write, so the same input hashes the same on
+  every machine that runs the build.
+- **Countdown** is native, as specified. The reference screenshot of the
+  Canva home page shows an empty frame there because Canva's widget does not
+  render headless; the live page shows the count.
+- **Budget.** Shipped `invite/` is 10.9 MB (assets 10.67 MB: 104 WebP, 4 SVG,
+  2 WebM + 2 MP4 mattes, 13 fonts); envelope page 1.19 MB. Per-page pulls:
+  home 3.90, timeline 2.53, mehendi 1.39, reception 1.35, envelope 1.19,
+  nikah 0.48, dress-code 0.38 MB.
+- **Fidelity gate** at 1366 wide (mean channel difference on a 64×512
+  thumbnail, threshold 13): envelope 2.4, home 7.4, timeline 6.1, mehendi
+  5.9, nikah 3.3, reception 3.2, dress-code 3.0.
