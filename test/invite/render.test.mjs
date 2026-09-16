@@ -18,7 +18,7 @@ test('renders a text element line by line with the run style', () => {
   const html = renderElement(el, { assets, anims: {}, eager: true, ids: new Set() });
   assert.match(html, /class="el txt"/);
   assert.match(html, /<span class="ln">.*We are getting.*<\/span><span class="ln">.*married !.*<\/span>/s);
-  assert.match(html, /font-family:'f-YAFcf99lyzk-0'/);
+  assert.match(html, /font-family:'f-YAFcf99lyzk'/);
   assert.match(html, /text-transform:uppercase/);
   assert.match(html, /font-weight:900/);
 });
@@ -139,7 +139,7 @@ test('the full render has seven pages, fonts and no unresolved media', () => {
   const { html, css } = render(model, assets, anims);
   assert.equal((html.match(/<section class="page/g) || []).length, 7);
   assert.match(html, /id="envelope"[^>]*class="[^"]*active|class="page active" id="envelope"/);
-  assert.match(css, /@font-face\{font-family:'f-YAFcf99lyzk-0'/);
+  assert.match(css, /@font-face\{font-family:'f-YAFcf99lyzk'/);
   assert.doesNotMatch(html, /undefined/);
   assert.match(html, /data-cd="s"/);
 });

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { usedMedia, planFonts, styleToFace, pageBytes, spriteRect, assetKey, applyRecolor, recolorSvg, compositeCacheName, hashName } from '../../invite/build/assets.mjs';
+import { usedMedia, planFonts, pickFace, styleToFace, pageBytes, spriteRect, assetKey, applyRecolor, recolorSvg, compositeCacheName, hashName } from '../../invite/build/assets.mjs';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -20,12 +20,36 @@ test('collects every media id the published pages reference, with the widest use
   for (const [key, use] of used) assert.ok(model.media[use.media], key);
 });
 
-test('plans one font face per (font, style index) actually used', () => {
+test('plans one font face per (font, weight, slant) actually used', () => {
   const faces = planFonts(model);
   const keys = faces.map((f) => f.key);
-  assert.ok(keys.includes('YAFcf99lyzk-0'));
+  assert.ok(keys.includes('YAFcf99lyzk-HEAVY'));
   assert.equal(new Set(keys).size, keys.length);
   for (const f of faces) assert.match(f.url, /^_assets\/fonts\//);
+  for (const f of faces) assert.equal(f.key, `${f.fontId}-${f.style}`);
+});
+
+// Canva's run style names a font as "<id>,<n>" — the number is not an index
+// into the font's style list. The live page registers every style of the font
+// under one family and lets font-weight/font-style pick the face, so a run
+// with no weight set (400) on a font listed BOLD-first must get the REGULAR.
+test('picks the face by the run\'s weight and slant, not by the number after the comma', () => {
+  const symphony = planFonts(model).filter((f) => f.fontId === 'YAF7Scfb7Ns');
+  assert.equal(symphony.length, 1, 'one Symphony face in use');
+  assert.equal(symphony[0].style, 'REGULAR');
+  assert.equal(symphony[0].weight, 400);
+  assert.equal(symphony[0].url, model.fonts.YAF7Scfb7Ns.styles.find((s) => s.style === 'REGULAR').url);
+});
+
+test('matches the nearest weight within the same slant, and falls back across slants', () => {
+  const styles = (...names) => names.map((style) => ({ style, url: `_assets/fonts/${style}.woff` }));
+  assert.equal(pickFace(styles('BOLD', 'REGULAR'), 400, false).style, 'REGULAR');
+  assert.equal(pickFace(styles('BOLD', 'REGULAR'), 700, false).style, 'BOLD');
+  assert.equal(pickFace(styles('REGULAR', 'ITALICS', 'BOLD_ITALICS'), 700, true).style, 'BOLD_ITALICS');
+  assert.equal(pickFace(styles('REGULAR', 'ITALICS', 'BOLD_ITALICS'), 400, true).style, 'ITALICS');
+  assert.equal(pickFace(styles('MEDIUM'), 400, false).style, 'MEDIUM');
+  assert.equal(pickFace(styles('LIGHT', 'BOLD'), 400, false).style, 'LIGHT');
+  assert.equal(pickFace(styles('REGULAR'), 700, true).style, 'REGULAR');
 });
 
 test('maps Canva style names onto weight and italic', () => {

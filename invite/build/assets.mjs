@@ -69,14 +69,26 @@ export function usedMedia(model) {
   return used;
 }
 
+// The face for a run: same slant where the font has one, then the nearest
+// weight. Canva's run style names a font as "<id>,<n>", but the number is not
+// an index into the style list — the live page registers every style of the
+// font under one family and lets font-weight/font-style choose, so a run with
+// no weight of its own (400) on a font listed BOLD-first still gets the REGULAR.
+export function pickFace(styles, weight, italic) {
+  const faces = styles.map((style) => ({ style, ...styleToFace(style.style) }));
+  const slanted = faces.filter((f) => f.italic === !!italic);
+  const pool = slanted.length ? slanted : faces;
+  return pool.reduce((best, f) => (Math.abs(f.weight - weight) < Math.abs(best.weight - weight) ? f : best)).style;
+}
+
 export function planFonts(model) {
   const seen = new Map();
   const add = (run) => {
-    const key = `${run.font}-${run.styleIndex}`;
-    if (seen.has(key)) return;
     const font = model.fonts[run.font];
-    const style = font.styles[run.styleIndex] || font.styles[0];
-    seen.set(key, { key, fontId: run.font, styleIndex: run.styleIndex, url: style.url, family: font.family, ...styleToFace(style.style) });
+    const style = pickFace(font.styles, run.weight || 400, run.italic);
+    const key = `${run.font}-${style.style}`;
+    if (seen.has(key)) return;
+    seen.set(key, { key, fontId: run.font, style: style.style, url: style.url, family: font.family, ...styleToFace(style.style) });
   };
   for (const p of model.pages) for (const s of p.sections) walk(s.elements, (el) => {
     if (el.kind === 'text') el.runs.forEach(add);
@@ -265,7 +277,7 @@ export async function buildAssets(model) {
       const out = path.join(ASSETS, 'fonts', hashName(src, path.extname(face.url).toLowerCase()));
       fs.mkdirSync(path.dirname(out), { recursive: true });
       if (!fs.existsSync(out)) fs.copyFileSync(src, out);
-      manifest.fonts[face.key] = { family: face.family, src: path.relative(INVITE, out).replace(/\\/g, '/'), weight: face.weight, italic: face.italic };
+      manifest.fonts[face.key] = { fontId: face.fontId, family: face.family, src: path.relative(INVITE, out).replace(/\\/g, '/'), weight: face.weight, italic: face.italic };
     }
     fs.writeFileSync(path.join(BUILD, 'assets.json'), JSON.stringify(manifest, null, 1));
   } finally {

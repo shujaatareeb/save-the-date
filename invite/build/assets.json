@@ -664,87 +664,94 @@
   }
  },
  "fonts": {
-  "YAGL4FC9GCs-0": {
+  "YAGL4FC9GCs-BOLD": {
+   "fontId": "YAGL4FC9GCs",
    "family": "Hello Paris",
    "src": "assets/fonts/b870a7038461.woff",
    "weight": 700,
    "italic": false
   },
-  "YAFcf99lyzk-0": {
+  "YAFcf99lyzk-HEAVY": {
+   "fontId": "YAFcf99lyzk",
    "family": "Fabrica",
    "src": "assets/fonts/4e16bd4a4727.woff",
    "weight": 900,
    "italic": false
   },
-  "YAFcf5Qrkvs-0": {
+  "YAFcf5Qrkvs-REGULAR": {
+   "fontId": "YAFcf5Qrkvs",
    "family": "Citadel Script",
    "src": "assets/fonts/0c87c5fd3ee4.woff",
    "weight": 400,
    "italic": false
   },
-  "YAF7Scfb7Ns-0": {
+  "YAF7Scfb7Ns-REGULAR": {
+   "fontId": "YAF7Scfb7Ns",
    "family": "Symphony",
-   "src": "assets/fonts/8a4a3ec480c8.woff",
-   "weight": 700,
+   "src": "assets/fonts/6c71b0d76099.woff",
+   "weight": 400,
    "italic": false
   },
-  "YAGNIDZJMxo-0": {
+  "YAGNIDZJMxo-REGULAR": {
+   "fontId": "YAGNIDZJMxo",
    "family": "Parfumerie Script",
    "src": "assets/fonts/3f844cddbfb7.woff",
    "weight": 400,
    "italic": false
   },
-  "YAGtVK-MPwY-0": {
+  "YAGtVK-MPwY-REGULAR": {
+   "fontId": "YAGtVK-MPwY",
    "family": "Qaskin Black Personal Use",
    "src": "assets/fonts/bc7c5d4e6abe.otf",
    "weight": 400,
    "italic": false
   },
-  "YAFcfiBZ5y0-0": {
+  "YAFcfiBZ5y0-REGULAR": {
+   "fontId": "YAFcfiBZ5y0",
    "family": "Fry's Baskerville",
    "src": "assets/fonts/ebf5ba2036a8.woff",
    "weight": 400,
    "italic": false
   },
-  "YAEtfuYOYZQ-1": {
+  "YAEtfuYOYZQ-REGULAR": {
+   "fontId": "YAEtfuYOYZQ",
    "family": "The Youngest",
    "src": "assets/fonts/3bf56e83256e.woff",
    "weight": 400,
    "italic": false
   },
-  "YAHNfXfrdOE-0": {
+  "YAHNfXfrdOE-REGULAR": {
+   "fontId": "YAHNfXfrdOE",
    "family": "Bachelorette",
    "src": "assets/fonts/6fc1d2758a11.woff",
    "weight": 400,
    "italic": false
   },
-  "YAHQugL0Sy8-0": {
+  "YAHQugL0Sy8-MEDIUM": {
+   "fontId": "YAHQugL0Sy8",
    "family": "Atlante Display",
    "src": "assets/fonts/9344fd38c8d0.woff",
    "weight": 500,
    "italic": false
   },
-  "YAFcfknkruY-0": {
+  "YAFcfknkruY-REGULAR": {
+   "fontId": "YAFcfknkruY",
    "family": "ITC Edwardian Script",
    "src": "assets/fonts/43060ed27b27.woff",
    "weight": 400,
    "italic": false
   },
-  "YAFdJhX-538-0": {
+  "YAFdJhX-538-BOLD_ITALICS": {
+   "fontId": "YAFdJhX-538",
    "family": "Cormorant Garamond",
    "src": "assets/fonts/11c54233a01f.woff",
    "weight": 700,
    "italic": true
   },
-  "YAF3ubalrAg-0": {
+  "YAF3ubalrAg-REGULAR": {
+   "fontId": "YAF3ubalrAg",
    "family": "Burgues Script",
    "src": "assets/fonts/5ee32612bf5a.woff",
-   "weight": 400,
-   "italic": false
-  },
-  "YAEtfuYOYZQ-0": {
-   "family": "The Youngest",
-   "src": "assets/fonts/3bf56e83256e.woff",
    "weight": 400,
    "italic": false
   }

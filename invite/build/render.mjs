@@ -20,7 +20,7 @@ function fontFormat(src) {
 
 const TITLE = 'Misbah &amp; Areeb — Wedding Invitation';
 const DESCRIPTION = 'Misbah &amp; Areeb invite you to celebrate their wedding. Mehfil-e-Mehendi 8 October, Nikah and Dawat-e-Khaas 10 October 2026, Mumbai.';
-const COUNTDOWN_FACE = 'YAFcfiBZ5y0-0'; // Fry's Baskerville, the closest face to the Canva widget
+const COUNTDOWN_FACE = 'YAFcfiBZ5y0'; // Fry's Baskerville, the closest face to the Canva widget
 
 export const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const attr = (v) => escapeHtml(v);
@@ -141,7 +141,7 @@ function runStyle(run, backgroundCss) {
   // A superscript run draws at 60% of its own size. As `0.6em` that would
   // resolve against the parent .ln rather than this run, so fold it in here.
   const size = run.super ? run.size * 0.6 : run.size;
-  let s = `font-family:'f-${run.font}-${run.styleIndex}',serif;font-size:${px(size)};font-weight:${run.weight};font-style:${run.italic ? 'italic' : 'normal'};color:${run.color};`;
+  let s = `font-family:'f-${run.font}',serif;font-size:${px(size)};font-weight:${run.weight};font-style:${run.italic ? 'italic' : 'normal'};color:${run.color};`;
   if (run.letterSpacing) s += `letter-spacing:${run.letterSpacing};`;
   if (run.decoration && run.decoration !== 'none') s += `text-decoration:${run.decoration};`;
   if (run.transform && run.transform !== 'none') s += `text-transform:${run.transform};`;
@@ -407,7 +407,10 @@ export function render(model, assets, anims) {
     });
     sections.push(`<section class="page${eager ? ' active' : ''}" id="${page.slug}" data-page="${page.slug}" aria-label="${attr(page.title)}">\n${secs.join('\n')}\n</section>`);
   }
-  const faces = Object.entries(assets.fonts).map(([key, f]) => `@font-face{font-family:'f-${key}';src:url(${f.src}) format('${fontFormat(f.src)}');font-weight:${f.weight};font-style:${f.italic ? 'italic' : 'normal'};font-display:swap}`);
+  // One family per Canva font id, every face in use declared under it with its
+  // own weight and slant, so a run's font-weight/font-style pick the file the
+  // way they do on the live page.
+  const faces = Object.values(assets.fonts).map((f) => `@font-face{font-family:'f-${f.fontId}';src:url(${f.src}) format('${fontFormat(f.src)}');font-weight:${f.weight};font-style:${f.italic ? 'italic' : 'normal'};font-display:swap}`);
   const animations = [...animGroups.values()].map((g) => {
     if (g.kind === 'split') {
       return `${keyframeCss(g.name, g.entrance)}\n${keyframeCss(`${g.name}i`, g.idle)}\n.${g.name}.in{animation-name:${g.name},${g.name}i;animation-duration:var(--dur),var(--idur);animation-delay:var(--del),calc(var(--del) + var(--dur));animation-iteration-count:1,infinite;animation-direction:normal,alternate;animation-fill-mode:both,forwards;animation-timing-function:linear,ease-in-out}`;
