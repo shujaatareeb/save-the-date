@@ -9,7 +9,7 @@
     "invite:record": "node invite/build/record.mjs",
     "invite:render": "node invite/build/render.mjs",
     "invite:build": "npm run invite:fetch && npm run invite:extract && npm run invite:assets && npm run invite:record && npm run invite:render",
-    "test:invite": "node --test test/invite/"
+    "test:invite": "node --test \"test/invite/*.test.mjs\""
   },
   "devDependencies": {
     "ffmpeg-static": "5.3.0",
