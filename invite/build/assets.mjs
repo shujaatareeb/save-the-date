@@ -96,7 +96,13 @@ async function download(url) {
   return file;
 }
 
-const hashName = (file, ext) => crypto.createHash('sha1').update(fs.readFileSync(file)).digest('hex').slice(0, 12) + ext;
+// Output names are content-addressed to the *inputs* — the downloaded source
+// plus whatever recipe turned it into this file — never to an intermediate
+// rendered on this machine. A composited spritesheet passes through Chromium
+// on its way to WebP, and Chromium's PNG bytes differ from build to build, so
+// hashing the flat PNG renamed every composite on every machine that ran the
+// build.
+export const hashName = (file, ext, recipe = '') => crypto.createHash('sha1').update(fs.readFileSync(file)).update(recipe).digest('hex').slice(0, 12) + ext;
 
 // ffmpeg has no SVG decoder in any build (it doesn't rasterise vectors), and a
 // handful of media the model marks `type: 'raster'` are actually SVG source
@@ -188,8 +194,8 @@ export function compositeCacheName(src, sprites, recolor) {
   return `${path.basename(src)}.${hash}.composite.png`;
 }
 
-async function encodeStill(src, maxWidth, naturalWidth) {
-  const out = path.join(ASSETS, hashName(src, '.webp'));
+async function encodeStill(src, maxWidth, naturalWidth, { nameFrom = src, recipe = '' } = {}) {
+  const out = path.join(ASSETS, hashName(nameFrom, '.webp', recipe));
   if (!fs.existsSync(out)) {
     const target = Math.min(naturalWidth, Math.ceil(maxWidth * 2));
     const vf = target < naturalWidth ? ['-vf', `scale=${target}:-2`] : [];
@@ -239,13 +245,13 @@ export async function buildAssets(model) {
       let out, kind = 'image', poster = null;
       if (m.mime === 'image/svg+xml') out = use.recolor ? writeRecoloredSvg(src, use.recolor) : await copyThrough(src, '.svg');
       else if (m.type === 'raster' || m.type === 'vector') {
-        let stillSrc = src;
         if (m.sprites) {
           const flat = path.join(CACHE, compositeCacheName(src, m.sprites, use.recolor));
           if (!fs.existsSync(flat)) await compositeSheet(src, m.sprites, flat, use.recolor);
-          stillSrc = flat;
+          out = await encodeStill(flat, use.maxWidth, m.width, { nameFrom: src, recipe: JSON.stringify({ sprites: m.sprites, recolor: use.recolor || null }) });
+        } else {
+          out = await encodeStill(src, use.maxWidth, m.width);
         }
-        out = await encodeStill(stillSrc, use.maxWidth, m.width);
       }
       else if (m.url.endsWith('.gif')) { out = await encodeAnimated(src); kind = 'anim'; }
       else {

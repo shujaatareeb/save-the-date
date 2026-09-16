@@ -12,7 +12,6 @@
 @font-face{font-family:'f-YAFdJhX-538-0';src:url(assets/fonts/11c54233a01f.woff) format('woff');font-weight:700;font-style:italic;font-display:swap}
 @font-face{font-family:'f-YAF3ubalrAg-0';src:url(assets/fonts/5ee32612bf5a.woff) format('woff');font-weight:400;font-style:normal;font-display:swap}
 @font-face{font-family:'f-YAEtfuYOYZQ-0';src:url(assets/fonts/3bf56e83256e.woff) format('woff');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:'f-YACgEQzTJgs-0';src:url(assets/fonts/b2688e63cfdf.woff) format('woff');font-weight:400;font-style:normal;font-display:swap}
 html,body{margin:0;background:#f4efe8;overflow-x:hidden;-webkit-text-size-adjust:100%}
 main{position:relative;min-height:100vh}
 .page{display:none}.page.active{display:block}

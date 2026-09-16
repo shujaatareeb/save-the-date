@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { usedMedia, planFonts, styleToFace, pageBytes, spriteRect, assetKey, applyRecolor, recolorSvg, compositeCacheName } from '../../invite/build/assets.mjs';
+import { usedMedia, planFonts, styleToFace, pageBytes, spriteRect, assetKey, applyRecolor, recolorSvg, compositeCacheName, hashName } from '../../invite/build/assets.mjs';
+import os from 'node:os';
+import path from 'node:path';
 
 const model = JSON.parse(fs.readFileSync(new URL('../../invite/build/model.json', import.meta.url)));
 const manifest = JSON.parse(fs.readFileSync(new URL('../../invite/build/assets.json', import.meta.url)));
@@ -90,4 +92,16 @@ test('composite cache names include what was composited, not just the source bas
   assert.match(plain, /^abc123\.png\.[0-9a-f]{8}\.composite\.png$/);
   assert.match(recoloured, /^abc123\.png\.[0-9a-f]{8}\.composite\.png$/);
   assert.notEqual(plain, recoloured, 'recoloured variant must not collide with the plain composite');
+});
+
+test('names an output after its source and recipe, so a composite hashes the same on every machine', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'invite-hash-'));
+  const sheet = path.join(dir, 'sheet.png');
+  fs.writeFileSync(sheet, 'spritesheet bytes');
+  const recipe = JSON.stringify({ sprites: [{ x: 0, y: 0, w: 1, h: 1 }], recolor: null });
+  assert.equal(hashName(sheet, '.webp', recipe), hashName(sheet, '.webp', recipe));
+  assert.notEqual(hashName(sheet, '.webp', recipe), hashName(sheet, '.webp'));
+  assert.notEqual(hashName(sheet, '.webp', recipe), hashName(sheet, '.webp', recipe.replace('null', '{"#000000":"#ffffff"}')));
+  assert.match(hashName(sheet, '.webp', recipe), /^[0-9a-f]{12}\.webp$/);
+  fs.rmSync(dir, { recursive: true });
 });
