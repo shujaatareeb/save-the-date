@@ -92,6 +92,24 @@ test('recolours layer colours and svg fills through the map', () => {
   assert.equal(recolorSvg('<path fill="#EEBAD5"/><path style="fill:#eebad5"/>', { '#eebad5': '#e8e0d3' }), '<path fill="#e8e0d3"/><path style="fill:#e8e0d3"/>');
 });
 
+// Canva's own SVGs mostly leave their paths unfilled and let them fall to the
+// SVG default, black — and the design's colour map for such a layer is keyed
+// on that black. Rewriting only literal fills left the timeline's paint
+// splatter black on the page; the root takes the mapped colour so every
+// unfilled path inherits it, and paths that do name a fill keep their own map.
+test('a map entry for black recolours paths that never named a fill', () => {
+  const svg = '<?xml version="1.0"?><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><g><path d="M0 0h1"/><path fill="#EEBAD5" d="M1 1h1"/></g></svg>';
+  const out = recolorSvg(svg, { '#000000': '#ddc1a4', '#eebad5': '#e8e0d3' });
+  assert.match(out, /<svg [^>]*fill="#ddc1a4"[^>]*>/);
+  assert.match(out, /<path fill="#e8e0d3" d="M1 1h1"\/>/);
+  assert.equal((out.match(/<svg /g) || []).length, 1);
+  // A root that already names a fill has it rewritten rather than doubled.
+  const rooted = recolorSvg('<svg xmlns="http://www.w3.org/2000/svg" fill="#000000"><path d="M0 0h1"/></svg>', { '#000000': '#ddc1a4' });
+  assert.equal(rooted, '<svg xmlns="http://www.w3.org/2000/svg" fill="#ddc1a4"><path d="M0 0h1"/></svg>');
+  // No black in the map: the root is left alone.
+  assert.equal(recolorSvg('<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0h1"/></svg>', { '#eebad5': '#e8e0d3' }), '<svg xmlns="http://www.w3.org/2000/svg"><path d="M0 0h1"/></svg>');
+});
+
 test('the manifest carries a recoloured variant for the heart flourish', () => {
   // LBq7bt3xrnV5lSC1 is the small heart-and-squiggle flourish under "WE ARE
   // GETTING MARRIED!" (not the purple ribbon plate, which is a separate,

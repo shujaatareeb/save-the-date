@@ -49,8 +49,17 @@ const toHex = (c) => {
   return '#' + [r, g, b].map((n) => n.toString(16).padStart(2, '0')).join('');
 };
 export function applyRecolor(color, map) { const hex = toHex(color); return (map && map[hex]) || hex; }
+// Literal fills are rewritten through the map. Canva's own SVGs mostly leave
+// their paths unfilled, falling to the SVG default of black, and key the
+// layer's colour map on that black — so a mapping for #000000 also goes on
+// the root element, where every unfilled path inherits it.
 export function recolorSvg(svg, map) {
-  return svg.replace(/#[0-9a-fA-F]{6}\b/g, (hex) => map[hex.toLowerCase()] || hex);
+  let out = svg.replace(/#[0-9a-fA-F]{6}\b/g, (hex) => map[hex.toLowerCase()] || hex);
+  const black = map['#000000'];
+  if (black) {
+    out = out.replace(/<svg\b([^>]*)>/, (tag, attrs) => (/\sfill="/.test(attrs) ? tag : `<svg${attrs} fill="${black}">`));
+  }
+  return out;
 }
 
 export function usedMedia(model) {
