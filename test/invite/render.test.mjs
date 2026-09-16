@@ -381,3 +381,25 @@ test('an effect-30 image ships its matte for the runtime instead of a blended vi
   assert.match(css, /\.el\.mt\.mt-run>img\{visibility:hidden\}/);
   assert.match(css, /\.el\.mt>canvas\{position:absolute;left:0;top:0;width:100%;height:100%/);
 });
+
+// Canva pulses its buttons — opacity 0.35↔1 every 1.1 s and, for most, scale
+// 0.85↔1.14 every 0.9 s — with no animation on the element itself. The
+// recorder cannot sample that fast and aliased it into a 25-second drift that
+// parked "view details" at half strength; the signature is unmistakable
+// (no effect, a loop, an opacity floor at Canva's 0.35), so the build emits
+// the pulse itself instead of the recording.
+test('a recorded loop with no effect and a 0.35 opacity floor is Canva\'s button pulse', () => {
+  const { html, css } = render(model, assets, anims);
+  const wrapper = (id) => html.match(new RegExp(`<(?:div|a)[^>]*data-id="${id}"[^>]*>`))[0];
+  const details = wrapper('LBHb4nSN2rqPfTlS');
+  assert.match(details, /class="el txt pl pls"/, 'view details: opacity and scale pulse');
+  assert.doesNotMatch(details, /--dur:|\ban\b/);
+  assert.match(wrapper('LBrC6ChVnFnyKTVx'), /class="el txt pl"(?! pls)/, 'Click to open: opacity only');
+  assert.match(wrapper('LB1P27837r8487lS'), /class="el img pl"/, 'reception button the recorder caught at .396');
+  assert.match(css, /\.el\.pl\{animation:plo 1\.11s ease-in-out infinite\}/);
+  assert.match(css, /\.el\.pl\.pls\{animation:plo 1\.11s ease-in-out infinite,pls \.9s ease-in-out infinite\}/);
+  assert.match(css, /@keyframes plo\{0%,100%\{opacity:var\(--op,1\)\}50%\{opacity:calc\(var\(--op,1\)\*\.35\)\}\}/);
+  assert.match(css, /@keyframes pls\{0%,100%\{transform:rotate\(var\(--rot,0deg\)\) scale\(\.85\)\}50%\{transform:rotate\(var\(--rot,0deg\)\) scale\(1\.14\)\}\}/);
+  // A loop that genuinely goes to zero is an entrance, not a pulse.
+  assert.match(wrapper('LBwySg2vwJKtFn3Y'), /class="el img an /);
+});

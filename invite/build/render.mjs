@@ -33,9 +33,23 @@ function baseStyle(el) {
   return s;
 }
 
+// Canva pulses its buttons — opacity 0.35↔1 every 1.1 s and, on most, scale
+// 0.85↔1.14 every 0.9 s — without any animation on the element itself. The
+// recorder cannot sample that fast and aliases it into a slow drift, so it is
+// recognised by its signature instead: no effect on the element, a recorded
+// loop, and an opacity floor at Canva's 0.35 (a little above where the
+// sampler never quite caught the bottom). The pulse is then emitted as CSS.
+export function isPulse(el, a) {
+  if (el.anim?.effect || !a?.loop) return false;
+  const floor = Math.min(...a.frames.map((f) => f.opacity));
+  return floor >= 0.3 && floor <= 0.45;
+}
+const pulseScales = (a) => Math.max(...a.frames.map((f) => f.scale)) - Math.min(...a.frames.map((f) => f.scale)) > 0.05;
+
 function animAttrs(el, ctx) {
   const a = ctx.anims[el.id];
   if (!a) return { cls: '', style: '' };
+  if (isPulse(el, a)) { ctx.pulses.used = true; return { cls: pulseScales(a) ? ' pl pls' : ' pl', style: '' }; }
   const del = `--del:${Math.max(0, a.startMs - (ctx.sectionStart || 0))}ms;`;
   if (!a.loop) {
     const g = ctx.groupFor('once', a.frames, null);
@@ -247,6 +261,11 @@ export function keyframeCss(name, frames) {
   return `@keyframes ${name}{${stops.join('')}}`;
 }
 
+// Canva's button pulse (see isPulse), emitted once when any element uses it.
+const PULSE_CSS = `.el.pl{animation:plo 1.11s ease-in-out infinite}.el.pl.pls{animation:plo 1.11s ease-in-out infinite,pls .9s ease-in-out infinite}
+@keyframes plo{0%,100%{opacity:var(--op,1)}50%{opacity:calc(var(--op,1)*.35)}}
+@keyframes pls{0%,100%{transform:rotate(var(--rot,0deg)) scale(.85)}50%{transform:rotate(var(--rot,0deg)) scale(1.14)}}`;
+
 const BASE_CSS = `
 html,body{margin:0;background:#f4efe8;overflow-x:hidden;-webkit-text-size-adjust:100%}
 main{position:relative;min-height:100vh}
@@ -347,6 +366,7 @@ export function render(model, assets, anims) {
   // kind is 'once' (plain one-shot: entrance holds the frames, idle is null), 'split' (entrance
   // then idle) or 'idleOnly' (idle holds the frames, entrance is null).
   const animGroups = new Map();
+  const pulses = { used: false };
   const groupFor = (kind, entrance, idle) => {
     const key = JSON.stringify({ kind, entrance, idle });
     let g = animGroups.get(key);
@@ -415,7 +435,7 @@ export function render(model, assets, anims) {
       });
       walk(s.elements);
       const starts = Object.values(elementAnims).filter((a) => !a.borrowed).map((a) => a.startMs).filter((n) => n != null);
-      const ctx = { assets, anims: elementAnims, eager, groupFor, sectionStart: starts.length ? Math.min(...starts) : 0 };
+      const ctx = { assets, anims: elementAnims, eager, groupFor, pulses, sectionStart: starts.length ? Math.min(...starts) : 0 };
       const bg = s.background ? `background:${s.background};` : '';
       const c = s.content;
       const els = s.elements.map((e) => renderElement(e, ctx)).join('\n');
@@ -438,7 +458,7 @@ export function render(model, assets, anims) {
     }
     return `${keyframeCss(g.name, g.entrance)}\n.${g.name}.in{animation-name:${g.name}}`;
   });
-  const css = [...faces, BASE_CSS.trim(), ...animations].join('\n');
+  const css = [...faces, BASE_CSS.trim(), ...(pulses.used ? [PULSE_CSS] : []), ...animations].join('\n');
   const html = `<!doctype html>
 <html lang="en">
 <head>
