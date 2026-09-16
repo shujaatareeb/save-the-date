@@ -360,3 +360,24 @@ test('preserves whitespace in shape text blocks', () => {
   const { css } = render(model, assets, {});
   assert.match(css, /\.stxt\{[^}]*white-space:pre-wrap/);
 });
+
+// Canva's effect 30 is a luma-matte reveal: the animation's video is a
+// black-to-white matte the live page composites over the picture on a canvas,
+// not an overlay to blend on top of it. The build hands the matte to the
+// runtime and leaves the picture alone; nothing about the wrapper animates.
+test('an effect-30 image ships its matte for the runtime instead of a blended video overlay', () => {
+  const { html, css } = render(model, assets, anims);
+  const m = html.match(/<div class="el img mt"[^>]*data-id="LB5G72RFmZTRXFxD"[^>]*>(.*?)<\/div>/s);
+  assert.ok(m, 'candelabra wrapper carries class mt');
+  const [open, inner] = m;
+  assert.match(open, /data-matte="assets\/[0-9a-f]{12}\.webm"/);
+  assert.match(open, /data-matte-mp4="assets\/[0-9a-f]{12}\.mp4"/);
+  assert.doesNotMatch(open, /class="el img mt[^"]*\ban\b/);
+  assert.doesNotMatch(open, /--dur:/);
+  assert.match(inner, /<img [^>]*data-src="assets\/[0-9a-f]{12}\.webp"/);
+  assert.doesNotMatch(inner, /<video|mix-blend-mode/);
+  assert.doesNotMatch(html, /<video|mix-blend-mode/);
+  assert.match(css, /\.el\.mt:not\(\.in\)\{opacity:0\}/);
+  assert.match(css, /\.el\.mt\.mt-run>img\{visibility:hidden\}/);
+  assert.match(css, /\.el\.mt>canvas\{position:absolute;left:0;top:0;width:100%;height:100%/);
+});

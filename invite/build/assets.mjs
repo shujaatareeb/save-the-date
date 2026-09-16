@@ -222,9 +222,18 @@ async function encodeAnimated(src) {
   return out;
 }
 
+// The deck's videos are effect-30 mattes — black-to-white masks the runtime
+// draws the picture through — so they go out as VP9 WebM for everyone who
+// decodes it and baseline H.264 MP4 for the iPhones that don't. Greyscale
+// soft blobs compress to next to nothing either way.
 async function encodeVideo(src) {
   const out = path.join(ASSETS, hashName(src, '.webm'));
   if (!fs.existsSync(out)) await ffmpeg(['-i', src, '-vf', 'scale=960:-2', '-c:v', 'libvpx-vp9', '-b:v', '0', '-crf', '36', '-an', out]);
+  return out;
+}
+async function encodeVideoMp4(src) {
+  const out = path.join(ASSETS, hashName(src, '.mp4'));
+  if (!fs.existsSync(out)) await ffmpeg(['-i', src, '-vf', 'scale=960:-2', '-c:v', 'libx264', '-profile:v', 'baseline', '-level', '3.1', '-pix_fmt', 'yuv420p', '-crf', '28', '-preset', 'slow', '-movflags', '+faststart', '-an', out]);
   return out;
 }
 
@@ -233,7 +242,7 @@ export function pageBytes(model, manifest, slug) {
   const page = model.pages.find((p) => p.slug === slug);
   const sub = { ...model, pages: [page] };
   const files = new Set();
-  for (const id of usedMedia(sub).keys()) { const m = manifest.media[id]; files.add(m.src); if (m.poster) files.add(m.poster); }
+  for (const id of usedMedia(sub).keys()) { const m = manifest.media[id]; files.add(m.src); if (m.mp4) files.add(m.mp4); }
   for (const face of planFonts(sub)) files.add(manifest.fonts[face.key].src);
   let total = 0;
   for (const f of files) total += fs.statSync(path.join(INVITE, f)).size;
@@ -254,7 +263,7 @@ export async function buildAssets(model) {
         throw new Error(`recolour on a plain raster ${key} is not supported`);
       }
       const src = await download(m.url);
-      let out, kind = 'image', poster = null;
+      let out, kind = 'image', mp4 = null;
       if (m.mime === 'image/svg+xml') out = use.recolor ? writeRecoloredSvg(src, use.recolor) : await copyThrough(src, '.svg');
       else if (m.type === 'raster' || m.type === 'vector') {
         if (m.sprites) {
@@ -268,9 +277,9 @@ export async function buildAssets(model) {
       else if (m.url.endsWith('.gif')) { out = await encodeAnimated(src); kind = 'anim'; }
       else {
         out = await encodeVideo(src); kind = 'video';
-        if (m.poster) poster = path.relative(INVITE, await encodeStill(await download(m.poster), use.maxWidth, m.width)).replace(/\\/g, '/');
+        mp4 = path.relative(INVITE, await encodeVideoMp4(src)).replace(/\\/g, '/');
       }
-      manifest.media[key] = { src: path.relative(INVITE, out).replace(/\\/g, '/'), width: m.width, height: m.height, kind, ...(poster && { poster }) };
+      manifest.media[key] = { src: path.relative(INVITE, out).replace(/\\/g, '/'), width: m.width, height: m.height, kind, ...(mp4 && { mp4 }) };
     }
     for (const face of planFonts(model)) {
       const src = await download(face.url);

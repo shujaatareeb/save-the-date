@@ -129,3 +129,14 @@ test('names an output after its source and recipe, so a composite hashes the sam
   assert.match(hashName(sheet, '.webp', recipe), /^[0-9a-f]{12}\.webp$/);
   fs.rmSync(dir, { recursive: true });
 });
+
+test('matte videos ship a webm and an h264 mp4, and no poster', () => {
+  const videos = Object.entries(manifest.media).filter(([, m]) => m.kind === 'video');
+  assert.equal(videos.length, 2, 'two effect-30 mattes in the deck');
+  for (const [id, m] of videos) {
+    assert.match(m.src, /^assets\/[0-9a-f]{12}\.webm$/, id);
+    assert.match(m.mp4, /^assets\/[0-9a-f]{12}\.mp4$/, id);
+    assert.equal(m.poster, undefined, `${id} needs no poster: the matte is never shown`);
+    assert.ok(fs.existsSync(new URL(`../../invite/${m.mp4}`, import.meta.url)), `${m.mp4} on disk`);
+  }
+});

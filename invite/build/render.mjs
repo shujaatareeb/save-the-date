@@ -56,11 +56,11 @@ function animAttrs(el, ctx) {
   return { cls: ` an ${g.name}i`, style: `--dur:${a.idleMs}ms;${del}` };
 }
 
-function open(el, cls, ctx, extraStyle = '') {
-  const an = animAttrs(el, ctx);
+function open(el, cls, ctx, extraStyle = '', extraAttrs = '', animate = true) {
+  const an = animate ? animAttrs(el, ctx) : { cls: '', style: '' };
   const tag = el.link ? 'a' : 'div';
   const href = el.link ? ` href="${attr(el.link)}"${el.link.startsWith('#') ? '' : ' target="_blank" rel="noopener"'}` : '';
-  return `<${tag}${href} class="el ${cls}${an.cls}" data-id="${attr(el.id)}" style="${baseStyle(el)}${an.style}${extraStyle}">`;
+  return `<${tag}${href} class="el ${cls}${an.cls}" data-id="${attr(el.id)}"${extraAttrs} style="${baseStyle(el)}${an.style}${extraStyle}">`;
 }
 const close = (el) => (el.link ? '</a>' : '</div>');
 
@@ -68,10 +68,7 @@ function mediaTag(key, crop, ctx, extra = '') {
   const m = ctx.assets.media[key];
   if (!m) throw new Error(`no asset for media ${key}`);
   const style = `left:${px(crop.left)};top:${px(crop.top)};width:${px(crop.width)};height:${px(crop.height)};`;
-  if (m.kind === 'video') {
-    const src = ctx.eager ? `src="${m.src}"` : `data-src="${m.src}"`;
-    return `<video ${src} autoplay muted loop playsinline${m.poster ? ` poster="${m.poster}"` : ''} style="${style}${extra}"></video>`;
-  }
+  if (m.kind === 'video') throw new Error(`media ${key} is a video; only a matte may be one, and mattes go through matteAttrs`);
   const src = ctx.eager ? `src="${m.src}"` : `data-src="${m.src}" loading="lazy"`;
   return `<img ${src} width="${m.width}" height="${m.height}" alt="" decoding="async" style="${style}${extra}">`;
 }
@@ -186,12 +183,24 @@ export function renderTextBlock(block, effects) {
   return { style, html: lines.join(''), inner };
 }
 
+// Canva's effect 30 carries a video that is not a picture but a luma matte —
+// black to white over a second or three — which the live page composites over
+// the element on a canvas so the picture wipes or blooms in. The build hands
+// the runtime the matte's two encodings and nothing else: the recorded wrapper
+// animation for such an element is only the recorder watching a canvas it
+// could not see into, so it is dropped, and the matte is the whole entrance.
+function matteAttrs(el, ctx) {
+  const id = el.anim?.params?.video;
+  const m = id && ctx.assets.media[id];
+  if (!m) return '';
+  if (m.kind !== 'video') throw new Error(`animation video ${id} on ${el.id} is not a video asset`);
+  return ` data-matte="${m.src}"${m.mp4 ? ` data-matte-mp4="${m.mp4}"` : ''}`;
+}
+
 export function renderElement(el, ctx) {
   if (el.kind === 'image') {
-    const overlay = el.anim?.params?.video && ctx.assets.media[el.anim.params.video]
-      ? mediaTag(el.anim.params.video, { left: 0, top: 0, width: el.width, height: el.height }, ctx, 'mix-blend-mode:screen;pointer-events:none;')
-      : '';
-    return `${open(el, 'img', ctx)}${mediaTag(assetKey(el.media, el.recolor), el.crop, ctx)}${overlay}${close(el)}`;
+    const matte = matteAttrs(el, ctx);
+    return `${open(el, matte ? 'img mt' : 'img', ctx, '', matte, !matte)}${mediaTag(assetKey(el.media, el.recolor), el.crop, ctx)}${close(el)}`;
   }
   if (el.kind === 'text') {
     const { style, html, inner } = renderTextBlock(el, el.effects);
@@ -252,6 +261,7 @@ a.el{display:block;text-decoration:none;color:inherit}
 .grp>.gin{position:absolute;left:0;top:0;transform-origin:0 0}
 .shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;white-space:pre-wrap}
 .el.an{opacity:0;animation-fill-mode:both;animation-timing-function:linear;animation-duration:var(--dur,800ms);animation-delay:var(--del,0ms)}
+.el.mt:not(.in){opacity:0}.el.mt.mt-run>img{visibility:hidden}.el.mt>canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
 .cd{display:flex;align-items:center;justify-content:center;color:#4b3822;font-family:'f-${COUNTDOWN_FACE}',serif}
 .cd-row{display:flex;align-items:flex-start;gap:.15em;font-size:calc(var(--cd,238px)*.27);font-weight:700;line-height:1}
 .cd-u{display:flex;flex-direction:column;align-items:center;min-width:1.3em}.cd-u b{font-weight:700;font-variant-numeric:tabular-nums}
