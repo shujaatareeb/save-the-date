@@ -292,28 +292,59 @@ test('names each font format by its real extension', () => {
   assert.match(css, /\.woff\) format\('woff'\)/);
 });
 
-test('keeps text effects at sane sizes', () => {
-  const fx = textEffects([{ type: 'shadow', angle: '-45', blur: '2', color: '#000000', offset: '1.74', transparency: '0.33' }], 86.5);
-  const m = fx.shadow.match(/text-shadow:([-\d.]+)px ([-\d.]+)px ([\d.]+)px rgba\(0,0,0,0\.67\)/);
-  assert.ok(m, fx.shadow);
-  assert.ok(Math.abs(+m[1]) <= 43.25 && Math.abs(+m[2]) <= 43.25 && +m[3] <= 17.3, fx.shadow);
+// Expected values are what the live Canva page computes for these same
+// effects (read off its text-shadow), so a change here is a change in fidelity.
+const shadows = (fx) => [...fx.shadow.matchAll(/(-?[\d.]+)px (-?[\d.]+)px(?: ([\d.]+)px)? rgba\((\d+),(\d+),(\d+),([\d.]+)\)/g)]
+  .map((m) => ({ dx: +m[1], dy: +m[2], blur: m[3] == null ? 0 : +m[3], rgb: [+m[4], +m[5], +m[6]], a: +m[7] }));
+const near = (got, want, tol, what) => assert.ok(Math.abs(got - want) <= tol, `${what}: ${got} vs ${want}`);
+
+test('shadow: offset and blur are sixteenths of the font size, angle turns from straight down, transparency is the alpha', () => {
+  // "Misbah & Areeb" — Canva: rgba(0,0,0,.33) 6.65163px 6.65163px 10.8125px
+  const [misbah] = shadows(textEffects([{ type: 'shadow', angle: '-45', blur: '2', color: '#000000', offset: '1.74', transparency: '0.33' }], 86.4996));
+  near(misbah.dx, 6.652, 0.02, 'dx'); near(misbah.dy, 6.652, 0.02, 'dy'); near(misbah.blur, 10.81, 0.02, 'blur'); assert.equal(misbah.a, 0.33);
+  // "Wedding Timeline" — Canva: rgba(75,56,34,.5) -0.535102px 0.260986px 8.63265px
+  const [timeline] = shadows(textEffects([{ type: 'shadow', angle: '64', blur: '1.16', color: '#4b3822', offset: '0.08', transparency: '0.5' }], 119.071));
+  near(timeline.dx, -0.535, 0.02, 'dx'); near(timeline.dy, 0.261, 0.02, 'dy'); near(timeline.blur, 8.633, 0.02, 'blur'); assert.equal(timeline.a, 0.5);
+  assert.deepEqual(timeline.rgb, [75, 56, 34]);
+});
+
+test('echo: two copies at one and two steps, half and third strength', () => {
+  // "For Details" — Canva: rgba(75,56,34,.5) 1.10194px 0.860929px, rgba(75,56,34,.3) 2.20388px 1.72186px
+  const [one, two] = shadows(textEffects([{ type: 'echo', angle: '-52', color: '#4b3822', offset: '0.14' }], 159.815));
+  near(one.dx, 1.102, 0.02, 'dx'); near(one.dy, 0.861, 0.02, 'dy'); assert.equal(one.a, 0.5); assert.equal(one.blur, 0);
+  near(two.dx, 2.204, 0.02, 'dx2'); near(two.dy, 1.722, 0.02, 'dy2'); assert.equal(two.a, 0.3);
+  // "Save the Date" — Canva: rgba(202,124,118,.5) -0.212702px -0.244685px, ×2 at .3
+  const [a, b] = shadows(textEffects([{ type: 'echo', angle: '139', color: '#ca7c76', offset: '0.22' }], 23.579));
+  near(a.dx, -0.213, 0.01, 'dx'); near(a.dy, -0.245, 0.01, 'dy'); near(b.dx, -0.425, 0.01, 'dx2'); near(b.dy, -0.489, 0.01, 'dy2');
+});
+
+test('lift: a straight-down drop whose blur and strength grow with intensity', () => {
+  // Canva: i=.4 @36.7357 → rgba(0,0,0,.27) 0 1.37759px 4.95932px; i=1 @25.1043 → rgba(0,0,0,.6) 0 .941411px 7.06058px;
+  // i=.56 @72.3136 → rgba(0,0,0,.357) 0 2.71176px 12.5826px
+  for (const [i, size, dy, blur, a] of [['0.4', 36.7357, 1.378, 4.959, 0.27], ['1', 25.1043, 0.941, 7.061, 0.6], ['0.56', 72.3136, 2.712, 12.583, 0.36]]) {
+    const [lift] = shadows(textEffects([{ type: 'lift', intensity: i }], size));
+    assert.equal(lift.dx, 0); near(lift.dy, dy, 0.01, `dy i=${i}`); near(lift.blur, blur, 0.01, `blur i=${i}`); near(lift.a, a, 0.005, `alpha i=${i}`);
+  }
+});
+
+test('keeps outline and background at sane sizes', () => {
   assert.match(textEffects([{ type: 'outline', color: '#614124', thickness: '0.11' }], 68).stroke, /-webkit-text-stroke:0\.37px #614124;paint-order:stroke fill/);
   assert.match(textEffects([{ type: 'background', color: '#800d09', roundness: '1', spread: '1', transparency: '1' }], 20).background, /background:rgba\(128,13,9,0\);/);
   assert.match(textEffects([{ type: 'background', color: '#800d09', transparency: '0.25' }], 20).background, /background:rgba\(128,13,9,0\.75\);/);
 });
 
-test('clamps shadow alpha after converting transparency', () => {
+test('clamps shadow alpha and defaults it when the value is missing or junk', () => {
   const fx = textEffects([
     { type: 'shadow', color: '#000000', transparency: '-1' },
     { type: 'shadow', color: '#000000', transparency: '2' },
     { type: 'shadow', color: '#000000', transparency: 'invalid' },
     { type: 'shadow', color: '#000000' },
   ], 20);
-  assert.deepEqual(fx.shadow.match(/rgba\(0,0,0,[01]\)/g), [
-    'rgba(0,0,0,1)',
+  assert.deepEqual(fx.shadow.match(/rgba\(0,0,0,[\d.]+\)/g), [
     'rgba(0,0,0,0)',
     'rgba(0,0,0,1)',
-    'rgba(0,0,0,1)',
+    'rgba(0,0,0,0.5)',
+    'rgba(0,0,0,0.5)',
   ]);
 });
 

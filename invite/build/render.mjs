@@ -85,32 +85,38 @@ function hexToRgb(hex) {
 }
 const toRgba = (hex, alpha) => { const [rr, g, b] = hexToRgb(hex); return `rgba(${rr},${g},${b},${r(alpha, 2)})`; };
 
-// Approximates Canva's five text effects at sane sizes (fontSize is the run's
-// declared size — the block's own scale-to-box transform applies on top).
-// shadow/echo offsets are capped at 1 (Canva stores them well past 1) before
-// being scaled down to at most half an em; lift and its blur are plain em
-// units so they track font-size for free.
+// Canva's text effects, as the live page computes them (read off its
+// text-shadow for eight effects across the deck; every one fits exactly):
+//   · offset and blur are in sixteenths of the run's font size
+//   · the angle turns from straight down: dx = -sin, dy = cos
+//   · shadow "transparency" is the alpha as stored, not its complement
+//   · echo is two copies, one and two steps out, at .5 and .3
+//   · lift drops straight down 3/80 of the size; blur and alpha grow linearly
+//     with intensity (blur .0375→.28125 of the size, alpha .05→.6)
+// The block's own scale-to-box transform applies on top, as it does there.
+const unit = (e, key, fontSize) => ((parseFloat(e[key]) || 0) * fontSize) / 16;
+function angled(e, d) {
+  const rad = ((parseFloat(e.angle) || 0) * Math.PI) / 180;
+  return { dx: r(-Math.sin(rad) * d), dy: r(Math.cos(rad) * d) };
+}
+const clamp01 = (v, fallback) => (Number.isFinite(v) ? Math.min(Math.max(v, 0), 1) : fallback);
+
 export function textEffects(effects, fontSize) {
   const shadowParts = [];
   let stroke = '', background = '';
   for (const e of effects || []) {
     if (e.type === 'shadow') {
-      const rad = ((parseFloat(e.angle) || 0) * Math.PI) / 180;
-      const d = Math.min(parseFloat(e.offset) || 0, 1) * 0.5 * fontSize;
-      const dx = r(Math.cos(rad) * d), dy = r(-Math.sin(rad) * d);
-      const blurPx = r((parseFloat(e.blur) || 0) * 0.1 * fontSize);
-      const transparency = parseFloat(e.transparency);
-      const alpha = Number.isFinite(transparency) ? Math.min(Math.max(1 - transparency, 0), 1) : 1;
-      shadowParts.push(`${dx}px ${dy}px ${blurPx}px ${toRgba(e.color, alpha)}`);
+      const { dx, dy } = angled(e, unit(e, 'offset', fontSize));
+      const alpha = clamp01(parseFloat(e.transparency), 0.5);
+      shadowParts.push(`${dx}px ${dy}px ${r(unit(e, 'blur', fontSize))}px ${toRgba(e.color, alpha)}`);
     } else if (e.type === 'lift') {
-      const i = parseFloat(e.intensity) || 1;
-      shadowParts.push(`0 0.05em 0.12em rgba(0,0,0,${r(0.35 * i, 2)})`);
+      const i = clamp01(parseFloat(e.intensity), 1);
+      const dy = r(0.0375 * fontSize), blur = r((0.0375 + 0.24375 * i) * fontSize);
+      shadowParts.push(`0px ${dy}px ${blur}px rgba(0,0,0,${r(0.05 + 0.55 * i, 3)})`);
     } else if (e.type === 'echo') {
-      const rad = ((parseFloat(e.angle) || 0) * Math.PI) / 180;
-      const d = Math.min(parseFloat(e.offset) || 0, 1) * 0.5 * fontSize;
-      const dx = r(Math.cos(rad) * d), dy = r(-Math.sin(rad) * d);
-      shadowParts.push(`${dx}px ${dy}px ${toRgba(e.color, 1)}`);
-      shadowParts.push(`${r(dx * 2)}px ${r(dy * 2)}px ${toRgba(e.color, 0.5)}`);
+      const { dx, dy } = angled(e, unit(e, 'offset', fontSize));
+      shadowParts.push(`${dx}px ${dy}px ${toRgba(e.color, 0.5)}`);
+      shadowParts.push(`${r(dx * 2)}px ${r(dy * 2)}px ${toRgba(e.color, 0.3)}`);
     } else if (e.type === 'outline') {
       const thick = r((parseFloat(e.thickness) || 0) * 0.05 * fontSize, 2);
       stroke = `-webkit-text-stroke:${thick}px ${attr(e.color || '#000')};paint-order:stroke fill;`;
