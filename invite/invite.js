@@ -12,6 +12,7 @@
   const DEFAULT = 'envelope';
   const TARGET = Date.parse('2026-10-10T00:00:00+05:30');
   const PAD = 8;
+  const CANVAS = 1366; // design width; every section is laid out on it
   const pages = [...document.querySelectorAll('.page')];
   const bySlug = (slug) => pages.find((p) => p.dataset.page === slug);
 
@@ -22,7 +23,10 @@
     const vw = document.documentElement.clientWidth;
     const cw = +sec.dataset.cw, cl = +sec.dataset.cl, h = +sec.dataset.h;
     const k = Math.min(1, Math.max(0.25, (vw - 2 * PAD) / cw));
-    const tx = vw / 2 - (cl + cw / 2) * k;
+    // Centre the whole canvas when it fits, as Canva does on a desktop; when the
+    // viewport is narrower than the canvas, centre the content column instead so
+    // a tablet never crops it — and on a phone that column is what k fits.
+    const tx = vw >= CANVAS * k && k === 1 ? (vw - CANVAS) / 2 : vw / 2 - (cl + cw / 2) * k;
     sec.style.height = `${h * k}px`;
     stage.style.transform = `translate(${tx}px,0) scale(${k})`;
   }

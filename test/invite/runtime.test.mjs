@@ -40,19 +40,33 @@ test('fits the content box to a phone with no horizontal scroll', async () => {
   await page.close();
 });
 
-test('renders 1:1 on a desktop with the content column centred', async () => {
-  const { page } = await open(1500);
-  const { k, left, cl, cw } = await page.evaluate(() => {
-    const sec = document.querySelector('#envelope .sec');
+const stageAt = async (width, slug = 'envelope') => {
+  const { page } = await open(width);
+  const r = await page.evaluate((slug) => {
+    const sec = document.querySelector(`#${slug} .sec`);
     const st = sec.querySelector('.stage');
     const m = getComputedStyle(st).transform.match(/matrix\(([^,]+),/);
     return { k: parseFloat(m[1]), left: st.getBoundingClientRect().left, cl: +sec.dataset.cl, cw: +sec.dataset.cw };
-  });
-  assert.equal(k, 1);
-  // Content box centred on the viewport (Canva centres the canvas on desktop; we centre the
-  // content so narrow tablets never crop it — a 79 px shift at 1500 wide, accepted).
-  assert.ok(Math.abs(left + cl + cw / 2 - 750) < 2, `left=${left} cl=${cl} cw=${cw}`);
+  }, slug);
   await page.close();
+  return r;
+};
+
+test('renders 1:1 on a desktop with the whole canvas centred, as Canva does', async () => {
+  // The envelope section's content column sits off-centre in its 1366 canvas
+  // (cl 403, cw 450), so centring the column would shift everything ~55 px.
+  for (const width of [1366, 1500]) {
+    const { k, left } = await stageAt(width);
+    assert.equal(k, 1);
+    assert.ok(Math.abs(left - (width - 1366) / 2) < 1, `${width}: left=${left}`);
+  }
+});
+
+test('centres the content column instead when the canvas is wider than the viewport', async () => {
+  // A tablet: the canvas would overflow, the column fits — centre the column so nothing is cropped.
+  const { k, left, cl, cw } = await stageAt(1100);
+  assert.equal(k, 1);
+  assert.ok(Math.abs(left + cl + cw / 2 - 550) < 2, `left=${left} cl=${cl} cw=${cw}`);
 });
 
 test('reveals animated elements once they are in view and loads lazy images on activation', async () => {
