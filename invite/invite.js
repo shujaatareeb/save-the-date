@@ -2,7 +2,11 @@
 //
 // Everything visual is already in the HTML. This file only:
 //   · shows one page at a time by hash (#envelope, #home, #timeline, …)
-//   · scales each section so its content column fits the viewport (mobile first)
+//   · scales each section so its content column fits the viewport (mobile first) —
+//     with CSS zoom, not transform: WebKit rasterises a composited layer at its
+//     CSS size whatever transform scales it to, so a 1366 px stage scaled down
+//     by 0.27 on a phone still drew every entering layer at 1366 px × 3, and
+//     iOS reloaded the page under the weight; zoom shrinks the layout itself
 //   · adds .in to animated elements as they scroll into view
 //   · draws an effect-30 picture in through its luma matte on a canvas
 //   · swaps data-src → src (and data-href → href) for the page being shown,
@@ -31,7 +35,7 @@
   const SPARSE = 0.8, SPARSE_FRAME = 32, SPARSE_INNER = 76;
   function layoutSparse(sec, stage, vw) {
     const k = SPARSE;
-    stage.style.transform = `translate(0px,0) scale(${k})`;
+    stage.style.zoom = String(k); stage.style.left = '0px';
     for (const el of stage.querySelectorAll(':scope > .el')) {
       if (!el.dataset.left) { el.dataset.left = el.style.left; el.dataset.width = el.style.width; }
       if (el.classList.contains('bg')) continue;
@@ -81,7 +85,8 @@
     const fill = sec.parentElement.querySelectorAll('.sec').length === 1 && ch < vh;
     const secH = fill ? vh : ch, ty = 0;
     sec.style.height = `${secH}px`;
-    stage.style.transform = `translate(${tx}px,0) scale(${k})`;
+    // (a zoomed element's own left is zoomed with it, so it is set in its own units)
+    stage.style.zoom = String(k); stage.style.left = `${tx / k}px`;
     const bg = sec.querySelector('.stage > .el.bg');
     if (!bg) return;
     if (!fill) { bg.style.scale = ''; bg.style.translate = ''; return; }

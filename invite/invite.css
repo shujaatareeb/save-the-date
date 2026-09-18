@@ -16,7 +16,7 @@ html,body{margin:0;background:#f4efe8;overflow-x:hidden;-webkit-text-size-adjust
 main{position:relative;min-height:100vh}
 .page{display:none}.page.active{display:block}
 .sec{position:relative;overflow:hidden;width:100%;height:var(--h)}
-.stage{position:absolute;left:0;top:0;width:1366px;transform-origin:0 0}
+.stage{position:absolute;left:0;top:0;width:1366px}
 .el{position:absolute;box-sizing:border-box;transform:rotate(var(--rot,0deg));opacity:var(--op,1)}
 .img{overflow:hidden}.img img{position:absolute;max-width:none;display:block}
 .txt{overflow-wrap:break-word}.txt a{color:inherit;text-decoration:inherit}.ln{display:block}
