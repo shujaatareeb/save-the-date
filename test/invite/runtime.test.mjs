@@ -270,7 +270,8 @@ test('a page\'s only section fills a phone screen, background covering, content 
 test('a page with several sections, or one taller than the screen, is left alone', async () => {
   const { page } = await open(390, '#home');
   await page.waitForTimeout(300);
-  const home = await page.evaluate(() => [...document.querySelectorAll('#home .sec')].map((sec) => { const k = +getComputedStyle(sec.querySelector('.stage')).transform.match(/matrix\(([^,]+)/)[1]; return Math.abs(sec.getBoundingClientRect().height - +sec.dataset.h * k) < 1 && !sec.querySelector('.el.bg')?.style.scale; }));
+  // (the sparse closing section covers its background by design; its height is still its own)
+  const home = await page.evaluate(() => [...document.querySelectorAll('#home .sec')].map((sec) => { const k = +getComputedStyle(sec.querySelector('.stage')).transform.match(/matrix\(([^,]+)/)[1]; return Math.abs(sec.getBoundingClientRect().height - +sec.dataset.h * k) < 1 && ('sparse' in sec.dataset || !sec.querySelector('.el.bg')?.style.scale); }));
   assert.ok(home.every(Boolean), 'home sections keep their content height');
   await page.close();
   const desk = await open(1366, '#nikah');
@@ -281,25 +282,35 @@ test('a page with several sections, or one taller than the screen, is left alone
   await desk.page.close();
 });
 
-test('a sparse section reads big on a phone, its frame stretched to the screen', async () => {
+// Canva re-lays a sparse section out on a phone, measured on the home page's
+// closing block at 390 wide: everything at 0.8 of its design size, each
+// element centred on the screen, an element wider than the frame's inside
+// (390 − 32) shrunk to the frame's inside (390 − 76), the frame itself stretched to the screen with a
+// 16 px margin, the background covering the section.
+test('a sparse section is laid out at 0.8, centred, its frame stretched to the screen', async () => {
   const { page } = await open(390, '#home');
   await page.waitForTimeout(400);
   const st = await page.evaluate(() => {
     const sec = [...document.querySelectorAll('#home .sec')].at(-1);
     const k = +getComputedStyle(sec.querySelector('.stage')).transform.match(/matrix\(([^,]+)/)[1];
+    const box = (id) => document.querySelector(`[data-id="${id}"]`).getBoundingClientRect();
     const fr = sec.querySelector('.el.fr').getBoundingClientRect();
-    const t = document.querySelector('[data-id="LBG0ByNsdmqksMcZ"]').getBoundingClientRect();
-    return { k: +k.toFixed(3), frLeft: Math.round(fr.left), frRight: Math.round(fr.right), textW: Math.round(t.width), secW: Math.round(sec.getBoundingClientRect().width) };
+    const t = box('LBG0ByNsdmqksMcZ'), name = box('LBvMLJM7flpx9rsJ'), pill = box('LB6ZvJJYwv0DsNqG'), bg = sec.querySelector('.el.bg').getBoundingClientRect(), sr = sec.getBoundingClientRect();
+    return { k: +k.toFixed(3), frLeft: Math.round(fr.left), frRight: Math.round(fr.right), thanks: { cx: Math.round(t.left + t.width / 2), w: Math.round(t.width) }, name: { cx: Math.round(name.left + name.width / 2), w: Math.round(name.width) }, pill: { cx: Math.round(pill.left + pill.width / 2) }, secH: Math.round(sr.height), bgCovers: bg.left <= sr.left && bg.right >= sr.right && bg.top <= sr.top && bg.bottom >= sr.bottom };
   });
-  assert.ok(st.k > 0.55 && st.k < 0.65, `k=${st.k}`);
-  assert.ok(Math.abs(st.frLeft - 16) <= 1 && Math.abs(st.frRight - 374) <= 1, `frame spans the screen with a 16px margin: ${st.frLeft}..${st.frRight}`);
-  assert.ok(st.textW > 240, `"Thank you" block is ${st.textW}px wide (432 design px at k)`);
+  assert.equal(st.k, 0.8);
+  assert.ok(Math.abs(st.frLeft - 16) <= 1 && Math.abs(st.frRight - 374) <= 1, `frame ${st.frLeft}..${st.frRight}`);
+  assert.ok(Math.abs(st.thanks.cx - 195) <= 2 && Math.abs(st.name.cx - 195) <= 2 && Math.abs(st.pill.cx - 195) <= 2, `centred: ${JSON.stringify([st.thanks, st.name, st.pill])}`);
+  assert.ok(Math.abs(st.thanks.w - 432 * 0.8) <= 2, `"Thank you" at 0.8: ${st.thanks.w}`);
+  assert.ok(st.name.w <= 316 && st.name.w >= 300, `the wide name line shrunk to the frame's inside: ${st.name.w}`);
+  assert.ok(Math.abs(st.secH - 535 * 0.8) <= 2, `section at 0.8: ${st.secH}`);
+  assert.ok(st.bgCovers, 'background covers the section');
   await page.close();
-  // on a desktop the frame keeps its design box
+  // on a desktop the frame keeps its design box and nothing is re-laid-out
   const desk = await open(1366, '#home');
   await desk.page.waitForTimeout(300);
-  const d = await desk.page.evaluate(() => { const fr = document.querySelector('#home .el.fr'); return { left: fr.style.left, width: fr.style.width }; });
-  assert.equal(d.left, '76.79px'); assert.equal(d.width, '1235.71px');
+  const d = await desk.page.evaluate(() => { const fr = document.querySelector('#home .el.fr'); const t = document.querySelector('[data-id="LBG0ByNsdmqksMcZ"]'); return { left: fr.style.left, width: fr.style.width, translate: t.style.translate || '', scale: t.style.scale || '' }; });
+  assert.equal(d.left, '76.79px'); assert.equal(d.width, '1235.71px'); assert.equal(d.translate, ''); assert.equal(d.scale, '');
   await desk.page.close();
 });
 

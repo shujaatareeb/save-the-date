@@ -20,13 +20,51 @@
   const bySlug = (slug) => pages.find((p) => p.dataset.page === slug);
 
   // --- scaling -------------------------------------------------------------
-  document.querySelectorAll('.el.fr').forEach((fr) => { fr.dataset.left = fr.style.left; fr.dataset.width = fr.style.width; });
+  // Canva re-lays a sparse section — a few centred lines inside one wide
+  // frame — out on a phone, measured on the home page's closing block at 390
+  // wide: everything at 0.8 of its design size, each element centred on the
+  // screen, an element wider than the frame (the screen less 32) shrunk to
+  // the frame's inside (the screen less 76), the frame itself stretched to
+  // the screen with a 16 px margin.
+  // The stage carries the 0.8; each element's centring and any shrink ride on
+  // its own translate/scale, which its entrance animation never touches.
+  const SPARSE = 0.8, SPARSE_FRAME = 32, SPARSE_INNER = 76;
+  function layoutSparse(sec, stage, vw) {
+    const k = SPARSE;
+    stage.style.transform = `translate(0px,0) scale(${k})`;
+    for (const el of stage.querySelectorAll(':scope > .el')) {
+      if (!el.dataset.left) { el.dataset.left = el.style.left; el.dataset.width = el.style.width; }
+      if (el.classList.contains('bg')) continue;
+      if (el.classList.contains('fr')) { el.style.left = `${2 * PAD / k}px`; el.style.width = `${(vw - 4 * PAD) / k}px`; continue; }
+      const w = parseFloat(el.dataset.width), left = parseFloat(el.dataset.left);
+      const wide = w * k > vw - SPARSE_FRAME;
+      el.style.scale = wide ? String((vw - SPARSE_INNER) / (w * k)) : '';
+      el.style.translate = `${(vw / 2 / k - (left + w / 2))}px 0px`;
+    }
+    return k;
+  }
+  function unlaySparse(stage) {
+    for (const el of stage.querySelectorAll(':scope > .el')) {
+      if (!el.dataset.left || el.classList.contains('bg')) continue;
+      el.style.scale = ''; el.style.translate = '';
+      if (el.classList.contains('fr')) { el.style.left = el.dataset.left; el.style.width = el.dataset.width; }
+    }
+  }
+
   function scaleSection(sec) {
     const stage = sec.querySelector('.stage');
     if (!stage) return;
     const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
     const cw = +sec.dataset.cw, cl = +sec.dataset.cl, h = +sec.dataset.h;
     let k = Math.min(1, Math.max(0.25, (vw - 2 * PAD) / cw));
+    const sparse = 'sparse' in sec.dataset && k < SPARSE;
+    if (sparse) {
+      k = layoutSparse(sec, stage, vw);
+      sec.style.height = `${h * k}px`;
+      coverBackground(sec, stage, k, 0, vw, h * k);
+      return;
+    }
+    if ('sparse' in sec.dataset) unlaySparse(stage);
     // A section with no content column (nothing but bleeds) is fitted to the
     // screen's height when that is the larger fit, its canvas centred and the
     // sides cropped — Canva's treatment of the dress-code page, to the pixel:
@@ -44,20 +82,18 @@
     const secH = fill ? vh : ch, ty = 0;
     sec.style.height = `${secH}px`;
     stage.style.transform = `translate(${tx}px,0) scale(${k})`;
-    // A sparse section's frame (see frameOf in the build) hugs the screen on a
-    // phone — Canva stretches it to the content it holds — and keeps its design
-    // box wherever the column is not being fitted.
-    const fr = sec.querySelector('.stage > .el.fr');
-    if (fr) {
-      if (k < 1) { fr.style.left = `${(2 * PAD - tx) / k}px`; fr.style.width = `${(vw - 4 * PAD) / k}px`; }
-      else { fr.style.left = fr.dataset.left; fr.style.width = fr.dataset.width; }
-    }
     const bg = sec.querySelector('.stage > .el.bg');
     if (!bg) return;
     if (!fill) { bg.style.scale = ''; bg.style.translate = ''; return; }
-    // cover: scale the background about its centre until it spans the section, then centre it on the section
+    coverBackground(sec, stage, k, tx, vw, secH);
+  }
+  // cover: scale the section's background about its centre until it spans the
+  // section, then centre it on the section
+  function coverBackground(sec, stage, k, tx, vw, secH) {
+    const bg = sec.querySelector('.stage > .el.bg');
+    if (!bg) return;
     const s = Math.max(1, vw / (bg.offsetWidth * k), secH / (bg.offsetHeight * k));
-    const cx = tx + (bg.offsetLeft + bg.offsetWidth / 2) * k, cy = ty + (bg.offsetTop + bg.offsetHeight / 2) * k;
+    const cx = tx + (bg.offsetLeft + bg.offsetWidth / 2) * k, cy = (bg.offsetTop + bg.offsetHeight / 2) * k;
     bg.style.scale = String(s);
     bg.style.translate = `${(vw / 2 - cx) / k}px ${(secH / 2 - cy) / k}px`;
   }

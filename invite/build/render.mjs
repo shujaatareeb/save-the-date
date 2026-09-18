@@ -541,7 +541,7 @@ export function render(model, assets, anims) {
       const ctx = { assets, anims: elementAnims, eager, groupFor, pulses, cw: c.width, background: backgroundOf(s)?.id, frame: s.frame, sectionStart: starts.length ? Math.min(...starts) : 0 };
       const bg = s.background ? `background:${s.background};` : '';
       const els = s.elements.map((e) => renderElement(e, ctx)).join('\n');
-      return `<div class="sec" data-h="${r(s.height)}" data-cl="${r(c.left)}" data-cw="${r(c.width)}"${s.cover ? ' data-cover' : ''} style="--h:${px(s.height)};${bg}"><div class="stage">\n${els}\n</div></div>`;
+      return `<div class="sec" data-h="${r(s.height)}" data-cl="${r(c.left)}" data-cw="${r(c.width)}"${s.cover ? ' data-cover' : ''}${s.frame ? ' data-sparse' : ''} style="--h:${px(s.height)};${bg}"><div class="stage">\n${els}\n</div></div>`;
     });
     sections.push(`<section class="page${eager ? ' active' : ''}" id="${page.slug}" data-page="${page.slug}" aria-label="${attr(page.title)}">\n${secs.join('\n')}\n</section>`);
   }
