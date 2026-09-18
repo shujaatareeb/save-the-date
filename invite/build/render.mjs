@@ -280,10 +280,13 @@ export function renderElement(el, ctx) {
   throw new Error(`cannot render kind ${el.kind} (${el.id})`);
 }
 
+// A filter — even blur(0px) — keeps the element on a compositing layer of
+// its own, so keyframes only carry one when some frame actually blurs.
 export function keyframeCss(name, frames) {
+  const blurs = frames.some((f) => f.blur > 0);
   const stops = frames.map((f) => {
     const rot = f.dr ? `rotate(calc(var(--rot,0deg) + ${r(f.dr, 1)}deg))` : 'rotate(var(--rot,0deg))';
-    let s = `${r(f.t * 100, 1)}%{opacity:calc(var(--op,1)*${f.opacity});transform:translate(${r(f.dx)}px,${r(f.dy)}px) ${rot} scale(${f.scale});filter:blur(${f.blur}px)`;
+    let s = `${r(f.t * 100, 1)}%{opacity:calc(var(--op,1)*${f.opacity});transform:translate(${r(f.dx)}px,${r(f.dy)}px) ${rot} scale(${f.scale})${blurs ? `;filter:blur(${f.blur}px)` : ''}`;
     if (frames.some((x) => x.clip)) s += `;clip-path:${f.clip || 'inset(0)'}`;
     return s + '}';
   });
@@ -329,7 +332,7 @@ const BASE_CSS = `
 html,body{margin:0;background:#f4efe8;overflow-x:hidden;-webkit-text-size-adjust:100%}
 main{position:relative;min-height:100vh}
 .page{display:none}.page.active{display:block}
-.sec{position:relative;overflow:hidden;width:100%;height:var(--h)}
+.sec{position:relative;overflow:hidden;width:100%;height:var(--h);content-visibility:auto}
 .stage{position:absolute;left:0;top:0;width:1366px;transform-origin:0 0}
 .el{position:absolute;box-sizing:border-box;transform:rotate(var(--rot,0deg));opacity:var(--op,1)}
 .img{overflow:hidden}.img>img,.img>video{position:absolute;max-width:none;display:block}
@@ -339,6 +342,7 @@ a.el{display:block;text-decoration:none;color:inherit}
 .grp>.gin{position:absolute;left:0;top:0;transform-origin:0 0}
 .shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;white-space:pre-wrap}
 .el.an{opacity:0;animation-fill-mode:both;animation-timing-function:linear;animation-duration:var(--dur,800ms);animation-delay:var(--del,0ms)}
+.el.an.done:not(.hb):not(.sp):not(.wr){animation:none;opacity:var(--op,1);transform:rotate(var(--rot,0deg))}
 .el.mt:not(.in){opacity:0}.el.mt.mt-run>img{visibility:hidden}.el.mt>canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
 .cd>svg{display:block;width:100%;height:100%;overflow:visible}
 .cd text{text-anchor:middle;font-family:'f-countdown',serif;font-weight:400;fill:#715449;text-rendering:geometricPrecision;user-select:none}

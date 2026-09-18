@@ -184,7 +184,7 @@ test('animation rulings: hygiene, snap, invisible skip, borrowing', () => {
   const restClass = html.match(new RegExp(`data-id="${restId}"[^>]*class="el [^"]*\\b(k\\d+)\\b`))?.[1] || html.match(new RegExp(`class="el [^"]*\\b(k\\d+)\\b[^"]*"[^>]*data-id="${restId}"`))?.[1];
   assert.ok(restClass, `no keyframe class on ${restId}`);
   const block = css.match(new RegExp(`@keyframes ${restClass}\\{[^]*?\\}\\}`))[0];
-  assert.match(block, /100%\{opacity:calc\(var\(--op,1\)\*1\);transform:translate\(0px,0px\) rotate\(var\(--rot,0deg\)\) scale\(1\);filter:blur\(0px\)/);
+  assert.match(block, /100%\{opacity:calc\(var\(--op,1\)\*1\);transform:translate\(0px,0px\) rotate\(var\(--rot,0deg\)\) scale\(1\)\}/);
   // borrowed: element with anim.effect but no recording still animates, with zero delay.
   // Ruling 5 (refined) skips an invisible donor in favour of the next entry with the same
   // effect: LBTsJDh8fRLwBhKl (effect 18) skips the invisible LBwHyJnDhFdwT00m and borrows
@@ -213,7 +213,7 @@ test('hygiene sorts and de-duplicates frames and skips invisible entries', () =>
   assert.deepEqual([...block.matchAll(/(\d+(?:\.\d+)?)%\{/g)].map((m) => Number(m[1])), [0, 20, 100]);
   // The un-rested t:1 frame (opacity 0.9, dy 4, blur 1) must have been replaced by the snap,
   // not merely sorted into place — assert the 100% stop is exactly the rest stop.
-  assert.match(block, /100%\{opacity:calc\(var\(--op,1\)\*1\);transform:translate\(0px,0px\) rotate\(var\(--rot,0deg\)\) scale\(1\);filter:blur\(0px\)\}\}$/);
+  assert.match(block, /100%\{opacity:calc\(var\(--op,1\)\*1\);transform:translate\(0px,0px\) rotate\(var\(--rot,0deg\)\) scale\(1\)\}\}$/);
   const still = { [el.id]: { effect: 8, loop: true, startMs: 0, durationMs: 30000, frames: [
     { t: 0, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null },
     { t: 1, opacity: 0.995, dx: 0.1, dy: 0, scale: 1.001, blur: 0, clip: null },
@@ -538,4 +538,19 @@ test('preloads the faces the envelope page sets', () => {
   const wanted = planFonts({ ...model, pages: [envelope] }).map((f) => assets.fonts[f.key].src);
   assert.deepEqual(preloads.sort(), [...new Set(wanted)].sort());
   assert.ok(preloads.length >= 2 && preloads.length <= 5, `${preloads.length} faces`);
+});
+
+// A `filter`, even blur(0px), keeps an element on its own compositing layer;
+// on a phone at 3× a full-bleed background's layer is tens of megabytes, and
+// iOS reloads a page that holds too many. Keyframes only carry a filter when
+// some frame actually blurs, and a finished entrance releases its animation
+// (its rest state is the element's own) so nothing lingers.
+test('keyframes carry a filter only when a frame blurs, and a finished entrance lets go', () => {
+  const f = (t, blur, op = 1) => ({ t, opacity: op, dx: 0, dy: 0, scale: 1, blur, clip: null });
+  assert.doesNotMatch(keyframeCss('k1', [f(0, 0, 0), f(1, 0)]), /filter/);
+  assert.match(keyframeCss('k2', [f(0, 8, 0), f(1, 0)]), /0%\{[^}]*filter:blur\(8px\)/);
+  assert.match(keyframeCss('k2', [f(0, 8, 0), f(1, 0)]), /100%\{[^}]*filter:blur\(0px\)/);
+  const { css } = render(model, assets, anims);
+  assert.match(css, /\.el\.an\.done:not\(\.hb\):not\(\.sp\):not\(\.wr\)\{animation:none;opacity:var\(--op,1\);transform:rotate\(var\(--rot,0deg\)\)\}/);
+  assert.match(css, /\.sec\{[^}]*content-visibility:auto/);
 });

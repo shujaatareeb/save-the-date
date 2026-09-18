@@ -202,6 +202,29 @@ test('a phone takes the small encoding of a still, a retina desktop the big one'
   }
 });
 
+test('lets go of an entrance once it has played, and keeps the beat, the spin and the write-on', async () => {
+  const { page } = await open(1366, '#home');
+  await page.waitForFunction(() => document.querySelectorAll('#home .el.an.in').length > 0);
+  const h = await page.evaluate(() => document.documentElement.scrollHeight);
+  for (let y = 0; y < h; y += 600) { await page.evaluate((y) => window.scrollTo(0, y), y); await page.waitForTimeout(150); }
+  await page.waitForTimeout(6000);
+  const state = await page.evaluate(() => {
+    const plain = [...document.querySelectorAll('#home .el.an.in:not(.hb):not(.sp):not(.wr)')];
+    const done = plain.filter((e) => e.classList.contains('done'));
+    const stillAnimated = done.filter((e) => getComputedStyle(e).animationName !== 'none');
+    const beating = [...document.querySelectorAll('#home .el.hb.in')].filter((e) => e.getAnimations().some((a) => a.playState === 'running')).length;
+    const spinning = [...document.querySelectorAll('#home .el.sp.in')].filter((e) => e.getAnimations().some((a) => a.playState === 'running')).length;
+    const sample = done[0] ? getComputedStyle(done[0]) : null;
+    return { plain: plain.length, done: done.length, stillAnimated: stillAnimated.length, beating, spinning, sampleOpacity: sample?.opacity, sampleFilter: sample?.filter };
+  });
+  assert.ok(state.plain > 20 && state.done === state.plain, `${state.done}/${state.plain} entrances released`);
+  assert.equal(state.stillAnimated, 0);
+  assert.equal(state.sampleFilter, 'none');
+  assert.ok(Number(state.sampleOpacity) > 0.5, `released element still visible: ${state.sampleOpacity}`);
+  assert.ok(state.beating >= 1 && state.spinning === 1, `beating ${state.beating}, spinning ${state.spinning}`);
+  await page.close();
+});
+
 test('the countdown ticks toward nine in the evening on 10 October 2026, local time', async () => {
   const { page } = await open(390, '#home');
   await page.waitForTimeout(1100);

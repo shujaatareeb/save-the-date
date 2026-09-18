@@ -115,13 +115,27 @@
     return Promise.race([all, new Promise((res) => setTimeout(res, ms))]);
   }
 
+  // A finished entrance is let go of — its rest state is the element's own —
+  // so no lingering transform or filter keeps a compositing layer alive; on a
+  // phone at 3× a full-bleed background's layer is tens of megabytes, and iOS
+  // reloads a page that holds too many. The beat, the spin and the write-on
+  // keep their own animations (their CSS excludes them from `done`).
+  const ms = (v) => (v || '').split(',').reduce((n, x) => n + (x.trim().endsWith('ms') ? parseFloat(x) : parseFloat(x) * 1000 || 0), 0);
+  function release(el) {
+    if (!el.classList.contains('an') || el.classList.contains('hb') || el.classList.contains('sp') || el.classList.contains('wr')) return;
+    const cs = getComputedStyle(el);
+    // delay + duration of the entrance (one animation on a plain entrance)
+    const total = ms(cs.animationDelay) + ms(cs.animationDuration);
+    setTimeout(() => { if (el.classList.contains('in')) el.classList.add('done'); }, total + 60);
+  }
+
   // --- reveal ---------------------------------------------------------------
   // An entrance over a picture that has not arrived is a pop, not an entrance:
   // an element's reveal waits for its own pictures (briefly) before it starts.
   const enter = (el) => {
     if (el.dataset.entering) return;
     el.dataset.entering = '1';
-    whenLoaded(el, 2500).then(() => { el.classList.add('in'); if (el.classList.contains('mt')) reveal(el); });
+    whenLoaded(el, 2500).then(() => { el.classList.add('in'); release(el); if (el.classList.contains('mt')) reveal(el); });
   };
   const io = 'IntersectionObserver' in window
     ? new IntersectionObserver((entries) => {
@@ -168,7 +182,7 @@
   // again when you come back. Leaving a page forgets what it revealed.
   function reset(page) {
     page.querySelectorAll('.el.in, .el[data-entering], .el[data-mt-done]').forEach((el) => {
-      el.classList.remove('in', 'mt-run');
+      el.classList.remove('in', 'mt-run', 'done');
       delete el.dataset.entering;
       delete el.dataset.mtDone;
       el.querySelectorAll(':scope > canvas').forEach((c) => c.remove());
