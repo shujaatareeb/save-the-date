@@ -591,29 +591,6 @@ test('an effect-26 entrance wipes the content in rather than sliding it', () => 
   assert.doesNotMatch(html, /class="el img an k\d+ wp"[^>]*data-id="LBmGP6J3tmzZBvKq"/);
 });
 
-// A still is a <picture>: an AVIF source first, the WebP <img> as fallback,
-// both offered at both widths with the same sizes. Lazy pages carry the
-// source's srcset as data too, for the runtime to swap in.
-test('wraps each still in a picture with an AVIF source and the WebP fallback', () => {
-  const { html, css } = render(model, assets, anims);
-  // The AVIF source is always handed to the runtime as data, even on the eager
-  // envelope, because the runtime decides who gets it: iOS decodes AVIF in
-  // software and has reloaded the page over it, so it keeps the WebP.
-  const eager = html.match(/<section class="page active" id="envelope".*?<\/section>/s)[0];
-  const pic = eager.match(/<picture><source type="image\/avif" data-srcset="(assets\/[0-9a-f]{12}\.avif) (\d+)w, (assets\/[0-9a-f]{12}\.avif) (\d+)w" data-sizes="([^"]+)"><img src="assets\/[0-9a-f]{12}\.webp" srcset="[^"]+" sizes="([^"]+)"[^>]*><\/picture>/);
-  assert.ok(pic, 'eager picture: webp img live, avif source held for the runtime');
-  assert.equal(pic[5], pic[6], 'source and img share the sizes formula');
-  assert.ok(Number(pic[2]) < Number(pic[4]));
-  assert.doesNotMatch(eager, /<source[^>]* srcset=/);
-  const lazy = html.match(/<section class="page" id="home".*?<\/section>/s)[0];
-  assert.match(lazy, /<picture><source type="image\/avif" data-srcset="assets\/[0-9a-f]{12}\.avif \d+w, assets\/[0-9a-f]{12}\.avif \d+w" data-sizes="[^"]+"><img data-src="assets\/[0-9a-f]{12}\.webp" data-srcset="[^"]+" data-sizes="[^"]+" loading="lazy"/);
-  // a still with a single encoding still gets its AVIF as a one-candidate source
-  assert.match(html, /<picture><source type="image\/avif" (?:data-)?srcset="assets\/[0-9a-f]{12}\.avif"><img (?:data-)?src="assets\/[0-9a-f]{12}\.webp"/);
-  // SVG stickers stay plain
-  assert.match(html, /<img (?:data-)?src="assets\/[0-9a-f]{12}\.svg"/);
-  // the picture is a real box the same size as its wrapper (a wipe's counter-move lands on it), the img keeps its crop offsets inside
-  assert.match(css, /\.img picture\{position:absolute;left:0;top:0;width:100%;height:100%\}\.img img\{position:absolute/);
-});
 
 // The first element of a section that spans the canvas edge to edge is its
 // background; the runtime cover-scales it when the section is stretched to

@@ -224,29 +224,23 @@ export function compositeCacheName(src, sprites, recolor) {
 // and, when that is wider than the drawn width itself, at the drawn width
 // too — what a phone at k ≈ 0.3 and 3× needs, a third of the bytes. Returns
 // both paths with the width each was actually encoded at.
-// Each encoding is written twice: WebP, which everything decodes, and AVIF,
-// which iOS 16.4+, Chrome and Firefox decode and which keeps these
-// translucent watercolour washes at a fraction of the bytes. The alpha plane
-// rides as a second stream — libaom takes no alpha of its own — and both
-// planes are cut from the same scaled frame.
+// WebP only. AVIF was tried — it held these translucent washes at a fraction
+// of the bytes — and dropped: iOS kept reloading the page on scroll while
+// it was in, and it decodes AVIF in software on most phones.
 async function encodeStill(src, maxWidth, naturalWidth, { nameFrom = src, recipe = '' } = {}) {
   const encode = async (target, suffix) => {
     const out = path.join(ASSETS, hashName(nameFrom, '.webp', recipe + suffix));
-    const avif = path.join(ASSETS, hashName(nameFrom, '.avif', recipe + suffix));
-    const scale = target < naturalWidth ? `scale=${target}:-2,` : '';
-    if (!fs.existsSync(out)) await ffmpeg(['-i', src, ...(scale ? ['-vf', scale.slice(0, -1)] : []), '-c:v', 'libwebp', '-quality', '80', '-compression_level', '6', out]);
-    if (!fs.existsSync(avif)) {
-      await ffmpeg(['-i', src, '-filter_complex', `[0:v]${scale}format=yuva444p,split[c][a];[a]alphaextract[alpha];[c]format=yuv420p[col]`, '-map', '[col]', '-map', '[alpha]', '-c:v', 'libaom-av1', '-crf', '30', '-cpu-used', '6', '-still-picture', '1', '-f', 'avif', avif]);
+    if (!fs.existsSync(out)) {
+      const vf = target < naturalWidth ? ['-vf', `scale=${target}:-2`] : [];
+      await ffmpeg(['-i', src, ...vf, '-c:v', 'libwebp', '-quality', '80', '-compression_level', '6', out]);
     }
-    return { out, avif };
+    return out;
   };
   const w = Math.min(naturalWidth, Math.ceil(maxWidth * 2));
   const ws = Math.min(naturalWidth, Math.ceil(maxWidth));
-  const big = await encode(w, '');
-  const res = { out: big.out, avif: big.avif, w };
+  const res = { out: await encode(w, ''), w };
   if (ws >= w) return res;
-  const small = await encode(ws, '@1x');
-  return { ...res, outS: small.out, avifS: small.avif, ws };
+  return { ...res, outS: await encode(ws, '@1x'), ws };
 }
 
 async function encodeAnimated(src) {
@@ -285,8 +279,7 @@ export function pageBytes(model, manifest, slug, phone = false) {
   const files = new Set();
   for (const id of usedMedia(sub).keys()) {
     const m = manifest.media[id];
-    // an AVIF-decoding browser (every current one) takes the AVIF of whichever width it picks
-    files.add(phone && m.srcS ? (m.avifS || m.srcS) : (m.avif || m.src));
+    files.add(phone && m.srcS ? m.srcS : m.src);
     if (m.mp4) files.add(m.mp4);
   }
   for (const face of planFonts(sub)) files.add(manifest.fonts[face.key].src);
@@ -329,7 +322,7 @@ export async function buildAssets(model) {
       }
       const rel = (f) => path.relative(INVITE, f).replace(/\\/g, '/');
       // width/height are the source's; w/ws are the encoded widths the page offers through srcset
-      manifest.media[key] = { src: rel(out), width: m.width, height: m.height, kind, ...(mp4 && { mp4 }), ...(still && { w: still.w, avif: rel(still.avif) }), ...(still?.outS && { srcS: rel(still.outS), ws: still.ws, avifS: rel(still.avifS) }) };
+      manifest.media[key] = { src: rel(out), width: m.width, height: m.height, kind, ...(mp4 && { mp4 }), ...(still && { w: still.w }), ...(still?.outS && { srcS: rel(still.outS), ws: still.ws }) };
     }
     for (const face of planFonts(model)) {
       const src = await download(face.url);
@@ -357,14 +350,12 @@ if (isMain(import.meta.url)) {
   const model = JSON.parse(fs.readFileSync(path.join(BUILD, 'model.json'), 'utf8'));
   const manifest = await buildAssets(model);
   // The budget is what one visitor can pull, not the sum of every encoding on
-  // disk: the whole site as a retina desktop that decodes AVIF takes it, and
-  // as one that does not (every WebP at its full width).
+  // disk: the whole site as a retina desktop, every WebP at its full width.
   const onDisk = fs.readdirSync(ASSETS, { recursive: true }).reduce((n, f) => { const p = path.join(ASSETS, f); return n + (fs.statSync(p).isFile() ? fs.statSync(p).size : 0); }, 0);
   const sum = (files) => [...files].reduce((n, f) => n + fs.statSync(path.join(INVITE, f)).size, 0);
   const media = Object.values(manifest.media), fonts = Object.values(manifest.fonts).map((f) => f.src);
   const worst = sum(new Set([...media.flatMap((m) => [m.src, m.mp4].filter(Boolean)), ...fonts]));
-  const modern = sum(new Set([...media.flatMap((m) => [m.avif || m.src, m.mp4].filter(Boolean)), ...fonts]));
-  console.log(`media=${media.length} fonts=${fonts.length} on disk ${(onDisk / 1e6).toFixed(1)}MB; a visitor pulls at most ${(worst / 1e6).toFixed(1)}MB (WebP) / ${(modern / 1e6).toFixed(1)}MB (AVIF)`);
+  console.log(`media=${media.length} fonts=${fonts.length} on disk ${(onDisk / 1e6).toFixed(1)}MB; a visitor pulls at most ${(worst / 1e6).toFixed(1)}MB`);
   if (worst > 12e6) { console.error('a visitor would pull more than the 12 MB budget'); process.exit(1); }
   for (const phone of [false, true]) {
     const envelope = pageBytes(model, manifest, 'envelope', phone);

@@ -217,21 +217,8 @@
   }
 
   // --- lazy assets --------------------------------------------------------------
-  // iPhone, iPod, iPad — and an iPad calling itself a Mac, which has touch.
-  const IOS = /iP(hone|od|ad)/.test(navigator.platform) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  if (IOS) document.querySelectorAll('source[type="image/avif"]').forEach((n) => n.remove());
   function activate(page, eager = false) {
-    const eagerPage = page.querySelector('img[src]') !== null && page.querySelector('img[data-src]') === null;
-    // a picture's AVIF source before its img, and srcset/sizes before src, so
-    // the browser chooses once and never fetches a fallback first. iOS decodes
-    // AVIF in software and has reloaded the page over it: it keeps the WebP,
-    // every source dropped at startup (see IOS). The envelope's WebP is already
-    // on its way when the runtime starts, so its sources are dropped too.
-    page.querySelectorAll('source[data-srcset]').forEach((n) => {
-      if (eagerPage) { n.remove(); return; }
-      if (n.dataset.sizes) { n.sizes = n.dataset.sizes; n.removeAttribute('data-sizes'); }
-      n.srcset = n.dataset.srcset; n.removeAttribute('data-srcset');
-    });
+    // srcset/sizes before src, so the browser chooses once and never fetches a fallback first
     page.querySelectorAll('[data-src]').forEach((n) => {
       if (n.dataset.srcset) { n.sizes = n.dataset.sizes; n.srcset = n.dataset.srcset; n.removeAttribute('data-srcset'); n.removeAttribute('data-sizes'); }
       n.src = n.dataset.src; n.removeAttribute('data-src');

@@ -127,16 +127,7 @@ function mediaTag(key, crop, ctx, extra = '') {
     srcs += ` ${at}srcset="${m.srcS} ${m.ws}w, ${m.src} ${m.w}w" ${at}sizes="${sizes}"`;
   }
   if (!ctx.eager) srcs += ' loading="lazy"';
-  const img = `<img ${srcs} width="${m.width}" height="${m.height}" alt="" decoding="async" style="${style}${extra}">`;
-  if (!m.avif) return img;
-  // The AVIF goes first as a <source> the browser takes when it can; the WebP
-  // <img> is the fallback. Same widths, same sizes. The source is always held
-  // as data, even on the eager envelope, because the runtime decides who gets
-  // it: iOS decodes AVIF in software and has reloaded the page over it, so it
-  // keeps the WebP — and an envelope whose WebP is already on its way is not
-  // asked for the AVIF as well.
-  const source = m.avifS ? `<source type="image/avif" data-srcset="${m.avifS} ${m.ws}w, ${m.avif} ${m.w}w" data-sizes="${sizes}">` : `<source type="image/avif" data-srcset="${m.avif}">`;
-  return `<picture>${source}${img}</picture>`;
+  return `<img ${srcs} width="${m.width}" height="${m.height}" alt="" decoding="async" style="${style}${extra}">`;
 }
 
 // #rrggbb -> [r,g,b]; also accepts the 3-digit shorthand.
@@ -368,7 +359,7 @@ main{position:relative;min-height:100vh}
 .sec{position:relative;overflow:hidden;width:100%;height:var(--h)}
 .stage{position:absolute;left:0;top:0;width:1366px;transform-origin:0 0}
 .el{position:absolute;box-sizing:border-box;transform:rotate(var(--rot,0deg));opacity:var(--op,1)}
-.img{overflow:hidden}.img picture{position:absolute;left:0;top:0;width:100%;height:100%}.img img{position:absolute;max-width:none;display:block}
+.img{overflow:hidden}.img img{position:absolute;max-width:none;display:block}
 .txt{overflow-wrap:break-word}.txt a{color:inherit;text-decoration:inherit}.ln{display:block}
 .txt>.tin{position:absolute;left:0;top:0;transform-origin:0 0;white-space:pre}
 a.el{display:block;text-decoration:none;color:inherit}

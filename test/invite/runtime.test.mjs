@@ -111,11 +111,11 @@ test('holds an element\'s entrance until its pictures have arrived', async () =>
   const page = await browser.newPage({ viewport: { width: 1366, height: 844 }, deviceScaleFactor: 1 });
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  await page.route(/\/assets\/[0-9a-f]{12}\.(webp|avif)$/, async (r) => { await new Promise((res) => setTimeout(res, 1500)); await r.continue(); });
+  await page.route(/\/assets\/[0-9a-f]{12}\.webp$/, async (r) => { await new Promise((res) => setTimeout(res, 1500)); await r.continue(); });
   await page.goto(`${site.url}/invite/#home`, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => document.querySelector('.page.active')?.id === 'home');
   await page.waitForTimeout(600);
-  // Only the WebP/AVIF pictures are held up by the route; SVG ones arrive at once.
+  // Only the WebP pictures are held up by the route; SVG ones arrive at once.
   const webpIn = () => [...document.querySelectorAll('#home .el.img.an.in')].filter((e) => /\.webp$/.test(e.querySelector('img')?.getAttribute('src') || '')).length;
   const early = await page.evaluate((fn) => ({ imgIn: eval(fn)(), txtIn: document.querySelectorAll('#home .el.txt.an.in').length }), webpIn.toString());
   assert.equal(early.imgIn, 0, 'picture elements wait for their picture');
@@ -194,12 +194,7 @@ test('a phone takes the small encoding of a still, a retina desktop the big one'
     const page = await browser.newPage({ viewport: { width, height: 844 }, deviceScaleFactor: dpr });
     await page.goto(`${site.url}/invite/#home`, { waitUntil: 'networkidle' });
     await page.waitForFunction(() => [...document.querySelectorAll('#home img[srcset]')].filter((i) => i.currentSrc).length > 10);
-    const picks = await page.evaluate(() => [...document.querySelectorAll('#home img[srcset]')].filter((i) => i.currentSrc).map((i) => {
-      // whichever encoding the browser chose (the AVIF source or the WebP img), which of its two widths did it take?
-      const set = i.currentSrc.endsWith('.avif') ? i.parentElement.querySelector('source').srcset : i.srcset;
-      const [small, big] = set.split(', ').map((c) => c.split(' ')[0]);
-      return i.currentSrc.endsWith(small) ? 'small' : i.currentSrc.endsWith(big) ? 'big' : '?';
-    }));
+    const picks = await page.evaluate(() => [...document.querySelectorAll('#home img[srcset]')].filter((i) => i.currentSrc).map((i) => { const [small, big] = i.srcset.split(', ').map((c) => c.split(' ')[0]); return i.currentSrc.endsWith(small) ? 'small' : i.currentSrc.endsWith(big) ? 'big' : '?'; }));
     const small = picks.filter((p) => p === 'small').length, big = picks.filter((p) => p === 'big').length;
     assert.ok(!picks.includes('?'), 'every pick is one of the two offered');
     if (wantSmall) assert.ok(small > big, `${width}@${dpr}x: ${small} small vs ${big} big`);
@@ -228,38 +223,6 @@ test('lets go of an entrance once it has played, and keeps the beat, the spin an
   assert.equal(state.sampleFilter, 'none');
   assert.ok(Number(state.sampleOpacity) > 0.5, `released element still visible: ${state.sampleOpacity}`);
   assert.ok(state.beating >= 1 && state.spinning === 1, `beating ${state.beating}, spinning ${state.spinning}`);
-  await page.close();
-});
-
-test('an iPhone keeps the WebP: its AVIF sources are dropped before they can load', async () => {
-  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3 });
-  await ctx.addInitScript(() => { Object.defineProperty(navigator, 'platform', { get: () => 'iPhone' }); });
-  const page = await ctx.newPage();
-  const avifRequests = []; page.on('request', (r) => { if (r.url().endsWith('.avif')) avifRequests.push(r.url()); });
-  await page.goto(`${site.url}/invite/#home`, { waitUntil: 'networkidle' });
-  await page.waitForFunction(() => [...document.querySelectorAll('#home img')].filter((i) => i.currentSrc).length > 10);
-  const st = await page.evaluate(() => ({ sources: document.querySelectorAll('source').length, webp: [...document.querySelectorAll('#home img')].filter((i) => i.currentSrc.endsWith('.webp')).length }));
-  assert.equal(st.sources, 0, 'no avif sources left anywhere');
-  assert.ok(st.webp > 10);
-  assert.deepEqual(avifRequests, []);
-  await ctx.close();
-});
-
-test('a browser that decodes AVIF is served it, and activation swaps the source too', async () => {
-  const { page } = await open(390, '#home');
-  await page.waitForFunction(() => [...document.querySelectorAll('#home img')].filter((i) => i.currentSrc).length > 10);
-  const st = await page.evaluate(() => ({
-    avif: [...document.querySelectorAll('#home img')].filter((i) => i.currentSrc.endsWith('.avif')).length,
-    webp: [...document.querySelectorAll('#home img')].filter((i) => i.currentSrc.endsWith('.webp')).length,
-    pendingSources: document.querySelectorAll('#home source[data-srcset]').length,
-    liveSources: document.querySelectorAll('#home source[srcset]').length,
-  }));
-  assert.equal(st.pendingSources, 0);
-  assert.ok(st.liveSources > 10);
-  assert.ok(st.avif > 10 && st.webp === 0, `avif ${st.avif}, webp ${st.webp}`);
-  // the envelope's pictures were eager WebP before the runtime ran, and stay so — nothing is fetched twice
-  const env = await page.evaluate(() => ({ webp: [...document.querySelectorAll('#envelope img')].filter((i) => i.currentSrc.endsWith('.webp')).length, avifSources: document.querySelectorAll('#envelope source[srcset]').length }));
-  assert.ok(env.webp > 5 && env.avifSources === 0, JSON.stringify(env));
   await page.close();
 });
 
