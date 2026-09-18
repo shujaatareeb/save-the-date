@@ -244,23 +244,55 @@ item was checked against the live Canva page rather than assumed.
 - **Animations.** Entrances come from recordings of the live page (Task 4),
   not from an effect-id → keyframe table, and an element the recorder has
   nothing for is simply shown static — the "fade + rise" fallback was
-  dropped. Canva's button pulse (opacity .35↔1 every 1.1 s, scale .85↔1.14
-  every .9 s, on eleven buttons that have no animation of their own) is too
-  fast for the recorder and aliased into a slow drift; the build recognises
-  its signature and emits the pulse as CSS instead.
+  dropped. A recorded *loop* is its entrance, played once and held: sampled
+  on the live page, every one of the 21 loops in the deck but the two hearts
+  sits still once its entrance is over (the recorder calls an entry a loop
+  whenever the node kept changing until the window closed, which an
+  entrance's easing tail does too), and played as sways those tails were a
+  2–5 Hz shake. The things that do keep moving on the live page are each a
+  rule of their own, measured there: the button pulse (opacity .35↔1 every
+  1.1 s, scale .85↔1.14 every .9 s with a quick swell and slow release, on
+  eleven buttons with no animation of their own — recognised by its
+  signature), the two hearts (the pulse's scale half; effect 2 with a
+  recorded scale swing ≥ .2), and the vinyl record (a loop whose recorded
+  rotation only ever grows; one turn every 20.3 s at the recorded speed —
+  the recorder now writes rotation). Two texts (effect 18) write on one
+  character every 72 ms. Pages re-mount their entrances on every visit, as
+  Canva does. An element's entrance waits for its own pictures.
+- **Loading.** Once a page's own pictures are in, the pages it links to are
+  warmed in a quiet moment, so the envelope tap lands on a painted home page
+  (a lazy picture on a hidden page never fetches by itself; warming asks
+  outright). Every still drawn smaller than its source ships at its drawn
+  width as well as at 2×, offered through `srcset` with a `sizes` formula that
+  is the scaler's rule for the section; phones take the small ones (home
+  1.7 MB instead of 2.8, timeline 1.2 instead of 2.3), retina desktops the
+  big. Faces are WOFF2 subsets of the characters they set (192 KB for all
+  fourteen, from 1.47 MB); the envelope's are preloaded. On a 1.6 Mbps /
+  150 ms phone the envelope is complete in 6.5 s (was 17.7) and home is
+  warm behind it by 11.5 s. The envelope itself stays ~1.1 MB of pictures:
+  its narrow column is zoomed to k .83 on a phone, which at 3× needs the big
+  encodings, and its paper textures are noise that lower WebP quality
+  barely shrinks.
 - **SVG recolours.** Canva's vector stickers mostly leave paths unfilled and
   key the colour map on the default black; a mapping for `#000000` therefore
   also goes on the root `<svg>`.
 - **Composited spritesheets** are named after their source and recipe, not
   the PNG Chromium happened to write, so the same input hashes the same on
   every machine that runs the build.
-- **Countdown** is native, as specified. The reference screenshot of the
-  Canva home page shows an empty frame there because Canva's widget does not
-  render headless; the live page shows the count.
-- **Budget.** Shipped `invite/` is 10.9 MB (assets 10.67 MB: 104 WebP, 4 SVG,
-  2 WebM + 2 MP4 mattes, 13 fonts); envelope page 1.19 MB. Per-page pulls:
-  home 3.90, timeline 2.53, mehendi 1.39, reception 1.35, envelope 1.19,
-  nikah 0.48, dress-code 0.38 MB.
+- **Countdown.** The live page's is a third-party widget (betterimages.ai):
+  an 800×400 SVG in Abril Fatface, digits 140 px two to a unit, 40 px
+  labels, all `#715449` under a letterpress filter, counting to
+  `2026-10-10T21:00` *in the viewer's local time* — not midnight IST as
+  assumed above. Ours is that SVG drawn by hand with the widget's own 2.5 KB
+  font subset (OFL, checked in under `invite/build/`), the same deadline. The
+  reference screenshot shows an empty frame there because the widget does
+  not render headless.
+- **Budget.** On disk `invite/` is 12.0 MB (166 WebP across two encodings,
+  4 SVG, 2 WebM + 2 MP4 mattes, 14 font subsets), but no visitor pulls more
+  than one encoding of anything: a retina desktop takes at most home 2.79,
+  timeline 2.32, mehendi 1.36, reception 1.32, envelope 1.08, nikah 0.45,
+  dress-code 0.35 MB; a phone home 1.69, timeline 1.24, reception 0.96,
+  mehendi 0.81, envelope 0.75, nikah 0.42, dress-code 0.35 MB.
 - **Fidelity gate** at 1366 wide (mean channel difference on a 64×512
   thumbnail, threshold 13): envelope 2.4, home 7.4, timeline 6.1, mehendi
   5.9, nikah 3.3, reception 3.2, dress-code 3.0.
