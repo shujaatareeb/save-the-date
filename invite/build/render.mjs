@@ -75,13 +75,25 @@ function animAttrs(el, ctx) {
   // the live page for both such texts), each for as long as the recorder saw
   // the first one take. No block keyframes on top.
   if (a.writeOn) { ctx.pulses.writeOn = true; return { cls: ' an wr', style: `--dur:${Math.max(300, a.durationMs)}ms;${del}--step:72ms;` }; }
+  // Canva's effect 26 is a wipe: the clipping box sweeps by its own size while
+  // the content inside counter-moves, so the picture is revealed in place. The
+  // recorder caught whichever of the two nodes it matched, so the sign of the
+  // sweep is taken from the effect's direction (E: box from the left, C: from
+  // above) rather than from the recording.
+  const wipe = el.anim?.effect === 26;
+  const sweep = (frames) => {
+    if (!wipe) return frames;
+    const c = el.anim.params?.c;
+    return frames.map((f) => ({ ...f, dx: c === 'E' ? -Math.abs(f.dx) : f.dx, dy: c === 'C' ? -Math.abs(f.dy) : f.dy }));
+  };
   if (!a.loop) {
-    const g = ctx.groupFor('once', a.frames);
-    return { cls: ` an ${g.name}`, style: `--dur:${a.durationMs}ms;${del}` };
+    const g = ctx.groupFor('once', sweep(a.frames), wipe);
+    return { cls: ` an ${g.name}${wipe ? ' wp' : ''}`, style: `--dur:${a.durationMs}ms;${del}` };
   }
   // A loop is its entrance, played once and held (see processEntry); the two
   // hearts beat on after theirs.
-  const g = ctx.groupFor('once', a.entrance);
+  const g = ctx.groupFor('once', sweep(a.entrance), wipe);
+  if (wipe) return { cls: ` an ${g.name} wp`, style: `--dur:${a.entranceMs}ms;${del}` };
   if (a.spinMs) { ctx.pulses.spin = true; return { cls: ` an ${g.name} sp`, style: `--dur:${a.entranceMs}ms;${del}--kf:${g.name};--spin:${a.spinMs}ms;` }; }
   if (isHeartbeat(el, a)) { ctx.pulses.heartbeat = true; return { cls: ` an ${g.name} hb`, style: `--dur:${a.entranceMs}ms;${del}--kf:${g.name};` }; }
   return { cls: ` an ${g.name}`, style: `--dur:${a.entranceMs}ms;${del}` };
@@ -343,6 +355,8 @@ a.el{display:block;text-decoration:none;color:inherit}
 .shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;white-space:pre-wrap}
 .el.an{opacity:0;animation-fill-mode:both;animation-timing-function:linear;animation-duration:var(--dur,800ms);animation-delay:var(--del,0ms)}
 .el.an.done:not(.hb):not(.sp):not(.wr){animation:none;opacity:var(--op,1);transform:rotate(var(--rot,0deg))}
+.el.an.done:not(.hb):not(.sp):not(.wr)>*{animation:none}
+.el.wp{overflow:hidden}
 .el.mt:not(.in){opacity:0}.el.mt.mt-run>img{visibility:hidden}.el.mt>canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
 .cd>svg{display:block;width:100%;height:100%;overflow:visible}
 .cd text{text-anchor:middle;font-family:'f-countdown',serif;font-weight:400;fill:#715449;text-rendering:geometricPrecision;user-select:none}
@@ -425,10 +439,10 @@ export function render(model, assets, anims) {
   // Every distinct entrance gets its own kN; elements with the same frames share one.
   const animGroups = new Map();
   const pulses = { used: false, writeOn: false, heartbeat: false, spin: false }; // which on-demand CSS blocks the deck needs
-  const groupFor = (kind, entrance) => {
-    const key = JSON.stringify({ kind, entrance });
+  const groupFor = (kind, entrance, wipe = false) => {
+    const key = JSON.stringify({ kind, entrance, wipe });
     let g = animGroups.get(key);
-    if (!g) { g = { name: `k${animGroups.size + 1}`, kind, entrance }; animGroups.set(key, g); }
+    if (!g) { g = { name: `k${animGroups.size + 1}`, kind, entrance, wipe }; animGroups.set(key, g); }
     return g;
   };
 
@@ -519,7 +533,11 @@ export function render(model, assets, anims) {
   const faces = Object.values(assets.fonts).map((f) => `@font-face{font-family:'f-${f.fontId}';src:url(${f.src}) format('${fontFormat(f.src)}');font-weight:${f.weight};font-style:${f.italic ? 'italic' : 'normal'};font-display:swap}`);
   const animations = [...animGroups.values()].map((g) => {
     if (g.kind !== 'once') throw new Error(`unexpected animation group kind ${g.kind}`);
-    return `${keyframeCss(g.name, g.entrance)}\n.${g.name}.in{animation-name:${g.name}}`;
+    const own = `${keyframeCss(g.name, g.entrance)}\n.${g.name}.in{animation-name:${g.name}}`;
+    if (!g.wipe) return own;
+    // the content's counter-move: the inverse of the box's translate at every stop
+    const stops = g.entrance.map((f) => `${r(f.t * 100, 1)}%{translate:${r(-f.dx)}px ${r(-f.dy)}px}`).join('');
+    return `${own}\n@keyframes ${g.name}w{${stops}}\n.${g.name}.wp.in>*{animation:${g.name}w var(--dur) linear both;animation-delay:var(--del)}`;
   });
   const css = [...faces, BASE_CSS.trim(), ...(pulses.used ? [PULSE_CSS] : []), ...(pulses.writeOn ? [WRITE_ON_CSS] : []), ...animations, ...(pulses.heartbeat ? [HEARTBEAT_CSS] : []), ...(pulses.spin ? [SPIN_CSS] : [])].join('\n');
   // The envelope's faces, a few KB each now, are worth asking for up front.

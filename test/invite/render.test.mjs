@@ -554,3 +554,30 @@ test('keyframes carry a filter only when a frame blurs, and a finished entrance 
   assert.match(css, /\.el\.an\.done:not\(\.hb\):not\(\.sp\):not\(\.wr\)\{animation:none;opacity:var\(--op,1\);transform:rotate\(var\(--rot,0deg\)\)\}/);
   assert.match(css, /\.sec\{[^}]*content-visibility:auto/);
 });
+
+// Canva's effect 26 is a wipe: the element's clipping box sweeps across its
+// own width (or height) while the artwork inside counter-moves and stays
+// put, so the picture is revealed edge to edge. The recorder kept only the
+// box's motion, and we slid the whole thing. The wrapper still plays the
+// recorded sweep; its content gets the inverse as a `translate`, which
+// composes with any transform of its own.
+test('an effect-26 entrance wipes the content in rather than sliding it', () => {
+  const { html, css } = render(model, assets, anims);
+  const cls = (id) => html.match(new RegExp(`class="el (?:img|txt|shp) an (k\\d+) wp"[^>]*data-id="${id}"`))?.[1];
+  const line = cls('LBq7bt3xrnV5lSC1'), path = cls('LBDKD68Lf5BM7kkq'), heading = cls('LBl27C3knDdvHVj0');
+  assert.ok(line && path && heading, 'wiped elements carry wp');
+  // the line sweeps sideways by its width; its content starts pushed the other way and settles at rest
+  const lineW = css.match(new RegExp(`@keyframes ${line}w\\{([^]*?)\\}\\}`))[1];
+  assert.match(lineW, /^0%\{translate:21[01](\.\d+)?px 0px\}/);
+  assert.match(lineW, /100%\{translate:0px 0px$/);
+  const pathW = css.match(new RegExp(`@keyframes ${path}w\\{([^]*?)\\}\\}`))[1];
+  // the path draws downward: its box starts above and sweeps down, its content starts pushed down
+  assert.match(pathW, /^0%\{translate:0px 116[67](\.\d+)?px\}/);
+  const pathBox = css.match(new RegExp(`@keyframes ${path}\\{([^]*?)\\}\\}`))[1];
+  assert.match(pathBox, /^0%\{[^}]*translate\(0px,-116[67](\.\d+)?px\)/);
+  for (const k of [line, path, heading]) assert.match(css, new RegExp(`\\.${k}\\.wp\\.in>\\*\\{animation:${k}w var\\(--dur\\) linear both;animation-delay:var\\(--del\\)\\}`));
+  assert.match(css, /\.el\.wp\{overflow:hidden\}/);
+  assert.match(css, /\.el\.an\.done:not\(\.hb\):not\(\.sp\):not\(\.wr\)>\*\{animation:none\}/);
+  // an ordinary entrance gets no companion
+  assert.doesNotMatch(html, /class="el img an k\d+ wp"[^>]*data-id="LBmGP6J3tmzZBvKq"/);
+});
