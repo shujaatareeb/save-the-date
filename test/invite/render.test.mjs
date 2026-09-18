@@ -93,27 +93,53 @@ test('caps a long two-frame entrance at 800ms', () => {
   assert.match(html, /data-id="LB7KNXNdyg4sxl4b"[^>]*--dur:800ms|--dur:800ms[^>]*data-id="LB7KNXNdyg4sxl4b"/);
 });
 
-test('caps a long two-frame loop entrance without changing its idle duration', () => {
+test('caps a long two-frame loop entrance', () => {
   const el = model.pages[1].sections[0].elements[0];
   const f = (t, dy, opacity = 1) => ({ t, opacity, dx: 0, dy, scale: 1, blur: 0, clip: null });
   const synth = { [el.id]: { effect: 501, loop: true, startMs: 0, durationMs: 10000, frames: [
     f(0, 80, 0), f(0.3, 0), f(0.6, 2), f(1, 0),
   ] } };
   const { html } = render(model, assets, synth);
-  assert.match(html, new RegExp(`data-id="${el.id}"[^>]*--dur:800ms[^;]*;--idur:7000ms`));
+  assert.match(html, new RegExp(`data-id="${el.id}"[^>]*--dur:800ms;`));
+  assert.doesNotMatch(html, new RegExp(`data-id="${el.id}"[^>]*--idur:`));
 });
 
-test('a looping element gets a one-shot entrance followed by an infinite idle', () => {
+// The recorder calls an entry a loop whenever the sampled node kept changing
+// until the window closed — which an entrance's long easing tail does too.
+// Sampled on the live page, every one of the 21 "loops" in the deck but the
+// two hearts sits perfectly still once its entrance is over; played as an
+// alternating sway, their tails became a 2–5 Hz shake. A loop now plays its
+// entrance once and holds.
+test('a looping recording plays its entrance once and then holds still', () => {
   const el = model.pages[0].sections[0].elements[12];
   const f = (t, dy, op = 1) => ({ t, opacity: op, dx: 0, dy, scale: 1, blur: 0, clip: null });
   const anims2 = { [el.id]: { effect: 26, loop: true, startMs: 0, durationMs: 1000, frames: [f(0, 80, 0), f(0.1, 40, 0.5), f(0.2, 0), f(0.4, 2), f(0.6, -2), f(0.8, 2), f(1, 0)] } };
   const { html, css } = render(model, assets, anims2);
-  assert.match(css, /@keyframes k1\{/); assert.match(css, /@keyframes k1i\{/);
-  assert.match(css, /\.k1\.in\{animation-name:k1,k1i;[^}]*animation-iteration-count:1,infinite;animation-direction:normal,alternate;animation-fill-mode:both,forwards/);
-  assert.match(html, new RegExp(`data-id="${el.id}"[^>]*--idur:800ms|--idur:800ms[^>]*data-id="${el.id}"`));
+  assert.match(css, /@keyframes k1\{/);
+  assert.doesNotMatch(css, /@keyframes k1i\{|infinite|alternate/);
+  assert.match(css, /\.k1\.in\{animation-name:k1\}/);
+  assert.match(html, new RegExp(`data-id="${el.id}"[^>]*--dur:200ms;`));
+  assert.doesNotMatch(html, /--idur:/);
 });
 
-test('two loops with an identical entrance but different idle sways never share a keyframe', () => {
+// The two hearts — round the 10 on the home calendar and on the nikah card —
+// beat on the live page: scale .85↔1.14 every .9 s, a quick swell and a slow
+// release, no change in opacity. They are effect 2 with a recorded scale
+// swing the recorder aliased into a 12–40 s loop; that signature is the beat.
+test('an effect-2 loop with a big scale swing is a heartbeat', () => {
+  const { html, css } = render(model, assets, anims);
+  for (const id of ['LB6d2Q7MlFSXJzT6', 'LBy1MrY9MctlgX5z']) {
+    const m = html.match(new RegExp(`<div class="el img an (k\\d+) hb"[^>]*data-id="${id}"`));
+    assert.ok(m, `${id} carries an entrance class and hb`);
+    assert.match(css, new RegExp(`\\.${m[1]}\\.in\\{animation-name:${m[1]}\\}`));
+  }
+  assert.match(css, /\.el\.hb\.in\{animation-name:var\(--kf\),hb;animation-duration:var\(--dur\),\.9s;animation-delay:var\(--del\),calc\(var\(--del\) \+ var\(--dur\)\);animation-iteration-count:1,infinite;animation-direction:normal,normal;animation-fill-mode:both,none;animation-timing-function:linear,ease-in-out\}/);
+  assert.match(css, /@keyframes hb\{0%,100%\{transform:rotate\(var\(--rot,0deg\)\) scale\(\.85\)\}34%\{transform:rotate\(var\(--rot,0deg\)\) scale\(1\.14\)\}\}/);
+  // The banner group is effect 2 too, but its recorded scale barely moves: no beat.
+  assert.doesNotMatch(html, /data-id="LBx2hFJCMqCggSF4"[^>]*class="[^"]*\bhb\b|class="[^"]*\bhb\b[^"]*"[^>]*data-id="LBx2hFJCMqCggSF4"/);
+});
+
+test('two loops with the same entrance share one keyframe set once their sways are dropped', () => {
   const home = model.pages.find((p) => p.slug === 'home');
   const s0 = home.sections[0];
   const idA = s0.elements[0].id, idB = s0.elements[1].id;
@@ -125,14 +151,9 @@ test('two loops with an identical entrance but different idle sways never share 
   };
   const { html, css } = render(model, assets, synth);
   const classOf = (id) => (html.match(new RegExp(`data-id="${id}"[^>]*class="el [^"]*\\b(k\\d+)\\b`)) || html.match(new RegExp(`class="el [^"]*\\b(k\\d+)\\b[^"]*"[^>]*data-id="${id}"`)))?.[1];
-  const nameA = classOf(idA), nameB = classOf(idB);
-  assert.ok(nameA && nameB, 'both elements should carry a keyframe class');
-  assert.notEqual(nameA, nameB, 'identical entrances but different idle sways must not share a name');
-  const idleBlock = (name) => css.match(new RegExp(`@keyframes ${name}i\\{[^]*?\\}\\}`))[0];
-  assert.notEqual(idleBlock(nameA), idleBlock(nameB), 'each element\'s idle keyframes should reflect its own sway');
-  // each element's class points at its own rule, not the other's
-  assert.match(html, new RegExp(`data-id="${idA}"[^>]*class="[^"]*\\b${nameA}\\b|class="[^"]*\\b${nameA}\\b[^"]*"[^>]*data-id="${idA}"`));
-  assert.match(html, new RegExp(`data-id="${idB}"[^>]*class="[^"]*\\b${nameB}\\b|class="[^"]*\\b${nameB}\\b[^"]*"[^>]*data-id="${idB}"`));
+  assert.ok(classOf(idA) && classOf(idB), 'both elements should carry a keyframe class');
+  assert.equal(classOf(idA), classOf(idB));
+  assert.equal((css.match(/@keyframes k\d+\{/g) || []).length, 1);
 });
 
 test('the full render has seven pages, fonts and no unresolved media', () => {
@@ -155,13 +176,9 @@ test('animation rulings: hygiene, snap, invisible skip, borrowing', () => {
   // splits into a one-shot entrance plus an infinite idle (or an idle-only class); see the
   // dedicated splitLoop tests above.
   assert.doesNotMatch(css, /\.el\.an\.loop\.in/);
-  // the split mechanism actually fires on the real recording: at least one entry gets a real
-  // paired entrance+idle rule (the .kN.in selector referencing both kN and kNi), and some
-  // element in the page actually carries that class.
-  assert.match(css, /animation-iteration-count:1,infinite/);
-  const splitRule = css.match(/\.(k\d+)\.in\{animation-name:\1,\1i;/);
-  assert.ok(splitRule, 'expected at least one real entrance+idle split rule');
-  assert.match(html, new RegExp(`class="[^"]*\\b${splitRule[1]}\\b[^"]*"`), `${splitRule[1]} should actually be used by an element`);
+  // nothing recorded loops any more: the only infinite animations are the button pulse,
+  // the heartbeat and the write-on's per-character fades (none of them recorded sways)
+  assert.doesNotMatch(css, /@keyframes k\d+i\{|animation-direction:normal,alternate/);
   // non-loop keyframes end at rest
   const restClass = html.match(new RegExp(`data-id="${restId}"[^>]*class="el [^"]*\\b(k\\d+)\\b`))?.[1] || html.match(new RegExp(`class="el [^"]*\\b(k\\d+)\\b[^"]*"[^>]*data-id="${restId}"`))?.[1];
   assert.ok(restClass, `no keyframe class on ${restId}`);
@@ -399,7 +416,8 @@ test('a recorded loop with no effect and a 0.35 opacity floor is Canva\'s button
   assert.match(css, /\.el\.pl\{animation:plo 1\.11s ease-in-out infinite\}/);
   assert.match(css, /\.el\.pl\.pls\{animation:plo 1\.11s ease-in-out infinite,pls \.9s ease-in-out infinite\}/);
   assert.match(css, /@keyframes plo\{0%,100%\{opacity:var\(--op,1\)\}50%\{opacity:calc\(var\(--op,1\)\*\.35\)\}\}/);
-  assert.match(css, /@keyframes pls\{0%,100%\{transform:rotate\(var\(--rot,0deg\)\) scale\(\.85\)\}50%\{transform:rotate\(var\(--rot,0deg\)\) scale\(1\.14\)\}\}/);
+  // quick swell, slow release: the peak sits a third of the way through the beat
+  assert.match(css, /@keyframes pls\{0%,100%\{transform:rotate\(var\(--rot,0deg\)\) scale\(\.85\)\}34%\{transform:rotate\(var\(--rot,0deg\)\) scale\(1\.14\)\}\}/);
   // A loop that genuinely goes to zero is an entrance, not a pulse.
   assert.match(wrapper('LBwySg2vwJKtFn3Y'), /class="el img an /);
 });
@@ -451,4 +469,32 @@ test('the countdown is the widget\'s own SVG geometry', () => {
   assert.match(css, /\.cd text\{[^}]*font-family:'f-countdown'[^}]*fill:#715449/);
   assert.match(css, /\.cd-d text\{font-size:140px\}\.cd-l text\{font-size:40px\}/);
   assert.doesNotMatch(html, /cd-row|cd-u/);
+});
+
+// The vinyl record on the home page turns on the live page — 17.7°/s, one
+// turn every 20 s, for ever. The recorder now writes rotation (dr, degrees
+// relative to rest, unwrapped); a loop whose rotation only ever grows is a
+// spin, and its speed sets the period.
+test('a loop whose rotation only ever grows is a spin at the recorded speed', () => {
+  const { html, css } = render(model, assets, anims);
+  const m = html.match(/<div class="el img an (k\d+) sp"[^>]*data-id="LBdNPD4c6lVSCGRg"[^>]*style="([^"]*)"/);
+  assert.ok(m, 'record carries an entrance class and sp');
+  const period = Number(m[2].match(/--spin:(\d+)ms/)[1]);
+  assert.ok(period > 19000 && period < 21500, `one turn every ${period} ms`);
+  assert.match(m[2], /--kf:k\d+;/);
+  // its entrance keeps the fade but not the turn — the spin owns the transform
+  const kf = css.match(new RegExp(`@keyframes ${m[1]}\\{[^]*?\\}\\}`))[0];
+  assert.doesNotMatch(kf, /calc\(var\(--rot,0deg\) \+/);
+  assert.match(css, /\.el\.sp\.in\{animation-name:var\(--kf\),sp;animation-duration:var\(--dur\),var\(--spin\);animation-delay:var\(--del\),0ms;animation-iteration-count:1,infinite;animation-direction:normal,normal;animation-fill-mode:both,none;animation-timing-function:linear,linear\}/);
+  assert.match(css, /@keyframes sp\{from\{transform:rotate\(var\(--rot,0deg\)\)\}to\{transform:rotate\(calc\(var\(--rot,0deg\) \+ 360deg\)\)\}\}/);
+});
+
+test('a recorded turn that settles is part of the entrance, not a spin', () => {
+  const el = model.pages[0].sections[0].elements[12];
+  const f = (t, dr, op = 1) => ({ t, opacity: op, dx: 0, dy: 0, scale: 1, blur: 0, clip: null, ...(dr ? { dr } : {}) });
+  const synth = { [el.id]: { effect: 9, loop: false, startMs: 0, durationMs: 800, frames: [f(0, -90, 0), f(0.5, -30, 0.7), f(1, 0)] } };
+  const { html, css } = render(model, assets, synth);
+  assert.doesNotMatch(html, /\bsp\b/);
+  assert.match(css, /0%\{opacity:calc\(var\(--op,1\)\*0\);transform:translate\(0px,0px\) rotate\(calc\(var\(--rot,0deg\) \+ -90deg\)\) scale\(1\)/);
+  assert.match(css, /100%\{[^}]*rotate\(var\(--rot,0deg\)\)/);
 });

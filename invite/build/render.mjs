@@ -43,7 +43,28 @@ export function isPulse(el, a) {
   const floor = Math.min(...a.frames.map((f) => f.opacity));
   return floor >= 0.3 && floor <= 0.45;
 }
-const pulseScales = (a) => Math.max(...a.frames.map((f) => f.scale)) - Math.min(...a.frames.map((f) => f.scale)) > 0.05;
+const scaleSwing = (a) => Math.max(...a.frames.map((f) => f.scale)) - Math.min(...a.frames.map((f) => f.scale));
+const pulseScales = (a) => scaleSwing(a) > 0.05;
+// The two hearts (round the 10 on the home calendar and on the nikah card)
+// beat on the live page — scale .85↔1.14 every .9 s, a quick swell and a slow
+// release, no change in opacity — and are the only effect-2 elements whose
+// recorded loop swings its scale by more than a whisker.
+export function isHeartbeat(el, a) {
+  return el.anim?.effect === 2 && !!a?.loop && scaleSwing(a) >= 0.2;
+}
+// The vinyl record on the home page turns for ever (17.7°/s on the live page).
+// A loop whose rotation only ever grows — never turning back, more than a
+// full turn over the window — is a spin; its speed over the settled part of
+// the recording gives the period of one turn.
+export function spinPeriodMs(a, settle) {
+  if (!a?.loop) return 0;
+  const drs = a.frames.map((f) => f.dr || 0);
+  const steps = drs.slice(1).map((d, i) => d - drs[i]);
+  if (!steps.length || !steps.every((d) => d > 0) || drs.at(-1) - drs[0] < 360) return 0;
+  const from = a.frames[settle], to = a.frames.at(-1);
+  const rate = (to.dr || 0) - (from.dr || 0), span = a.durationMs * (to.t - from.t);
+  return rate > 0 && span > 0 ? Math.round((360 * span) / rate) : 0;
+}
 
 function animAttrs(el, ctx) {
   const a = ctx.anims[el.id];
@@ -55,22 +76,15 @@ function animAttrs(el, ctx) {
   // the first one take. No block keyframes on top.
   if (a.writeOn) { ctx.pulses.writeOn = true; return { cls: ' an wr', style: `--dur:${Math.max(300, a.durationMs)}ms;${del}--step:72ms;` }; }
   if (!a.loop) {
-    const g = ctx.groupFor('once', a.frames, null);
+    const g = ctx.groupFor('once', a.frames);
     return { cls: ` an ${g.name}`, style: `--dur:${a.durationMs}ms;${del}` };
   }
-  // A loop splits into an entrance (played once) and an idle sway (played
-  // forever, alternating) — either part may be absent (see splitLoop).
-  if (a.entrance && a.idle) {
-    const g = ctx.groupFor('split', a.entrance, a.idle);
-    return { cls: ` an ${g.name}`, style: `--dur:${a.entranceMs}ms;--idur:${a.idleMs}ms;${del}` };
-  }
-  if (a.entrance) {
-    // Nothing to sway once settled: play the entrance and hold, like a non-loop entry.
-    const g = ctx.groupFor('once', a.entrance, null);
-    return { cls: ` an ${g.name}`, style: `--dur:${a.entranceMs}ms;${del}` };
-  }
-  const g = ctx.groupFor('idleOnly', null, a.idle);
-  return { cls: ` an ${g.name}i`, style: `--dur:${a.idleMs}ms;${del}` };
+  // A loop is its entrance, played once and held (see processEntry); the two
+  // hearts beat on after theirs.
+  const g = ctx.groupFor('once', a.entrance);
+  if (a.spinMs) { ctx.pulses.spin = true; return { cls: ` an ${g.name} sp`, style: `--dur:${a.entranceMs}ms;${del}--kf:${g.name};--spin:${a.spinMs}ms;` }; }
+  if (isHeartbeat(el, a)) { ctx.pulses.heartbeat = true; return { cls: ` an ${g.name} hb`, style: `--dur:${a.entranceMs}ms;${del}--kf:${g.name};` }; }
+  return { cls: ` an ${g.name}`, style: `--dur:${a.entranceMs}ms;${del}` };
 }
 
 function open(el, cls, ctx, extraStyle = '', extraAttrs = '', animate = true) {
@@ -256,7 +270,8 @@ export function renderElement(el, ctx) {
 
 export function keyframeCss(name, frames) {
   const stops = frames.map((f) => {
-    let s = `${r(f.t * 100, 1)}%{opacity:calc(var(--op,1)*${f.opacity});transform:translate(${r(f.dx)}px,${r(f.dy)}px) rotate(var(--rot,0deg)) scale(${f.scale});filter:blur(${f.blur}px)`;
+    const rot = f.dr ? `rotate(calc(var(--rot,0deg) + ${r(f.dr, 1)}deg))` : 'rotate(var(--rot,0deg))';
+    let s = `${r(f.t * 100, 1)}%{opacity:calc(var(--op,1)*${f.opacity});transform:translate(${r(f.dx)}px,${r(f.dy)}px) ${rot} scale(${f.scale});filter:blur(${f.blur}px)`;
     if (frames.some((x) => x.clip)) s += `;clip-path:${f.clip || 'inset(0)'}`;
     return s + '}';
   });
@@ -266,7 +281,16 @@ export function keyframeCss(name, frames) {
 // Canva's button pulse (see isPulse), emitted once when any element uses it.
 const PULSE_CSS = `.el.pl{animation:plo 1.11s ease-in-out infinite}.el.pl.pls{animation:plo 1.11s ease-in-out infinite,pls .9s ease-in-out infinite}
 @keyframes plo{0%,100%{opacity:var(--op,1)}50%{opacity:calc(var(--op,1)*.35)}}
-@keyframes pls{0%,100%{transform:rotate(var(--rot,0deg)) scale(.85)}50%{transform:rotate(var(--rot,0deg)) scale(1.14)}}`;
+@keyframes pls{0%,100%{transform:rotate(var(--rot,0deg)) scale(.85)}34%{transform:rotate(var(--rot,0deg)) scale(1.14)}}`;
+
+// The hearts' beat (see isHeartbeat): the pulse's scale half, taking over the
+// transform once the recorded entrance has played out.
+const HEARTBEAT_CSS = `.el.hb.in{animation-name:var(--kf),hb;animation-duration:var(--dur),.9s;animation-delay:var(--del),calc(var(--del) + var(--dur));animation-iteration-count:1,infinite;animation-direction:normal,normal;animation-fill-mode:both,none;animation-timing-function:linear,ease-in-out}
+@keyframes hb{0%,100%{transform:rotate(var(--rot,0deg)) scale(.85)}34%{transform:rotate(var(--rot,0deg)) scale(1.14)}}`;
+
+// A spin (see spinPeriodMs): one linear turn per --spin, from the moment the element enters.
+const SPIN_CSS = `.el.sp.in{animation-name:var(--kf),sp;animation-duration:var(--dur),var(--spin);animation-delay:var(--del),0ms;animation-iteration-count:1,infinite;animation-direction:normal,normal;animation-fill-mode:both,none;animation-timing-function:linear,linear}
+@keyframes sp{from{transform:rotate(var(--rot,0deg))}to{transform:rotate(calc(var(--rot,0deg) + 360deg))}}`;
 
 // Canva's write-on text entrance (see animAttrs), emitted once when used.
 const WRITE_ON_CSS = `.el.wr.in{opacity:var(--op,1);animation:none}
@@ -309,7 +333,7 @@ a.el{display:block;text-decoration:none;color:inherit}
 .cd-d text{font-size:140px}.cd-l text{font-size:40px}
 `;
 
-const RESTING_FRAME = { t: 1, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null };
+const RESTING_FRAME = { t: 1, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null }; // dr (rotation) absent = 0
 
 // A recording often opens with the hidden start state held for seconds until the
 // element scrolled into view; the sampler records no frames during a hold, so the
@@ -338,7 +362,7 @@ function isInvisibleFrames(frames) {
   const finalOpacity = frames[frames.length - 1].opacity;
   let moved = false, scaled = false, blurred = false, opacityDrifted = false;
   for (const f of frames) {
-    if (Math.abs(f.dx) > 0.5 || Math.abs(f.dy) > 0.5) moved = true;
+    if (Math.abs(f.dx) > 0.5 || Math.abs(f.dy) > 0.5 || Math.abs(f.dr || 0) > 1) moved = true;
     if (f.scale < 0.99 || f.scale > 1.01) scaled = true;
     if (f.blur) blurred = true;
     if (Math.abs(f.opacity - finalOpacity) > 0.02) opacityDrifted = true;
@@ -382,17 +406,13 @@ export function splitLoop(frames) {
 }
 
 export function render(model, assets, anims) {
-  // Every distinct (kind, entrance, idle) combination gets its own kN — keying on the full
-  // shape (not just entrance) means two elements that happen to share an entrance but sway
-  // differently afterward never collide on one name and clobber each other's idle keyframes.
-  // kind is 'once' (plain one-shot: entrance holds the frames, idle is null), 'split' (entrance
-  // then idle) or 'idleOnly' (idle holds the frames, entrance is null).
+  // Every distinct entrance gets its own kN; elements with the same frames share one.
   const animGroups = new Map();
-  const pulses = { used: false, writeOn: false }; // which on-demand CSS blocks the deck needs
-  const groupFor = (kind, entrance, idle) => {
-    const key = JSON.stringify({ kind, entrance, idle });
+  const pulses = { used: false, writeOn: false, heartbeat: false, spin: false }; // which on-demand CSS blocks the deck needs
+  const groupFor = (kind, entrance) => {
+    const key = JSON.stringify({ kind, entrance });
     let g = animGroups.get(key);
-    if (!g) { g = { name: `k${animGroups.size + 1}`, kind, entrance, idle }; animGroups.set(key, g); }
+    if (!g) { g = { name: `k${animGroups.size + 1}`, kind, entrance }; animGroups.set(key, g); }
     return g;
   };
 
@@ -416,12 +436,20 @@ export function render(model, assets, anims) {
       const cappedDurationMs = frames.length === 2 && durationMs > 2000 ? 800 : durationMs;
       return { ...entry, frames: snapped, durationMs: cappedDurationMs };
     }
-    const { entrance, idle, i } = splitLoop(frames);
-    if (!entrance && !idle) return null;
+    // The recorder calls an entry a loop whenever the node kept changing until
+    // the window closed — an entrance's long easing tail does that too. Sampled
+    // on the live page, every "loop" in the deck but the two hearts sits still
+    // once its entrance is over, and played as an alternating sway those tails
+    // were a 2–5 Hz shake. So a loop is its entrance, played once and held; the
+    // sway is dropped. (Hearts get their beat in animAttrs; see isHeartbeat.)
+    const { entrance, i } = splitLoop(frames);
+    if (!entrance) return null;
     const entranceMs = Math.round(durationMs * frames[i].t);
-    const idleMs = durationMs - entranceMs;
-    const cappedEntranceMs = entrance?.length === 2 && entranceMs > 2000 ? 800 : entranceMs;
-    return { ...entry, frames, entrance, idle, entranceMs: cappedEntranceMs, idleMs, durationMs };
+    const cappedEntranceMs = entrance.length === 2 && entranceMs > 2000 ? 800 : entranceMs;
+    // A spin owns the transform from the first frame; its entrance keeps the fade only.
+    const spinMs = spinPeriodMs({ ...entry, frames }, i);
+    const frames2 = spinMs ? entrance.map(({ dr, ...f }) => f) : entrance;
+    return { ...entry, frames, entrance: frames2, entranceMs: cappedEntranceMs, durationMs, spinMs };
   }
   const processedById = new Map();
   for (const [id, entry] of Object.entries(anims)) processedById.set(id, processEntry(entry));
@@ -474,17 +502,10 @@ export function render(model, assets, anims) {
   // way they do on the live page.
   const faces = Object.values(assets.fonts).map((f) => `@font-face{font-family:'f-${f.fontId}';src:url(${f.src}) format('${fontFormat(f.src)}');font-weight:${f.weight};font-style:${f.italic ? 'italic' : 'normal'};font-display:swap}`);
   const animations = [...animGroups.values()].map((g) => {
-    if (g.kind === 'split') {
-      return `${keyframeCss(g.name, g.entrance)}\n${keyframeCss(`${g.name}i`, g.idle)}\n.${g.name}.in{animation-name:${g.name},${g.name}i;animation-duration:var(--dur),var(--idur);animation-delay:var(--del),calc(var(--del) + var(--dur));animation-iteration-count:1,infinite;animation-direction:normal,alternate;animation-fill-mode:both,forwards;animation-timing-function:linear,ease-in-out}`;
-    }
-    if (g.kind === 'idleOnly') {
-      // Only animation-name/-iteration-count/-direction/-fill-mode/-timing-function are
-      // overridden here; duration and delay fall through to the .el.an base rule's --dur/--del.
-      return `${keyframeCss(`${g.name}i`, g.idle)}\n.${g.name}i.in{animation-name:${g.name}i;animation-iteration-count:infinite;animation-direction:alternate;animation-fill-mode:forwards;animation-timing-function:ease-in-out}`;
-    }
+    if (g.kind !== 'once') throw new Error(`unexpected animation group kind ${g.kind}`);
     return `${keyframeCss(g.name, g.entrance)}\n.${g.name}.in{animation-name:${g.name}}`;
   });
-  const css = [...faces, BASE_CSS.trim(), ...(pulses.used ? [PULSE_CSS] : []), ...(pulses.writeOn ? [WRITE_ON_CSS] : []), ...animations].join('\n');
+  const css = [...faces, BASE_CSS.trim(), ...(pulses.used ? [PULSE_CSS] : []), ...(pulses.writeOn ? [WRITE_ON_CSS] : []), ...animations, ...(pulses.heartbeat ? [HEARTBEAT_CSS] : []), ...(pulses.spin ? [SPIN_CSS] : [])].join('\n');
   const html = `<!doctype html>
 <html lang="en">
 <head>

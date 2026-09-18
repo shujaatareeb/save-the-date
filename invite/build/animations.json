@@ -3914,8 +3914,8 @@
  "LBdNPD4c6lVSCGRg": {
   "effect": 31,
   "loop": true,
-  "startMs": 183,
-  "durationMs": 40666,
+  "startMs": 265,
+  "durationMs": 41013,
   "frames": [
    {
     "t": 0,
@@ -3924,160 +3924,178 @@
     "dy": 0,
     "scale": 0.9,
     "blur": 24,
-    "clip": null
+    "clip": null,
+    "dr": -568.3
    },
    {
-    "t": 0.253,
+    "t": 0.262,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -537.1
    },
    {
-    "t": 0.295,
+    "t": 0.303,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -507.3
    },
    {
-    "t": 0.336,
+    "t": 0.344,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -477.4
    },
    {
-    "t": 0.379,
+    "t": 0.385,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -447.7
    },
    {
-    "t": 0.42,
+    "t": 0.425,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -417.8
    },
    {
-    "t": 0.461,
+    "t": 0.466,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -388.1
    },
    {
-    "t": 0.502,
+    "t": 0.507,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -358.4
    },
    {
-    "t": 0.544,
+    "t": 0.55,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -327.8
    },
    {
-    "t": 0.585,
+    "t": 0.59,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -298.1
    },
    {
-    "t": 0.627,
+    "t": 0.631,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -268.2
    },
    {
-    "t": 0.668,
+    "t": 0.672,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -238.4
    },
    {
-    "t": 0.71,
+    "t": 0.713,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -208.7
    },
    {
-    "t": 0.751,
+    "t": 0.754,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -178.8
    },
    {
-    "t": 0.792,
+    "t": 0.795,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -149.1
    },
    {
-    "t": 0.834,
+    "t": 0.836,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -119.3
    },
    {
-    "t": 0.876,
+    "t": 0.877,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -89.4
    },
    {
-    "t": 0.917,
+    "t": 0.918,
     "opacity": 1,
     "dx": 0,
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -59.7
    },
    {
     "t": 0.959,
@@ -4086,7 +4104,8 @@
     "dy": 0,
     "scale": 1,
     "blur": 0,
-    "clip": null
+    "clip": null,
+    "dr": -29.8
    },
    {
     "t": 1,

@@ -36,8 +36,20 @@ export function normalise(samples, triggerMs) {
   const first = samples[0], last = samples.at(-1);
   const startMs = first.t - triggerMs;
   const durationMs = Math.max(1, last.t - first.t);
+  // Rotation, unwrapped: a node that turns and turns reads as a sawtooth in
+  // its inline style, so each sample's angle is carried on from the last.
+  const turned = new Map();
+  let acc = 0, prevRot = null;
+  for (const s of samples) {
+    const rot = parseTransform(s.transform).rot;
+    if (prevRot !== null) { let d = rot - prevRot; if (d > 180) d -= 360; else if (d < -180) d += 360; acc += d; }
+    prevRot = rot;
+    turned.set(s, acc);
+  }
+  const restTurn = turned.get(rest);
   const toFrame = (s) => {
     const tf = parseTransform(s.transform);
+    const dr = round(turned.get(s) - restTurn, 1);
     return {
       t: round((s.t - first.t) / durationMs, 3),
       opacity: s.opacity === '' ? 1 : round(parseFloat(s.opacity), 3),
@@ -45,6 +57,7 @@ export function normalise(samples, triggerMs) {
       scale: round(tf.scale / (restT.scale || 1), 3),
       blur: round(parseFloat((s.filter.match(/blur\(([\d.]+)px/) || [])[1] || 0)),
       clip: s.clip || null,
+      ...(dr ? { dr } : {}),
     };
   };
   let picked = samples;
