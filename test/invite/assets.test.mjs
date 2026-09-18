@@ -214,3 +214,22 @@ test('encodes a phone-sized variant of every still drawn smaller than its source
   assert.ok(withSmall > 60, `${withSmall} stills with a phone variant`);
   assert.ok(without >= 0);
 });
+
+// AVIF keeps these translucent watercolour washes at a fraction of WebP's
+// bytes (a 889 KB wash is 104 KB), and iOS 16.4+, Chrome and Firefox all
+// decode it. Every still ships an AVIF beside each WebP encoding; the WebP
+// stays as the fallback for older browsers.
+test('encodes an AVIF beside every WebP still', () => {
+  let n = 0, saved = 0, webp = 0;
+  for (const [id, m] of Object.entries(manifest.media)) {
+    if (m.kind !== 'image' || m.src.endsWith('.svg')) continue;
+    n++;
+    assert.match(m.avif, /^assets\/[0-9a-f]{12}\.avif$/, id);
+    assert.ok(fs.existsSync(new URL(`../../invite/${m.avif}`, import.meta.url)), `${id}: ${m.avif} on disk`);
+    if (m.srcS) { assert.match(m.avifS, /^assets\/[0-9a-f]{12}\.avif$/, id); assert.ok(fs.existsSync(new URL(`../../invite/${m.avifS}`, import.meta.url))); }
+    const w = fs.statSync(new URL(`../../invite/${m.src}`, import.meta.url)).size, a = fs.statSync(new URL(`../../invite/${m.avif}`, import.meta.url)).size;
+    webp += w; saved += w - a;
+  }
+  assert.ok(n > 90);
+  assert.ok(saved > webp * 0.4, `AVIF saves ${Math.round((saved / webp) * 100)}% over WebP across the deck`);
+});

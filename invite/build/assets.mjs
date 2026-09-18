@@ -224,20 +224,29 @@ export function compositeCacheName(src, sprites, recolor) {
 // and, when that is wider than the drawn width itself, at the drawn width
 // too — what a phone at k ≈ 0.3 and 3× needs, a third of the bytes. Returns
 // both paths with the width each was actually encoded at.
+// Each encoding is written twice: WebP, which everything decodes, and AVIF,
+// which iOS 16.4+, Chrome and Firefox decode and which keeps these
+// translucent watercolour washes at a fraction of the bytes. The alpha plane
+// rides as a second stream — libaom takes no alpha of its own — and both
+// planes are cut from the same scaled frame.
 async function encodeStill(src, maxWidth, naturalWidth, { nameFrom = src, recipe = '' } = {}) {
   const encode = async (target, suffix) => {
     const out = path.join(ASSETS, hashName(nameFrom, '.webp', recipe + suffix));
-    if (!fs.existsSync(out)) {
-      const vf = target < naturalWidth ? ['-vf', `scale=${target}:-2`] : [];
-      await ffmpeg(['-i', src, ...vf, '-c:v', 'libwebp', '-quality', '80', '-compression_level', '6', out]);
+    const avif = path.join(ASSETS, hashName(nameFrom, '.avif', recipe + suffix));
+    const scale = target < naturalWidth ? `scale=${target}:-2,` : '';
+    if (!fs.existsSync(out)) await ffmpeg(['-i', src, ...(scale ? ['-vf', scale.slice(0, -1)] : []), '-c:v', 'libwebp', '-quality', '80', '-compression_level', '6', out]);
+    if (!fs.existsSync(avif)) {
+      await ffmpeg(['-i', src, '-filter_complex', `[0:v]${scale}format=yuva444p,split[c][a];[a]alphaextract[alpha];[c]format=yuv420p[col]`, '-map', '[col]', '-map', '[alpha]', '-c:v', 'libaom-av1', '-crf', '30', '-cpu-used', '6', '-still-picture', '1', '-f', 'avif', avif]);
     }
-    return out;
+    return { out, avif };
   };
   const w = Math.min(naturalWidth, Math.ceil(maxWidth * 2));
   const ws = Math.min(naturalWidth, Math.ceil(maxWidth));
-  const big = { out: await encode(w, ''), w };
-  if (ws >= w) return big;
-  return { ...big, outS: await encode(ws, '@1x'), ws };
+  const big = await encode(w, '');
+  const res = { out: big.out, avif: big.avif, w };
+  if (ws >= w) return res;
+  const small = await encode(ws, '@1x');
+  return { ...res, outS: small.out, avifS: small.avif, ws };
 }
 
 async function encodeAnimated(src) {
@@ -274,7 +283,12 @@ export function pageBytes(model, manifest, slug, phone = false) {
   const page = model.pages.find((p) => p.slug === slug);
   const sub = { ...model, pages: [page] };
   const files = new Set();
-  for (const id of usedMedia(sub).keys()) { const m = manifest.media[id]; files.add(phone && m.srcS ? m.srcS : m.src); if (m.mp4) files.add(m.mp4); }
+  for (const id of usedMedia(sub).keys()) {
+    const m = manifest.media[id];
+    // an AVIF-decoding browser (every current one) takes the AVIF of whichever width it picks
+    files.add(phone && m.srcS ? (m.avifS || m.srcS) : (m.avif || m.src));
+    if (m.mp4) files.add(m.mp4);
+  }
   for (const face of planFonts(sub)) files.add(manifest.fonts[face.key].src);
   if (hasEmbed(sub)) files.add(manifest.fonts[COUNTDOWN_FONT.key].src);
   let total = 0;
@@ -315,7 +329,7 @@ export async function buildAssets(model) {
       }
       const rel = (f) => path.relative(INVITE, f).replace(/\\/g, '/');
       // width/height are the source's; w/ws are the encoded widths the page offers through srcset
-      manifest.media[key] = { src: rel(out), width: m.width, height: m.height, kind, ...(mp4 && { mp4 }), ...(still && { w: still.w }), ...(still?.outS && { srcS: rel(still.outS), ws: still.ws }) };
+      manifest.media[key] = { src: rel(out), width: m.width, height: m.height, kind, ...(mp4 && { mp4 }), ...(still && { w: still.w, avif: rel(still.avif) }), ...(still?.outS && { srcS: rel(still.outS), ws: still.ws, avifS: rel(still.avifS) }) };
     }
     for (const face of planFonts(model)) {
       const src = await download(face.url);
@@ -342,10 +356,19 @@ export async function buildAssets(model) {
 if (isMain(import.meta.url)) {
   const model = JSON.parse(fs.readFileSync(path.join(BUILD, 'model.json'), 'utf8'));
   const manifest = await buildAssets(model);
-  const total = fs.readdirSync(ASSETS, { recursive: true }).reduce((n, f) => { const p = path.join(ASSETS, f); return n + (fs.statSync(p).isFile() ? fs.statSync(p).size : 0); }, 0);
-  console.log(`media=${Object.keys(manifest.media).length} fonts=${Object.keys(manifest.fonts).length} assets=${(total / 1e6).toFixed(1)}MB`);
-  if (total > 12e6) { console.error('assets exceed the 12 MB budget'); process.exit(1); }
-  const envelope = pageBytes(model, manifest, 'envelope');
-  console.log(`envelope page ${(envelope / 1e6).toFixed(2)}MB`);
-  if (envelope > 1.5e6) { console.error('envelope page exceeds the 1.5 MB budget'); process.exit(1); }
+  // The budget is what one visitor can pull, not the sum of every encoding on
+  // disk: the whole site as a retina desktop that decodes AVIF takes it, and
+  // as one that does not (every WebP at its full width).
+  const onDisk = fs.readdirSync(ASSETS, { recursive: true }).reduce((n, f) => { const p = path.join(ASSETS, f); return n + (fs.statSync(p).isFile() ? fs.statSync(p).size : 0); }, 0);
+  const sum = (files) => [...files].reduce((n, f) => n + fs.statSync(path.join(INVITE, f)).size, 0);
+  const media = Object.values(manifest.media), fonts = Object.values(manifest.fonts).map((f) => f.src);
+  const worst = sum(new Set([...media.flatMap((m) => [m.src, m.mp4].filter(Boolean)), ...fonts]));
+  const modern = sum(new Set([...media.flatMap((m) => [m.avif || m.src, m.mp4].filter(Boolean)), ...fonts]));
+  console.log(`media=${media.length} fonts=${fonts.length} on disk ${(onDisk / 1e6).toFixed(1)}MB; a visitor pulls at most ${(worst / 1e6).toFixed(1)}MB (WebP) / ${(modern / 1e6).toFixed(1)}MB (AVIF)`);
+  if (worst > 12e6) { console.error('a visitor would pull more than the 12 MB budget'); process.exit(1); }
+  for (const phone of [false, true]) {
+    const envelope = pageBytes(model, manifest, 'envelope', phone);
+    console.log(`envelope page ${(envelope / 1e6).toFixed(2)}MB${phone ? ' on a phone' : ''}`);
+    if (envelope > 1.5e6) { console.error('envelope page exceeds the 1.5 MB budget'); process.exit(1); }
+  }
 }

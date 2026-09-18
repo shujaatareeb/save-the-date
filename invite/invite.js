@@ -154,8 +154,13 @@
 
   // --- lazy assets --------------------------------------------------------------
   function activate(page, eager = false) {
+    // a picture's AVIF source before its img, and srcset/sizes before src, so
+    // the browser chooses once and never fetches a fallback first
+    page.querySelectorAll('source[data-srcset]').forEach((n) => {
+      if (n.dataset.sizes) { n.sizes = n.dataset.sizes; n.removeAttribute('data-sizes'); }
+      n.srcset = n.dataset.srcset; n.removeAttribute('data-srcset');
+    });
     page.querySelectorAll('[data-src]').forEach((n) => {
-      // srcset/sizes first, so the browser never fetches the plain src before choosing
       if (n.dataset.srcset) { n.sizes = n.dataset.sizes; n.srcset = n.dataset.srcset; n.removeAttribute('data-srcset'); n.removeAttribute('data-sizes'); }
       n.src = n.dataset.src; n.removeAttribute('data-src');
       if (n.tagName === 'VIDEO') n.play?.().catch(() => {});

@@ -119,13 +119,19 @@ function mediaTag(key, crop, ctx, extra = '') {
   const style = `left:${px(crop.left)};top:${px(crop.top)};width:${px(crop.width)};height:${px(crop.height)};`;
   if (m.kind === 'video') throw new Error(`media ${key} is a video; only a matte may be one, and mattes go through matteAttrs`);
   const at = ctx.eager ? '' : 'data-';
-  let srcs = `${at}src="${m.src}"`;
+  let srcs = `${at}src="${m.src}"`, sizes = '';
   if (m.srcS && ctx.cw) {
     const dw = crop.width * (ctx.k || 1);
-    srcs += ` ${at}srcset="${m.srcS} ${m.ws}w, ${m.src} ${m.w}w" ${at}sizes="(max-width: ${Math.round(ctx.cw + 15)}px) calc((100vw - 16px) * ${r(dw / ctx.cw, 4)}), ${r(dw)}px"`;
+    sizes = `(max-width: ${Math.round(ctx.cw + 15)}px) calc((100vw - 16px) * ${r(dw / ctx.cw, 4)}), ${r(dw)}px`;
+    srcs += ` ${at}srcset="${m.srcS} ${m.ws}w, ${m.src} ${m.w}w" ${at}sizes="${sizes}"`;
   }
   if (!ctx.eager) srcs += ' loading="lazy"';
-  return `<img ${srcs} width="${m.width}" height="${m.height}" alt="" decoding="async" style="${style}${extra}">`;
+  const img = `<img ${srcs} width="${m.width}" height="${m.height}" alt="" decoding="async" style="${style}${extra}">`;
+  if (!m.avif) return img;
+  // The AVIF goes first as a <source> the browser takes when it can; the WebP
+  // <img> is the fallback. Same widths, same sizes.
+  const source = m.avifS ? `<source type="image/avif" ${at}srcset="${m.avifS} ${m.ws}w, ${m.avif} ${m.w}w" ${at}sizes="${sizes}">` : `<source type="image/avif" ${at}srcset="${m.avif}">`;
+  return `<picture>${source}${img}</picture>`;
 }
 
 // #rrggbb -> [r,g,b]; also accepts the 3-digit shorthand.
@@ -347,7 +353,7 @@ main{position:relative;min-height:100vh}
 .sec{position:relative;overflow:hidden;width:100%;height:var(--h);content-visibility:auto}
 .stage{position:absolute;left:0;top:0;width:1366px;transform-origin:0 0}
 .el{position:absolute;box-sizing:border-box;transform:rotate(var(--rot,0deg));opacity:var(--op,1)}
-.img{overflow:hidden}.img>img,.img>video{position:absolute;max-width:none;display:block}
+.img{overflow:hidden}.img picture{position:absolute;left:0;top:0;width:100%;height:100%}.img img{position:absolute;max-width:none;display:block}
 .txt{overflow-wrap:break-word}.txt a{color:inherit;text-decoration:inherit}.ln{display:block}
 .txt>.tin{position:absolute;left:0;top:0;transform-origin:0 0;white-space:pre-wrap}
 a.el{display:block;text-decoration:none;color:inherit}
@@ -357,7 +363,7 @@ a.el{display:block;text-decoration:none;color:inherit}
 .el.an.done:not(.hb):not(.sp):not(.wr){animation:none;opacity:var(--op,1);transform:rotate(var(--rot,0deg))}
 .el.an.done:not(.hb):not(.sp):not(.wr)>*{animation:none}
 .el.wp{overflow:hidden}
-.el.mt:not(.in){opacity:0}.el.mt.mt-run>img{visibility:hidden}.el.mt>canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
+.el.mt:not(.in){opacity:0}.el.mt.mt-run img{visibility:hidden}.el.mt>canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
 .cd>svg{display:block;width:100%;height:100%;overflow:visible}
 .cd text{text-anchor:middle;font-family:'f-countdown',serif;font-weight:400;fill:#715449;text-rendering:geometricPrecision;user-select:none}
 .cd-d text{font-size:140px}.cd-l text{font-size:40px}

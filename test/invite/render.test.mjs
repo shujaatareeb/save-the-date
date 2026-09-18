@@ -400,7 +400,7 @@ test('an effect-30 image ships its matte for the runtime instead of a blended vi
   assert.doesNotMatch(inner, /<video|mix-blend-mode/);
   assert.doesNotMatch(html, /<video|mix-blend-mode/);
   assert.match(css, /\.el\.mt:not\(\.in\)\{opacity:0\}/);
-  assert.match(css, /\.el\.mt\.mt-run>img\{visibility:hidden\}/);
+  assert.match(css, /\.el\.mt\.mt-run img\{visibility:hidden\}/);
   assert.match(css, /\.el\.mt>canvas\{position:absolute;left:0;top:0;width:100%;height:100%/);
 });
 
@@ -580,4 +580,24 @@ test('an effect-26 entrance wipes the content in rather than sliding it', () => 
   assert.match(css, /\.el\.an\.done:not\(\.hb\):not\(\.sp\):not\(\.wr\)>\*\{animation:none\}/);
   // an ordinary entrance gets no companion
   assert.doesNotMatch(html, /class="el img an k\d+ wp"[^>]*data-id="LBmGP6J3tmzZBvKq"/);
+});
+
+// A still is a <picture>: an AVIF source first, the WebP <img> as fallback,
+// both offered at both widths with the same sizes. Lazy pages carry the
+// source's srcset as data too, for the runtime to swap in.
+test('wraps each still in a picture with an AVIF source and the WebP fallback', () => {
+  const { html, css } = render(model, assets, anims);
+  const eager = html.match(/<section class="page active" id="envelope".*?<\/section>/s)[0];
+  const pic = eager.match(/<picture><source type="image\/avif" srcset="(assets\/[0-9a-f]{12}\.avif) (\d+)w, (assets\/[0-9a-f]{12}\.avif) (\d+)w" sizes="([^"]+)"><img src="assets\/[0-9a-f]{12}\.webp" srcset="[^"]+" sizes="([^"]+)"[^>]*><\/picture>/);
+  assert.ok(pic, 'eager picture with avif source and webp img');
+  assert.equal(pic[5], pic[6], 'source and img share the sizes formula');
+  assert.ok(Number(pic[2]) < Number(pic[4]));
+  const lazy = html.match(/<section class="page" id="home".*?<\/section>/s)[0];
+  assert.match(lazy, /<picture><source type="image\/avif" data-srcset="assets\/[0-9a-f]{12}\.avif \d+w, assets\/[0-9a-f]{12}\.avif \d+w" data-sizes="[^"]+"><img data-src="assets\/[0-9a-f]{12}\.webp" data-srcset="[^"]+" data-sizes="[^"]+" loading="lazy"/);
+  // a still with a single encoding still gets its AVIF as a one-candidate source
+  assert.match(html, /<picture><source type="image\/avif" (?:data-)?srcset="assets\/[0-9a-f]{12}\.avif"><img (?:data-)?src="assets\/[0-9a-f]{12}\.webp"/);
+  // SVG stickers stay plain
+  assert.match(html, /<img (?:data-)?src="assets\/[0-9a-f]{12}\.svg"/);
+  // the picture is a real box the same size as its wrapper (a wipe's counter-move lands on it), the img keeps its crop offsets inside
+  assert.match(css, /\.img picture\{position:absolute;left:0;top:0;width:100%;height:100%\}\.img img\{position:absolute/);
 });

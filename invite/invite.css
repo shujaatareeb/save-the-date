@@ -18,7 +18,7 @@ main{position:relative;min-height:100vh}
 .sec{position:relative;overflow:hidden;width:100%;height:var(--h);content-visibility:auto}
 .stage{position:absolute;left:0;top:0;width:1366px;transform-origin:0 0}
 .el{position:absolute;box-sizing:border-box;transform:rotate(var(--rot,0deg));opacity:var(--op,1)}
-.img{overflow:hidden}.img>img,.img>video{position:absolute;max-width:none;display:block}
+.img{overflow:hidden}.img picture{position:absolute;left:0;top:0;width:100%;height:100%}.img img{position:absolute;max-width:none;display:block}
 .txt{overflow-wrap:break-word}.txt a{color:inherit;text-decoration:inherit}.ln{display:block}
 .txt>.tin{position:absolute;left:0;top:0;transform-origin:0 0;white-space:pre-wrap}
 a.el{display:block;text-decoration:none;color:inherit}
@@ -28,7 +28,7 @@ a.el{display:block;text-decoration:none;color:inherit}
 .el.an.done:not(.hb):not(.sp):not(.wr){animation:none;opacity:var(--op,1);transform:rotate(var(--rot,0deg))}
 .el.an.done:not(.hb):not(.sp):not(.wr)>*{animation:none}
 .el.wp{overflow:hidden}
-.el.mt:not(.in){opacity:0}.el.mt.mt-run>img{visibility:hidden}.el.mt>canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
+.el.mt:not(.in){opacity:0}.el.mt.mt-run img{visibility:hidden}.el.mt>canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
 .cd>svg{display:block;width:100%;height:100%;overflow:visible}
 .cd text{text-anchor:middle;font-family:'f-countdown',serif;font-weight:400;fill:#715449;text-rendering:geometricPrecision;user-select:none}
 .cd-d text{font-size:140px}.cd-l text{font-size:40px}
