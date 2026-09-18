@@ -334,23 +334,29 @@ const WRITE_ON_CSS = `.el.wr.in{opacity:var(--op,1);animation:none}
 // Abril Fatface digits 140 px tall on y 199.5 (the widget's odometer reels
 // declare them at 94.5 and translate the reel), two per unit centred 80
 // apart, colons between, 40 px labels on y 300, all #715449, under a
-// letterpress filter
-// (a lightened copy up-left, a darkened one down-right). This is that SVG,
-// drawn by hand; the runtime writes the digits.
-const COUNTDOWN_FILTER = (id, dx) => `<filter id="${id}" x="-50%" y="-100%" width="200%" height="300%"><feOffset in="SourceAlpha" dx="${-dx}" dy="${-dx}" result="topLeft"/><feComponentTransfer in="topLeft" result="lightShadow"><feFuncR type="linear" slope="1.5" intercept="0.2"/><feFuncG type="linear" slope="1.5" intercept="0.2"/><feFuncB type="linear" slope="1.5" intercept="0.2"/></feComponentTransfer><feOffset in="SourceAlpha" dx="${dx}" dy="${dx}" result="bottomRight"/><feComponentTransfer in="bottomRight" result="darkShadow"><feFuncR type="linear" slope="0.5" intercept="-0.2"/><feFuncG type="linear" slope="0.5" intercept="-0.2"/><feFuncB type="linear" slope="0.5" intercept="-0.2"/></feComponentTransfer><feMerge><feMergeNode in="lightShadow"/><feMergeNode in="darkShadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+// letterpress: a lightened copy 2 px up-left, a darkened one 2 px down-right.
+// The widget does that with an SVG filter; ours is three plain copies of the
+// text — WebKit rasterises a filter's whole region into several buffers on
+// every paint, and with the digits repainting each second at 3× on a phone
+// that was enough to have iOS reload the page. The runtime writes the digits
+// into all three copies.
 const COUNTDOWN_SVG = (() => {
   const units = [['d', 60, 140], ['h', 260, 340], ['m', 460, 540], ['s', 660, 740]];
-  const digits = units.map(([u, a, b]) => `<text data-cd="${u}" y="199.5" dominant-baseline="central" filter="url(#cd-fx-d)"><tspan x="${a}">0</tspan><tspan x="${b}">0</tspan></text>`);
-  const colons = [200, 400, 600].map((x) => `<text x="${x}" y="199.5" dominant-baseline="central" filter="url(#cd-fx-d)">:</text>`);
-  const labels = [[100, 'DAYS'], [300, 'HOURS'], [500, 'MINS'], [700, 'SECS']].map(([x, l]) => `<text x="${x}" y="300" dominant-baseline="central" filter="url(#cd-fx-l)">${l}</text>`);
-  return `<svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice"><defs>${COUNTDOWN_FILTER('cd-fx-d', 2)}${COUNTDOWN_FILTER('cd-fx-l', 0)}</defs><g class="cd-l">${labels.join('')}</g><g class="cd-d">${digits.join('')}${colons.join('')}</g></svg>`;
+  const layer = (dx, dy) => {
+    const digits = units.map(([u, a, b]) => `<text data-cd="${u}" y="${199.5 + dy}" dominant-baseline="central"><tspan x="${a + dx}">0</tspan><tspan x="${b + dx}">0</tspan></text>`);
+    const colons = [200, 400, 600].map((x) => `<text x="${x + dx}" y="${199.5 + dy}" dominant-baseline="central">:</text>`);
+    const labels = [[100, 'DAYS'], [300, 'HOURS'], [500, 'MINS'], [700, 'SECS']].map(([x, l]) => `<text x="${x + dx}" y="${300 + dy}" dominant-baseline="central">${l}</text>`);
+    return { labels: labels.join(''), digits: digits.join('') + colons.join('') };
+  };
+  const lo = layer(-2, -2), dk = layer(2, 2), main = layer(0, 0);
+  return `<svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice"><g class="cd-l cd-lo">${lo.labels}</g><g class="cd-l cd-dk">${dk.labels}</g><g class="cd-l">${main.labels}</g><g class="cd-d cd-lo">${lo.digits}</g><g class="cd-d cd-dk">${dk.digits}</g><g class="cd-d">${main.digits}</g></svg>`;
 })();
 
 const BASE_CSS = `
 html,body{margin:0;background:#f4efe8;overflow-x:hidden;-webkit-text-size-adjust:100%}
 main{position:relative;min-height:100vh}
 .page{display:none}.page.active{display:block}
-.sec{position:relative;overflow:hidden;width:100%;height:var(--h);content-visibility:auto}
+.sec{position:relative;overflow:hidden;width:100%;height:var(--h)}
 .stage{position:absolute;left:0;top:0;width:1366px;transform-origin:0 0}
 .el{position:absolute;box-sizing:border-box;transform:rotate(var(--rot,0deg));opacity:var(--op,1)}
 .img{overflow:hidden}.img picture{position:absolute;left:0;top:0;width:100%;height:100%}.img img{position:absolute;max-width:none;display:block}
@@ -367,6 +373,7 @@ a.el{display:block;text-decoration:none;color:inherit}
 .cd>svg{display:block;width:100%;height:100%;overflow:visible}
 .cd text{text-anchor:middle;font-family:'f-countdown',serif;font-weight:400;fill:#715449;text-rendering:geometricPrecision;user-select:none}
 .cd-d text{font-size:140px}.cd-l text{font-size:40px}
+.cd-lo text{fill:rgba(255,255,255,.45)}.cd-dk text{fill:rgba(0,0,0,.2)}
 `;
 
 const RESTING_FRAME = { t: 1, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null }; // dr (rotation) absent = 0

@@ -15,7 +15,7 @@
 html,body{margin:0;background:#f4efe8;overflow-x:hidden;-webkit-text-size-adjust:100%}
 main{position:relative;min-height:100vh}
 .page{display:none}.page.active{display:block}
-.sec{position:relative;overflow:hidden;width:100%;height:var(--h);content-visibility:auto}
+.sec{position:relative;overflow:hidden;width:100%;height:var(--h)}
 .stage{position:absolute;left:0;top:0;width:1366px;transform-origin:0 0}
 .el{position:absolute;box-sizing:border-box;transform:rotate(var(--rot,0deg));opacity:var(--op,1)}
 .img{overflow:hidden}.img picture{position:absolute;left:0;top:0;width:100%;height:100%}.img img{position:absolute;max-width:none;display:block}
@@ -32,6 +32,7 @@ a.el{display:block;text-decoration:none;color:inherit}
 .cd>svg{display:block;width:100%;height:100%;overflow:visible}
 .cd text{text-anchor:middle;font-family:'f-countdown',serif;font-weight:400;fill:#715449;text-rendering:geometricPrecision;user-select:none}
 .cd-d text{font-size:140px}.cd-l text{font-size:40px}
+.cd-lo text{fill:rgba(255,255,255,.45)}.cd-dk text{fill:rgba(0,0,0,.2)}
 .el.pl{animation:plo 1.11s ease-in-out infinite}.el.pl.pls{animation:plo 1.11s ease-in-out infinite,pls .9s ease-in-out infinite}
 @keyframes plo{0%,100%{opacity:var(--op,1)}50%{opacity:calc(var(--op,1)*.35)}}
 @keyframes pls{0%,100%{transform:rotate(var(--rot,0deg)) scale(.85)}34%{transform:rotate(var(--rot,0deg)) scale(1.14)}}

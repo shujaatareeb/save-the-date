@@ -464,12 +464,21 @@ test('the countdown is the widget\'s own SVG geometry', () => {
   const svg = m[1];
   assert.match(svg, /^<svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">/);
   for (const [u, x1, x2] of [['d', 60, 140], ['h', 260, 340], ['m', 460, 540], ['s', 660, 740]]) {
-    assert.match(svg, new RegExp(`<text data-cd="${u}" y="199.5"[^>]*><tspan x="${x1}">0</tspan><tspan x="${x2}">0</tspan></text>`), `unit ${u}`);
+    assert.match(svg, new RegExp(`<g class="cd-d">.*?<text data-cd="${u}" y="199.5"[^>]*><tspan x="${x1}">0</tspan><tspan x="${x2}">0</tspan></text>`, 's'), `unit ${u}`);
   }
   for (const x of [200, 400, 600]) assert.match(svg, new RegExp(`<text x="${x}" y="199.5"[^>]*>:</text>`));
   for (const [x, l] of [[100, 'DAYS'], [300, 'HOURS'], [500, 'MINS'], [700, 'SECS']]) assert.match(svg, new RegExp(`<text x="${x}" y="300"[^>]*>${l}</text>`));
-  assert.match(svg, /<filter id="cd-fx-d"/);
-  assert.match(svg, /<filter id="cd-fx-l"/);
+  // The letterpress is two plain offset copies behind each text — a light one
+  // up-left, a dark one down-right — not an SVG filter: WebKit rasterises a
+  // filter's whole region into several buffers on every paint, and with the
+  // digits repainting each second at 3× on a phone that was enough to have
+  // iOS reload the page.
+  assert.doesNotMatch(svg, /<filter|filter=/);
+  assert.match(svg, /<g class="cd-l cd-lo"><text[^>]*>DAYS<\/text>/, 'light copies of the labels');
+  assert.match(svg, /<g class="cd-d cd-lo"><text data-cd="d"[^>]*><tspan x="58">0<\/tspan><tspan x="138">0<\/tspan><\/text>/, 'light copy of the digits, 2px up-left');
+  assert.match(svg, /<g class="cd-d cd-dk"><text data-cd="d"[^>]*><tspan x="62">0<\/tspan><tspan x="142">0<\/tspan><\/text>/, 'dark copy, 2px down-right');
+  assert.match(css, /\.cd-lo text\{fill:rgba\(255,255,255,\.45\)\}\.cd-dk text\{fill:rgba\(0,0,0,\.2\)\}/);
+  assert.equal((svg.match(/data-cd="s"/g) || []).length, 3, 'three copies of each unit, all updated by the runtime');
   assert.match(css, /@font-face\{font-family:'f-countdown';src:url\(assets\/fonts\/[0-9a-f]{12}\.woff2\) format\('woff2'\)/);
   assert.match(css, /\.cd text\{[^}]*font-family:'f-countdown'[^}]*fill:#715449/);
   assert.match(css, /\.cd-d text\{font-size:140px\}\.cd-l text\{font-size:40px\}/);
@@ -552,7 +561,7 @@ test('keyframes carry a filter only when a frame blurs, and a finished entrance 
   assert.match(keyframeCss('k2', [f(0, 8, 0), f(1, 0)]), /100%\{[^}]*filter:blur\(0px\)/);
   const { css } = render(model, assets, anims);
   assert.match(css, /\.el\.an\.done:not\(\.hb\):not\(\.sp\):not\(\.wr\)\{animation:none;opacity:var\(--op,1\);transform:rotate\(var\(--rot,0deg\)\)\}/);
-  assert.match(css, /\.sec\{[^}]*content-visibility:auto/);
+  assert.doesNotMatch(css, /content-visibility/);
 });
 
 // Canva's effect 26 is a wipe: the element's clipping box sweeps across its
