@@ -403,3 +403,29 @@ test('a recorded loop with no effect and a 0.35 opacity floor is Canva\'s button
   // A loop that genuinely goes to zero is an entrance, not a pulse.
   assert.match(wrapper('LBwySg2vwJKtFn3Y'), /class="el img an /);
 });
+
+// Canva's effect 18 writes a text on one character at a time — each character
+// (spaces included) fades in ~72 ms after the one before, the fade itself
+// lasting what the recorder measured. The recorder marks these entries with
+// `parts` (many short-lived nodes on one text element); render turns them into
+// per-character spans with a staggered delay instead of one fade for the block.
+test('a text recorded in parts writes on character by character', () => {
+  const { html, css } = render(model, assets, anims);
+  const textOf = (id) => { let hit; const walk = (els) => els.forEach((e) => { if (e.id === id) hit = e; if (e.children) walk(e.children); }); model.pages.forEach((p) => p.sections.forEach((s) => walk(s.elements))); return hit.text.replace(/\n/g, ''); };
+  for (const id of ['LBHF3m9B2D2zRr53', 'LBwHyJnDhFdwT00m']) {
+    const text = textOf(id);
+    const m = html.match(new RegExp(`<div class="el txt an wr"[^>]*data-id="${id}"[^>]*style="([^"]*)"[^>]*>(.*?)</div></div>`, 's'));
+    assert.ok(m, `${id} is a write-on`);
+    assert.match(m[1], /--dur:\d+ms;/);
+    assert.match(m[1], /--step:72ms;/);
+    const chars = [...m[2].matchAll(/<span class="ch" style="--i:(\d+)">(.*?)<\/span>/g)].map((c) => [Number(c[1]), c[2]]);
+    assert.equal(chars.map((c) => c[1]).join(''), text.replace('&', '&amp;'), `${id} characters`);
+    assert.deepEqual(chars.map((c) => c[0]), chars.map((_, i) => i), `${id} indices count spaces`);
+    assert.doesNotMatch(m[0], /class="el txt an wr k\d/, 'no block keyframes on top of the write-on');
+  }
+  assert.match(css, /\.el\.wr\.in\{opacity:var\(--op,1\);animation:none\}/);
+  assert.match(css, /\.el\.wr \.ch\{opacity:0\}\.el\.wr\.in \.ch\{animation:wr var\(--dur,800ms\) linear both;animation-delay:calc\(var\(--del,0ms\) \+ var\(--i\)\*var\(--step,72ms\)\)\}/);
+  assert.match(css, /@keyframes wr\{from\{opacity:0\}to\{opacity:1\}\}/);
+  // A text without parts is untouched.
+  assert.doesNotMatch(html.match(/<div class="el txt[^>]*data-id="LBpx4R6Jb5dzwf96"[^>]*>.*?<\/div><\/div>/s)[0], /class="ch"/);
+});

@@ -51,6 +51,10 @@ function animAttrs(el, ctx) {
   if (!a) return { cls: '', style: '' };
   if (isPulse(el, a)) { ctx.pulses.used = true; return { cls: pulseScales(a) ? ' pl pls' : ' pl', style: '' }; }
   const del = `--del:${Math.max(0, a.startMs - (ctx.sectionStart || 0))}ms;`;
+  // Write-on: characters fade in one after another, 72 ms apart (measured on
+  // the live page for both such texts), each for as long as the recorder saw
+  // the first one take. No block keyframes on top.
+  if (a.writeOn) { ctx.pulses.writeOn = true; return { cls: ' an wr', style: `--dur:${Math.max(300, a.durationMs)}ms;${del}--step:72ms;` }; }
   if (!a.loop) {
     const g = ctx.groupFor('once', a.frames, null);
     return { cls: ` an ${g.name}`, style: `--dur:${a.durationMs}ms;${del}` };
@@ -172,11 +176,13 @@ function runStyle(run, backgroundCss) {
 // wrapper's own width/height/scale, laying the block out at its natural size
 // and scaling it into its box — Canva's exact line breaks then hold). A block
 // with no naturals (shape text) gets `width:100%` and no transform.
-export function renderTextBlock(block, effects) {
+// `perChar` wraps every character (spaces included) in its own span numbered
+// in reading order, for a write-on entrance (see animAttrs).
+export function renderTextBlock(block, effects, perChar = false) {
   const first = block.runs[0] || {};
   const fx = textEffects(effects, first.size || 16);
   const lines = [];
-  let pos = 0;
+  let pos = 0, ch = 0;
   for (const count of block.lines) {
     const start = pos, end = pos + count; pos = end;
     let line = '';
@@ -185,7 +191,8 @@ export function renderTextBlock(block, effects) {
       if (b <= a) continue;
       const piece = block.text.slice(a, b).replace(/\n$/, '');
       if (!piece) continue;
-      const span = `<span style="${runStyle(run, fx.background)}">${escapeHtml(piece)}</span>`;
+      const text = perChar ? [...piece].map((c) => `<span class="ch" style="--i:${ch++}">${escapeHtml(c)}</span>`).join('') : escapeHtml(piece);
+      const span = `<span style="${runStyle(run, fx.background)}">${text}</span>`;
       line += run.link ? `<a href="${attr(run.link)}">${span}</a>` : span;
     }
     lines.push(`<span class="ln">${line || '&nbsp;'}</span>`);
@@ -217,7 +224,7 @@ export function renderElement(el, ctx) {
     return `${open(el, matte ? 'img mt' : 'img', ctx, '', matte, !matte)}${mediaTag(assetKey(el.media, el.recolor), el.crop, ctx)}${close(el)}`;
   }
   if (el.kind === 'text') {
-    const { style, html, inner } = renderTextBlock(el, el.effects);
+    const { style, html, inner } = renderTextBlock(el, el.effects, !!ctx.anims[el.id]?.writeOn);
     return `${open(el, 'txt', ctx)}<div class="tin" style="${inner}${style}">${html}</div>${close(el)}`;
   }
   if (el.kind === 'group') {
@@ -265,6 +272,11 @@ export function keyframeCss(name, frames) {
 const PULSE_CSS = `.el.pl{animation:plo 1.11s ease-in-out infinite}.el.pl.pls{animation:plo 1.11s ease-in-out infinite,pls .9s ease-in-out infinite}
 @keyframes plo{0%,100%{opacity:var(--op,1)}50%{opacity:calc(var(--op,1)*.35)}}
 @keyframes pls{0%,100%{transform:rotate(var(--rot,0deg)) scale(.85)}50%{transform:rotate(var(--rot,0deg)) scale(1.14)}}`;
+
+// Canva's write-on text entrance (see animAttrs), emitted once when used.
+const WRITE_ON_CSS = `.el.wr.in{opacity:var(--op,1);animation:none}
+.el.wr .ch{opacity:0}.el.wr.in .ch{animation:wr var(--dur,800ms) linear both;animation-delay:calc(var(--del,0ms) + var(--i)*var(--step,72ms))}
+@keyframes wr{from{opacity:0}to{opacity:1}}`;
 
 const BASE_CSS = `
 html,body{margin:0;background:#f4efe8;overflow-x:hidden;-webkit-text-size-adjust:100%}
@@ -366,7 +378,7 @@ export function render(model, assets, anims) {
   // kind is 'once' (plain one-shot: entrance holds the frames, idle is null), 'split' (entrance
   // then idle) or 'idleOnly' (idle holds the frames, entrance is null).
   const animGroups = new Map();
-  const pulses = { used: false };
+  const pulses = { used: false, writeOn: false }; // which on-demand CSS blocks the deck needs
   const groupFor = (kind, entrance, idle) => {
     const key = JSON.stringify({ kind, entrance, idle });
     let g = animGroups.get(key);
@@ -382,6 +394,10 @@ export function render(model, assets, anims) {
   // animations.json itself is never modified.
   function processEntry(entry) {
     if (!entry.frames?.length) return null;
+    // A text the recorder saw in parts (one short-lived node per character) is
+    // Canva's write-on: the frames belong to the earliest character alone and
+    // only its length matters — every character fades that long, in turn.
+    if (entry.parts) return { ...entry, writeOn: true };
     const hygiened = hygieneFrames(entry.frames);
     const { frames, durationMs } = trimLeadingHold(hygiened, entry.durationMs);
     if (!entry.loop) {
@@ -458,7 +474,7 @@ export function render(model, assets, anims) {
     }
     return `${keyframeCss(g.name, g.entrance)}\n.${g.name}.in{animation-name:${g.name}}`;
   });
-  const css = [...faces, BASE_CSS.trim(), ...(pulses.used ? [PULSE_CSS] : []), ...animations].join('\n');
+  const css = [...faces, BASE_CSS.trim(), ...(pulses.used ? [PULSE_CSS] : []), ...(pulses.writeOn ? [WRITE_ON_CSS] : []), ...animations].join('\n');
   const html = `<!doctype html>
 <html lang="en">
 <head>
