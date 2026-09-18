@@ -231,6 +231,20 @@ test('lets go of an entrance once it has played, and keeps the beat, the spin an
   await page.close();
 });
 
+test('an iPhone keeps the WebP: its AVIF sources are dropped before they can load', async () => {
+  const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3 });
+  await ctx.addInitScript(() => { Object.defineProperty(navigator, 'platform', { get: () => 'iPhone' }); });
+  const page = await ctx.newPage();
+  const avifRequests = []; page.on('request', (r) => { if (r.url().endsWith('.avif')) avifRequests.push(r.url()); });
+  await page.goto(`${site.url}/invite/#home`, { waitUntil: 'networkidle' });
+  await page.waitForFunction(() => [...document.querySelectorAll('#home img')].filter((i) => i.currentSrc).length > 10);
+  const st = await page.evaluate(() => ({ sources: document.querySelectorAll('source').length, webp: [...document.querySelectorAll('#home img')].filter((i) => i.currentSrc.endsWith('.webp')).length }));
+  assert.equal(st.sources, 0, 'no avif sources left anywhere');
+  assert.ok(st.webp > 10);
+  assert.deepEqual(avifRequests, []);
+  await ctx.close();
+});
+
 test('a browser that decodes AVIF is served it, and activation swaps the source too', async () => {
   const { page } = await open(390, '#home');
   await page.waitForFunction(() => [...document.querySelectorAll('#home img')].filter((i) => i.currentSrc).length > 10);
@@ -243,6 +257,9 @@ test('a browser that decodes AVIF is served it, and activation swaps the source 
   assert.equal(st.pendingSources, 0);
   assert.ok(st.liveSources > 10);
   assert.ok(st.avif > 10 && st.webp === 0, `avif ${st.avif}, webp ${st.webp}`);
+  // the envelope's pictures were eager WebP before the runtime ran, and stay so — nothing is fetched twice
+  const env = await page.evaluate(() => ({ webp: [...document.querySelectorAll('#envelope img')].filter((i) => i.currentSrc.endsWith('.webp')).length, avifSources: document.querySelectorAll('#envelope source[srcset]').length }));
+  assert.ok(env.webp > 5 && env.avifSources === 0, JSON.stringify(env));
   await page.close();
 });
 

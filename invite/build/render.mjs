@@ -130,8 +130,12 @@ function mediaTag(key, crop, ctx, extra = '') {
   const img = `<img ${srcs} width="${m.width}" height="${m.height}" alt="" decoding="async" style="${style}${extra}">`;
   if (!m.avif) return img;
   // The AVIF goes first as a <source> the browser takes when it can; the WebP
-  // <img> is the fallback. Same widths, same sizes.
-  const source = m.avifS ? `<source type="image/avif" ${at}srcset="${m.avifS} ${m.ws}w, ${m.avif} ${m.w}w" ${at}sizes="${sizes}">` : `<source type="image/avif" ${at}srcset="${m.avif}">`;
+  // <img> is the fallback. Same widths, same sizes. The source is always held
+  // as data, even on the eager envelope, because the runtime decides who gets
+  // it: iOS decodes AVIF in software and has reloaded the page over it, so it
+  // keeps the WebP — and an envelope whose WebP is already on its way is not
+  // asked for the AVIF as well.
+  const source = m.avifS ? `<source type="image/avif" data-srcset="${m.avifS} ${m.ws}w, ${m.avif} ${m.w}w" data-sizes="${sizes}">` : `<source type="image/avif" data-srcset="${m.avif}">`;
   return `<picture>${source}${img}</picture>`;
 }
 
