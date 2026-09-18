@@ -380,7 +380,7 @@ test('escapes outline colour before placing it in inline CSS', () => {
 
 test('preserves whitespace in shape text blocks', () => {
   const { css } = render(model, assets, {});
-  assert.match(css, /\.stxt\{[^}]*white-space:pre-wrap/);
+  assert.match(css, /\.stxt\{[^}]*white-space:pre\}/); // preserved, and never wrapped on its own
 });
 
 // Canva's effect 30 is a luma-matte reveal: the animation's video is a
@@ -620,4 +620,30 @@ test('marks each section\'s first bleed as its background', () => {
   assert.match(nikah, /class="el img[^"]*\bbg\b[^"]*"[^>]*data-id="LBg5tzRNb6dfJhmv"/, 'the satin is the background');
   assert.doesNotMatch(nikah, /class="el img[^"]*\bbg\b[^"]*"[^>]*data-id="LB7xDzbSWgpSSlhD"/, 'the second bleed is not');
   assert.equal((nikah.match(/\bbg\b[^"]*"[^>]*data-id/g) || []).length, 1);
+});
+
+test('marks a section\'s frame for the runtime', () => {
+  const { html } = render(model, assets, anims);
+  assert.match(html, /class="el shp[^"]*\bfr\b[^"]*"[^>]*data-id="LBmXYWhntCSrpFtH"/);
+  assert.equal((html.match(/\bfr\b[^"]*"[^>]*data-id/g) || []).length, 1);
+});
+
+// A stroked path keeps its stroke at its design width whatever the shape's
+// box is stretched to — Canva draws shape strokes in design pixels.
+test('draws a path\'s stroke at its design width, unscaled by the box', () => {
+  const { html } = render(model, assets, anims);
+  const frame = html.match(/data-id="LBmXYWhntCSrpFtH"[^>]*>(<svg.*?<\/svg>)/s)[1];
+  assert.match(frame, /<path d="M0 0H64V64H0z" fill="none" stroke="#715449" stroke-width="1" vector-effect="non-scaling-stroke"\/>/);
+  const gold = html.match(/data-id="LBxLcThlXtcKV5sJ"[^>]*>(<svg.*?<\/svg>)/s)[1];
+  assert.match(gold, /stroke="#ae8d3f" stroke-width="1" vector-effect="non-scaling-stroke"/);
+});
+
+// Every line of a text block is Canva's own line (the model lists them), so a
+// line must never wrap on its own: a run that measures a hair wider than the
+// block's natural width — "With Best Compliments" at 461 px in a 460.27 px
+// box on WebKit — broke onto two lines.
+test('a text line never wraps of its own accord', () => {
+  const { css } = render(model, assets, anims);
+  assert.match(css, /\.txt>\.tin\{[^}]*white-space:pre\}/);
+  assert.doesNotMatch(css, /pre-wrap/);
 });

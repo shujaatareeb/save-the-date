@@ -150,3 +150,33 @@ test('carries the natural text size and superscript runs', () => {
   assert.equal(sup.super, true);
   assert.equal(date.runs[0].super, false);
 });
+
+// A sparse section — a few centred lines inside one wide frame shape, like the
+// home page's "Thank you" — is re-laid-out by Canva on a phone: the text scaled
+// up to read and the frame stretched to hug it. The frame is the one wide
+// non-bleed shape or image whose other content is much narrower than it; it
+// is left out of the content column (so the text sets the scale) and marked
+// for the runtime to stretch.
+test('leaves a sparse section\'s frame out of its content column and marks it', () => {
+  const model = extractModel(canva);
+  const home = model.pages.find((p) => p.slug === 'home');
+  const thanks = home.sections[3];
+  assert.equal(thanks.frame, 'LBmXYWhntCSrpFtH');
+  assert.ok(thanks.content.width < 700 && thanks.content.width > 600, `content column ${thanks.content.width}`);
+  // no other section has a frame
+  const framed = model.pages.flatMap((p) => p.sections.filter((s) => s.frame).map((s) => p.slug));
+  assert.deepEqual(framed, ['home']);
+});
+
+// A shape path may be drawn with a stroke (`b[].C`: width, colour) and no
+// fill — the thin frames round the countdown and the thank-you block are
+// exactly that, and rendered as fill-only they were invisible.
+test('keeps a path\'s stroke', () => {
+  const model = extractModel(canva);
+  const find = (id) => { let hit; model.pages.forEach((p) => p.sections.forEach((s) => { const w = (els) => els.forEach((e) => { if (e.id === id) hit = e; if (e.children) w(e.children); }); w(s.elements); })); return hit; };
+  assert.deepEqual(find('LBmXYWhntCSrpFtH').paths[0].stroke, { width: 1, color: '#715449' });
+  assert.deepEqual(find('LBxLcThlXtcKV5sJ').paths[0].stroke, { width: 1, color: '#ae8d3f' });
+  assert.equal(find('LBmXYWhntCSrpFtH').paths[0].fill.color, 'none');
+  const stroked = []; model.pages.forEach((p) => p.sections.forEach((s) => s.elements.forEach((e) => { if (e.kind === 'shape' && e.paths.some((x) => x.stroke)) stroked.push(e.id); })));
+  assert.equal(stroked.length, 2);
+});

@@ -281,6 +281,28 @@ test('a page with several sections, or one taller than the screen, is left alone
   await desk.page.close();
 });
 
+test('a sparse section reads big on a phone, its frame stretched to the screen', async () => {
+  const { page } = await open(390, '#home');
+  await page.waitForTimeout(400);
+  const st = await page.evaluate(() => {
+    const sec = [...document.querySelectorAll('#home .sec')].at(-1);
+    const k = +getComputedStyle(sec.querySelector('.stage')).transform.match(/matrix\(([^,]+)/)[1];
+    const fr = sec.querySelector('.el.fr').getBoundingClientRect();
+    const t = document.querySelector('[data-id="LBG0ByNsdmqksMcZ"]').getBoundingClientRect();
+    return { k: +k.toFixed(3), frLeft: Math.round(fr.left), frRight: Math.round(fr.right), textW: Math.round(t.width), secW: Math.round(sec.getBoundingClientRect().width) };
+  });
+  assert.ok(st.k > 0.55 && st.k < 0.65, `k=${st.k}`);
+  assert.ok(Math.abs(st.frLeft - 16) <= 1 && Math.abs(st.frRight - 374) <= 1, `frame spans the screen with a 16px margin: ${st.frLeft}..${st.frRight}`);
+  assert.ok(st.textW > 240, `"Thank you" block is ${st.textW}px wide (432 design px at k)`);
+  await page.close();
+  // on a desktop the frame keeps its design box
+  const desk = await open(1366, '#home');
+  await desk.page.waitForTimeout(300);
+  const d = await desk.page.evaluate(() => { const fr = document.querySelector('#home .el.fr'); return { left: fr.style.left, width: fr.style.width }; });
+  assert.equal(d.left, '76.79px'); assert.equal(d.width, '1235.71px');
+  await desk.page.close();
+});
+
 test('the countdown ticks toward nine in the evening on 10 October 2026, local time', async () => {
   const { page } = await open(390, '#home');
   await page.waitForTimeout(1100);

@@ -263,10 +263,11 @@ function matteAttrs(el, ctx) {
 }
 
 export function renderElement(el, ctx) {
+  const fr = ctx.frame === el.id ? ' fr' : '';
   if (el.kind === 'image') {
     const matte = matteAttrs(el, ctx);
     const bg = ctx.background === el.id ? ' bg' : '';
-    return `${open(el, (matte ? 'img mt' : 'img') + bg, ctx, '', matte, !matte)}${mediaTag(assetKey(el.media, el.recolor), el.crop, ctx)}${close(el)}`;
+    return `${open(el, (matte ? 'img mt' : 'img') + bg + fr, ctx, '', matte, !matte)}${mediaTag(assetKey(el.media, el.recolor), el.crop, ctx)}${close(el)}`;
   }
   if (el.kind === 'text') {
     const { style, html, inner } = renderTextBlock(el, el.effects, !!ctx.anims[el.id]?.writeOn);
@@ -290,11 +291,13 @@ export function renderElement(el, ctx) {
         defs += `<pattern id="${id}" patternUnits="userSpaceOnUse" x="0" y="0" width="${r(W)}" height="${r(H)}"><image ${hrefAttr} x="${r(c.left)}" y="${r(c.top)}" width="${r(c.width)}" height="${r(c.height)}" preserveAspectRatio="none"/></pattern>`;
         paths += `<path d="${attr(p.d)}" fill="url(#${id})"/>`;
       } else {
-        paths += `<path d="${attr(p.d)}" fill="${attr(p.fill.color)}"/>`;
+        // a stroke stays at its design width however the box is stretched, as on Canva
+        const stroke = p.stroke ? ` stroke="${attr(p.stroke.color)}" stroke-width="${r(p.stroke.width, 2)}" vector-effect="non-scaling-stroke"` : '';
+        paths += `<path d="${attr(p.d)}" fill="${attr(p.fill.color)}"${stroke}/>`;
       }
     });
     const text = el.text ? (() => { const t = renderTextBlock(el.text, []); return `<div class="stxt" style="${t.style}">${t.html}</div>`; })() : '';
-    return `${open(el, 'shp', ctx)}<svg viewBox="0 0 ${r(W)} ${r(H)}" preserveAspectRatio="none">${defs ? `<defs>${defs}</defs>` : ''}${paths}</svg>${text}${close(el)}`;
+    return `${open(el, 'shp' + fr, ctx)}<svg viewBox="0 0 ${r(W)} ${r(H)}" preserveAspectRatio="none">${defs ? `<defs>${defs}</defs>` : ''}${paths}</svg>${text}${close(el)}`;
   }
   if (el.kind === 'embed') return `${open(el, 'cd', ctx)}${COUNTDOWN_SVG}${close(el)}`;
   throw new Error(`cannot render kind ${el.kind} (${el.id})`);
@@ -363,10 +366,10 @@ main{position:relative;min-height:100vh}
 .el{position:absolute;box-sizing:border-box;transform:rotate(var(--rot,0deg));opacity:var(--op,1)}
 .img{overflow:hidden}.img picture{position:absolute;left:0;top:0;width:100%;height:100%}.img img{position:absolute;max-width:none;display:block}
 .txt{overflow-wrap:break-word}.txt a{color:inherit;text-decoration:inherit}.ln{display:block}
-.txt>.tin{position:absolute;left:0;top:0;transform-origin:0 0;white-space:pre-wrap}
+.txt>.tin{position:absolute;left:0;top:0;transform-origin:0 0;white-space:pre}
 a.el{display:block;text-decoration:none;color:inherit}
 .grp>.gin{position:absolute;left:0;top:0;transform-origin:0 0}
-.shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;white-space:pre-wrap}
+.shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;white-space:pre}
 .el.an{opacity:0;animation-fill-mode:both;animation-timing-function:linear;animation-duration:var(--dur,800ms);animation-delay:var(--del,0ms)}
 .el.an.done:not(.hb):not(.sp):not(.wr){animation:none;opacity:var(--op,1);transform:rotate(var(--rot,0deg))}
 .el.an.done:not(.hb):not(.sp):not(.wr)>*{animation:none}
@@ -535,7 +538,7 @@ export function render(model, assets, anims) {
       walk(s.elements);
       const starts = Object.values(elementAnims).filter((a) => !a.borrowed).map((a) => a.startMs).filter((n) => n != null);
       const c = s.content;
-      const ctx = { assets, anims: elementAnims, eager, groupFor, pulses, cw: c.width, background: backgroundOf(s)?.id, sectionStart: starts.length ? Math.min(...starts) : 0 };
+      const ctx = { assets, anims: elementAnims, eager, groupFor, pulses, cw: c.width, background: backgroundOf(s)?.id, frame: s.frame, sectionStart: starts.length ? Math.min(...starts) : 0 };
       const bg = s.background ? `background:${s.background};` : '';
       const els = s.elements.map((e) => renderElement(e, ctx)).join('\n');
       return `<div class="sec" data-h="${r(s.height)}" data-cl="${r(c.left)}" data-cw="${r(c.width)}" style="--h:${px(s.height)};${bg}"><div class="stage">\n${els}\n</div></div>`;

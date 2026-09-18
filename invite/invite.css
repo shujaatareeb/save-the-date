@@ -20,10 +20,10 @@ main{position:relative;min-height:100vh}
 .el{position:absolute;box-sizing:border-box;transform:rotate(var(--rot,0deg));opacity:var(--op,1)}
 .img{overflow:hidden}.img picture{position:absolute;left:0;top:0;width:100%;height:100%}.img img{position:absolute;max-width:none;display:block}
 .txt{overflow-wrap:break-word}.txt a{color:inherit;text-decoration:inherit}.ln{display:block}
-.txt>.tin{position:absolute;left:0;top:0;transform-origin:0 0;white-space:pre-wrap}
+.txt>.tin{position:absolute;left:0;top:0;transform-origin:0 0;white-space:pre}
 a.el{display:block;text-decoration:none;color:inherit}
 .grp>.gin{position:absolute;left:0;top:0;transform-origin:0 0}
-.shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;white-space:pre-wrap}
+.shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;white-space:pre}
 .el.an{opacity:0;animation-fill-mode:both;animation-timing-function:linear;animation-duration:var(--dur,800ms);animation-delay:var(--del,0ms)}
 .el.an.done:not(.hb):not(.sp):not(.wr){animation:none;opacity:var(--op,1);transform:rotate(var(--rot,0deg))}
 .el.an.done:not(.hb):not(.sp):not(.wr)>*{animation:none}

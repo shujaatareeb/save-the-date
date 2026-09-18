@@ -20,6 +20,7 @@
   const bySlug = (slug) => pages.find((p) => p.dataset.page === slug);
 
   // --- scaling -------------------------------------------------------------
+  document.querySelectorAll('.el.fr').forEach((fr) => { fr.dataset.left = fr.style.left; fr.dataset.width = fr.style.width; });
   function scaleSection(sec) {
     const stage = sec.querySelector('.stage');
     if (!stage) return;
@@ -37,6 +38,14 @@
     const secH = fill ? vh : ch, ty = 0;
     sec.style.height = `${secH}px`;
     stage.style.transform = `translate(${tx}px,0) scale(${k})`;
+    // A sparse section's frame (see frameOf in the build) hugs the screen on a
+    // phone — Canva stretches it to the content it holds — and keeps its design
+    // box wherever the column is not being fitted.
+    const fr = sec.querySelector('.stage > .el.fr');
+    if (fr) {
+      if (k < 1) { fr.style.left = `${(2 * PAD - tx) / k}px`; fr.style.width = `${(vw - 4 * PAD) / k}px`; }
+      else { fr.style.left = fr.dataset.left; fr.style.width = fr.dataset.width; }
+    }
     const bg = sec.querySelector('.stage > .el.bg');
     if (!bg) return;
     if (!fill) { bg.style.scale = ''; bg.style.translate = ''; return; }

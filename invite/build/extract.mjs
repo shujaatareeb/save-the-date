@@ -107,9 +107,12 @@ function decodeElement(raw) {
     }
   } else if (kind === 'shape') {
     el.viewBox = { width: raw.a?.D || el.width, height: raw.a?.C || el.height };
+    // b[].C is the path's stroke: A width (design px), B colour. The thin
+    // frames round the countdown and the thank-you block are stroke-only.
     el.paths = (raw.b || []).map((p) => ({
       d: p.A,
       fill: p.B?.A ? { media: p.B.B.A.A, crop: decodeCrop(p.B.B.B, el.viewBox) } : { color: p.B?.C || 'none' },
+      ...(p.C?.B && p.C.A > 0 ? { stroke: { width: p.C.A, color: p.C.B } } : {}),
     }));
     const inner = raw.f?.[0]?.A?.C;
     if (inner && inner.A.join('').trim()) el.text = decodeTextBlock(inner, undefined, null);
@@ -139,10 +142,31 @@ export function bounds(el) {
 // The column the runtime fits to a phone: everything that is not a full-width
 // bleed (backgrounds, the petals layer), clamped to the canvas so decorations
 // hanging off the sides do not widen it.
+// A sparse section — a few centred lines inside one wide frame, like the home
+// page's "Thank you" — is re-laid-out by Canva on a phone: the text scaled up
+// to read and the frame stretched to hug it. The frame is the one wide
+// non-bleed shape or image (≥ 80 % of the canvas) whose other content is much
+// narrower than it (≤ 60 % of its width). It is left out of the content
+// column, so the text sets the scale, and the runtime stretches it.
+export function frameOf(section) {
+  const W = section.width;
+  const inner = section.elements.map((el) => ({ el, b: bounds(el) })).filter(({ b }) => !(b.left <= 0 && b.right >= W));
+  const clamp = (v) => Math.max(0, Math.min(W, v));
+  for (const c of inner) {
+    if (!(c.el.kind === 'shape' || c.el.kind === 'image') || c.b.right - c.b.left < 0.8 * W) continue;
+    const others = inner.filter((x) => x !== c);
+    if (!others.length) continue;
+    const union = Math.max(...others.map((x) => clamp(x.b.right))) - Math.min(...others.map((x) => clamp(x.b.left)));
+    if (union <= 0.6 * (c.b.right - c.b.left)) return c.el;
+  }
+  return null;
+}
+
 export function contentBox(section) {
   const W = section.width;
   const bleeds = (b) => b.left <= 0 && b.right >= W;
-  const boxes = section.elements.map(bounds).filter((b) => !bleeds(b))
+  const frame = frameOf(section);
+  const boxes = section.elements.filter((el) => el !== frame).map(bounds).filter((b) => !bleeds(b))
     .map((b) => ({ left: Math.max(0, b.left), right: Math.min(W, b.right), top: Math.max(0, b.top), bottom: Math.min(section.height, b.bottom) }))
     .filter((b) => b.right > b.left && b.bottom > b.top);
   if (!boxes.length) return { left: 0, top: 0, width: W, height: section.height };
@@ -165,6 +189,8 @@ export function extractModel(canva) {
       if (s.R === true) continue; // Canva does not render this section (e.g. a duplicate hidden variant)
       const section = { width: s.C.A, height: s.C.B, background: s.D?.C || null, elements: s.E.map((e) => decodeElement(e)) };
       section.content = contentBox(section);
+      const frame = frameOf(section);
+      if (frame) section.frame = frame.id;
       page.sections.push(section);
     }
     return page;
