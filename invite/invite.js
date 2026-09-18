@@ -23,15 +23,28 @@
   function scaleSection(sec) {
     const stage = sec.querySelector('.stage');
     if (!stage) return;
-    const vw = document.documentElement.clientWidth;
+    const vw = document.documentElement.clientWidth, vh = document.documentElement.clientHeight;
     const cw = +sec.dataset.cw, cl = +sec.dataset.cl, h = +sec.dataset.h;
     const k = Math.min(1, Math.max(0.25, (vw - 2 * PAD) / cw));
     // Centre the whole canvas when it fits, as Canva does on a desktop; when the
     // viewport is narrower than the canvas, centre the content column instead so
     // a tablet never crops it — and on a phone that column is what k fits.
     const tx = vw >= CANVAS * k && k === 1 ? (vw - CANVAS) / 2 : vw / 2 - (cl + cw / 2) * k;
-    sec.style.height = `${h * k}px`;
+    // A page's only section is at least the screen: Canva stretches it and
+    // keeps its background covering all of it, the content staying at the top.
+    const ch = h * k;
+    const fill = sec.parentElement.querySelectorAll('.sec').length === 1 && ch < vh;
+    const secH = fill ? vh : ch, ty = 0;
+    sec.style.height = `${secH}px`;
     stage.style.transform = `translate(${tx}px,0) scale(${k})`;
+    const bg = sec.querySelector('.stage > .el.bg');
+    if (!bg) return;
+    if (!fill) { bg.style.scale = ''; bg.style.translate = ''; return; }
+    // cover: scale the background about its centre until it spans the section, then centre it on the section
+    const s = Math.max(1, vw / (bg.offsetWidth * k), secH / (bg.offsetHeight * k));
+    const cx = tx + (bg.offsetLeft + bg.offsetWidth / 2) * k, cy = ty + (bg.offsetTop + bg.offsetHeight / 2) * k;
+    bg.style.scale = String(s);
+    bg.style.translate = `${(vw / 2 - cx) / k}px ${(secH / 2 - cy) / k}px`;
   }
   function scale() {
     const active = document.querySelector('.page.active');

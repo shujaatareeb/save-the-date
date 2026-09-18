@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { BUILD, INVITE, isMain, round as r } from './lib.mjs';
 import { assetKey, planFonts } from './assets.mjs';
+import { backgroundOf } from './extract.mjs';
 
 const FONT_FORMATS = { '.woff2': 'woff2', '.woff': 'woff', '.ttf': 'truetype', '.otf': 'opentype' };
 // A wrong format() hint lets a browser skip the source outright, so an unknown
@@ -264,7 +265,8 @@ function matteAttrs(el, ctx) {
 export function renderElement(el, ctx) {
   if (el.kind === 'image') {
     const matte = matteAttrs(el, ctx);
-    return `${open(el, matte ? 'img mt' : 'img', ctx, '', matte, !matte)}${mediaTag(assetKey(el.media, el.recolor), el.crop, ctx)}${close(el)}`;
+    const bg = ctx.background === el.id ? ' bg' : '';
+    return `${open(el, (matte ? 'img mt' : 'img') + bg, ctx, '', matte, !matte)}${mediaTag(assetKey(el.media, el.recolor), el.crop, ctx)}${close(el)}`;
   }
   if (el.kind === 'text') {
     const { style, html, inner } = renderTextBlock(el, el.effects, !!ctx.anims[el.id]?.writeOn);
@@ -533,7 +535,7 @@ export function render(model, assets, anims) {
       walk(s.elements);
       const starts = Object.values(elementAnims).filter((a) => !a.borrowed).map((a) => a.startMs).filter((n) => n != null);
       const c = s.content;
-      const ctx = { assets, anims: elementAnims, eager, groupFor, pulses, cw: c.width, sectionStart: starts.length ? Math.min(...starts) : 0 };
+      const ctx = { assets, anims: elementAnims, eager, groupFor, pulses, cw: c.width, background: backgroundOf(s)?.id, sectionStart: starts.length ? Math.min(...starts) : 0 };
       const bg = s.background ? `background:${s.background};` : '';
       const els = s.elements.map((e) => renderElement(e, ctx)).join('\n');
       return `<div class="sec" data-h="${r(s.height)}" data-cl="${r(c.left)}" data-cw="${r(c.width)}" style="--h:${px(s.height)};${bg}"><div class="stage">\n${els}\n</div></div>`;

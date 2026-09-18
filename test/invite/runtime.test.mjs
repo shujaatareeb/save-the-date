@@ -35,7 +35,8 @@ test('fits the content box to a phone with no horizontal scroll', async () => {
     return { k: parseFloat(m[1]), secH: sec.getBoundingClientRect().height, docW: document.documentElement.scrollWidth, vw: innerWidth };
   });
   assert.ok(k > 0.6 && k < 0.9, `k=${k}`);
-  assert.ok(Math.abs(secH - 990 * k) < 2, `height ${secH} vs ${990 * k}`);
+  // the envelope is its page's only section, so it is at least the screen
+  assert.ok(Math.abs(secH - Math.max(990 * k, 844)) < 2, `height ${secH} vs ${Math.max(990 * k, 844)}`);
   assert.equal(docW, vw);
   await page.close();
 });
@@ -243,6 +244,41 @@ test('a browser that decodes AVIF is served it, and activation swaps the source 
   assert.ok(st.liveSources > 10);
   assert.ok(st.avif > 10 && st.webp === 0, `avif ${st.avif}, webp ${st.webp}`);
   await page.close();
+});
+
+// Canva gives a page's only section at least the screen's height on a phone,
+// keeps its background covering all of it, the card staying at the top; ours
+// ended where the scaled content ended, with a cream band below.
+test('a page\'s only section fills a phone screen, background covering, content at the top', async () => {
+  const { page } = await open(390, '#nikah');
+  await page.waitForTimeout(500);
+  const st = await page.evaluate(() => {
+    const sec = document.querySelector('#nikah .sec'), stage = sec.querySelector('.stage'), bg = sec.querySelector('.el.bg');
+    const k = +getComputedStyle(stage).transform.match(/matrix\(([^,]+)/)[1];
+    const sr = sec.getBoundingClientRect(), br = bg.getBoundingClientRect();
+    const m = getComputedStyle(stage).transform.match(/matrix\([^)]+\)/)[0].split(',').map(parseFloat);
+    return { secH: Math.round(sr.height), vh: innerHeight, contentH: Math.round(+sec.dataset.h * k), stageTop: Math.round(m[5]), bgTop: Math.round(br.top - sr.top), bgBottom: Math.round(br.bottom - sr.top), bgLeft: Math.round(br.left), bgRight: Math.round(br.right), scale: getComputedStyle(bg).scale };
+  });
+  assert.equal(st.secH, st.vh, 'section is the screen');
+  assert.ok(st.contentH < st.vh);
+  assert.equal(st.stageTop, 0, 'content stays at the top, as on Canva');
+  assert.ok(st.bgTop <= 0 && st.bgBottom >= st.vh && st.bgLeft <= 0 && st.bgRight >= 390, `background covers the screen: ${JSON.stringify(st)}`);
+  assert.ok(parseFloat(st.scale) >= 1, `background never shrunk: ${st.scale}`);
+  await page.close();
+});
+
+test('a page with several sections, or one taller than the screen, is left alone', async () => {
+  const { page } = await open(390, '#home');
+  await page.waitForTimeout(300);
+  const home = await page.evaluate(() => [...document.querySelectorAll('#home .sec')].map((sec) => { const k = +getComputedStyle(sec.querySelector('.stage')).transform.match(/matrix\(([^,]+)/)[1]; return Math.abs(sec.getBoundingClientRect().height - +sec.dataset.h * k) < 1 && !sec.querySelector('.el.bg')?.style.scale; }));
+  assert.ok(home.every(Boolean), 'home sections keep their content height');
+  await page.close();
+  const desk = await open(1366, '#nikah');
+  await desk.page.waitForTimeout(300);
+  const d = await desk.page.evaluate(() => { const sec = document.querySelector('#nikah .sec'); const k = +getComputedStyle(sec.querySelector('.stage')).transform.match(/matrix\(([^,]+)/)[1]; return { h: Math.round(sec.getBoundingClientRect().height), own: Math.round(+sec.dataset.h * k), scale: sec.querySelector('.el.bg').style.scale }; });
+  assert.equal(d.h, d.own, 'desktop: taller than the screen, so its own height');
+  assert.equal(d.scale, '');
+  await desk.page.close();
 });
 
 test('the countdown ticks toward nine in the evening on 10 October 2026, local time', async () => {

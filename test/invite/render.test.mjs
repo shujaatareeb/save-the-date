@@ -610,3 +610,14 @@ test('wraps each still in a picture with an AVIF source and the WebP fallback', 
   // the picture is a real box the same size as its wrapper (a wipe's counter-move lands on it), the img keeps its crop offsets inside
   assert.match(css, /\.img picture\{position:absolute;left:0;top:0;width:100%;height:100%\}\.img img\{position:absolute/);
 });
+
+// The first element of a section that spans the canvas edge to edge is its
+// background; the runtime cover-scales it when the section is stretched to
+// fill a phone screen. Only the first: the other bleeds are overlays.
+test('marks each section\'s first bleed as its background', () => {
+  const { html } = render(model, assets, anims);
+  const nikah = html.match(/<section class="page" id="nikah".*?<\/section>/s)[0];
+  assert.match(nikah, /class="el img[^"]*\bbg\b[^"]*"[^>]*data-id="LBg5tzRNb6dfJhmv"/, 'the satin is the background');
+  assert.doesNotMatch(nikah, /class="el img[^"]*\bbg\b[^"]*"[^>]*data-id="LB7xDzbSWgpSSlhD"/, 'the second bleed is not');
+  assert.equal((nikah.match(/\bbg\b[^"]*"[^>]*data-id/g) || []).length, 1);
+});

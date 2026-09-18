@@ -120,7 +120,15 @@ function decodeElement(raw) {
 }
 
 // Axis-aligned bounds of a possibly rotated element box.
-function bounds(el) {
+// The first element of a section that spans the canvas edge to edge is the
+// section's background — the runtime cover-scales it when the section is
+// stretched to fill a phone screen. Later bleeds are overlays and stay put.
+export function backgroundOf(section) {
+  const W = section.width;
+  return section.elements.find((el) => { const b = bounds(el); return b.left <= 0 && b.right >= W; }) || null;
+}
+
+export function bounds(el) {
   const r = (el.rotation * Math.PI) / 180;
   const cx = el.left + el.width / 2, cy = el.top + el.height / 2;
   const hw = (Math.abs(Math.cos(r)) * el.width + Math.abs(Math.sin(r)) * el.height) / 2;
