@@ -11,7 +11,9 @@
 (() => {
   'use strict';
   const DEFAULT = 'envelope';
-  const TARGET = Date.parse('2026-10-10T00:00:00+05:30');
+  // The widget on the live page counts to "2026-10-10T21:00" with no zone: nine
+  // in the evening wherever the guest happens to be.
+  const TARGET = new Date(2026, 9, 10, 21, 0, 0).getTime();
   const PAD = 8;
   const CANVAS = 1366; // design width; every section is laid out on it
   const pages = [...document.querySelectorAll('.page')];
@@ -184,7 +186,11 @@
   function tick() {
     const left = Math.max(0, TARGET - Date.now());
     const v = { d: Math.floor(left / 864e5), h: Math.floor(left / 36e5) % 24, m: Math.floor(left / 6e4) % 60, s: Math.floor(left / 1e3) % 60 };
-    for (const u in v) slots[u].forEach((n) => { n.textContent = String(v[u]).padStart(2, '0'); });
+    for (const u in v) slots[u].forEach((n) => {
+      const [tens, ones] = String(v[u]).padStart(2, '0');
+      const t = n.querySelectorAll('tspan');
+      if (t.length === 2) { t[0].textContent = tens; t[1].textContent = ones; } else n.textContent = tens + ones;
+    });
   }
   if (slots.s.length) { tick(); setInterval(tick, 1000); }
 

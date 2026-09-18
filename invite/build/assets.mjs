@@ -247,12 +247,20 @@ async function encodeVideoMp4(src) {
 }
 
 // Bytes a single page pulls: its media plus the font faces its text uses.
+// The countdown on the live page is a third-party widget set in Abril Fatface
+// (OFL), carried inside its SVG as a 2.5 KB subset of the digits, the colon and
+// the four labels. That subset is checked in next to the build scripts and
+// ships as a face of its own, for the pages that hold the countdown.
+export const COUNTDOWN_FONT = { key: 'countdown-REGULAR', fontId: 'countdown', family: 'Abril Fatface', file: path.join(BUILD, 'countdown-font.woff2'), weight: 400, italic: false };
+const hasEmbed = (model) => { let hit = false; for (const p of model.pages) for (const s of p.sections) walk(s.elements, (el) => { if (el.kind === 'embed') hit = true; }); return hit; };
+
 export function pageBytes(model, manifest, slug) {
   const page = model.pages.find((p) => p.slug === slug);
   const sub = { ...model, pages: [page] };
   const files = new Set();
   for (const id of usedMedia(sub).keys()) { const m = manifest.media[id]; files.add(m.src); if (m.mp4) files.add(m.mp4); }
   for (const face of planFonts(sub)) files.add(manifest.fonts[face.key].src);
+  if (hasEmbed(sub)) files.add(manifest.fonts[COUNTDOWN_FONT.key].src);
   let total = 0;
   for (const f of files) total += fs.statSync(path.join(INVITE, f)).size;
   return total;
@@ -296,6 +304,12 @@ export async function buildAssets(model) {
       fs.mkdirSync(path.dirname(out), { recursive: true });
       if (!fs.existsSync(out)) fs.copyFileSync(src, out);
       manifest.fonts[face.key] = { fontId: face.fontId, family: face.family, src: path.relative(INVITE, out).replace(/\\/g, '/'), weight: face.weight, italic: face.italic };
+    }
+    if (hasEmbed(model)) {
+      const f = COUNTDOWN_FONT;
+      const out = path.join(ASSETS, 'fonts', hashName(f.file, '.woff2'));
+      if (!fs.existsSync(out)) fs.copyFileSync(f.file, out);
+      manifest.fonts[f.key] = { fontId: f.fontId, family: f.family, src: path.relative(INVITE, out).replace(/\\/g, '/'), weight: f.weight, italic: f.italic };
     }
     fs.writeFileSync(path.join(BUILD, 'assets.json'), JSON.stringify(manifest, null, 1));
   } finally {

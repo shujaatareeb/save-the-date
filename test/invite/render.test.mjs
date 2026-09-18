@@ -429,3 +429,26 @@ test('a text recorded in parts writes on character by character', () => {
   // A text without parts is untouched.
   assert.doesNotMatch(html.match(/<div class="el txt[^>]*data-id="LBpx4R6Jb5dzwf96"[^>]*>.*?<\/div><\/div>/s)[0], /class="ch"/);
 });
+
+// The live countdown is an 800×400 SVG widget: Abril Fatface digits 140 px
+// tall centred at x 60/140 · 260/340 · 460/540 · 660/740 on y 94.5, colons at
+// 200/400/600, labels 40 px at x 100/300/500/700 on y 300, all #715449, with
+// a letterpress filter. Ours is that SVG, drawn by hand.
+test('the countdown is the widget\'s own SVG geometry', () => {
+  const { html, css } = render(model, assets, anims);
+  const m = html.match(/<div class="el cd"[^>]*data-id="LBjdk7hGK5sfSTt6"[^>]*>(<svg.*?<\/svg>)<\/div>/s);
+  assert.ok(m, 'countdown wrapper holds an svg');
+  const svg = m[1];
+  assert.match(svg, /^<svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">/);
+  for (const [u, x1, x2] of [['d', 60, 140], ['h', 260, 340], ['m', 460, 540], ['s', 660, 740]]) {
+    assert.match(svg, new RegExp(`<text data-cd="${u}" y="199.5"[^>]*><tspan x="${x1}">0</tspan><tspan x="${x2}">0</tspan></text>`), `unit ${u}`);
+  }
+  for (const x of [200, 400, 600]) assert.match(svg, new RegExp(`<text x="${x}" y="199.5"[^>]*>:</text>`));
+  for (const [x, l] of [[100, 'DAYS'], [300, 'HOURS'], [500, 'MINS'], [700, 'SECS']]) assert.match(svg, new RegExp(`<text x="${x}" y="300"[^>]*>${l}</text>`));
+  assert.match(svg, /<filter id="cd-fx-d"/);
+  assert.match(svg, /<filter id="cd-fx-l"/);
+  assert.match(css, /@font-face\{font-family:'f-countdown';src:url\(assets\/fonts\/[0-9a-f]{12}\.woff2\) format\('woff2'\)/);
+  assert.match(css, /\.cd text\{[^}]*font-family:'f-countdown'[^}]*fill:#715449/);
+  assert.match(css, /\.cd-d text\{font-size:140px\}\.cd-l text\{font-size:40px\}/);
+  assert.doesNotMatch(html, /cd-row|cd-u/);
+});

@@ -11,6 +11,7 @@
 @font-face{font-family:'f-YAFcfknkruY';src:url(assets/fonts/43060ed27b27.woff) format('woff');font-weight:400;font-style:normal;font-display:swap}
 @font-face{font-family:'f-YAFdJhX-538';src:url(assets/fonts/11c54233a01f.woff) format('woff');font-weight:700;font-style:italic;font-display:swap}
 @font-face{font-family:'f-YAF3ubalrAg';src:url(assets/fonts/5ee32612bf5a.woff) format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'f-countdown';src:url(assets/fonts/30f68f703ef2.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
 html,body{margin:0;background:#f4efe8;overflow-x:hidden;-webkit-text-size-adjust:100%}
 main{position:relative;min-height:100vh}
 .page{display:none}.page.active{display:block}
@@ -25,10 +26,9 @@ a.el{display:block;text-decoration:none;color:inherit}
 .shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;white-space:pre-wrap}
 .el.an{opacity:0;animation-fill-mode:both;animation-timing-function:linear;animation-duration:var(--dur,800ms);animation-delay:var(--del,0ms)}
 .el.mt:not(.in){opacity:0}.el.mt.mt-run>img{visibility:hidden}.el.mt>canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
-.cd{display:flex;align-items:center;justify-content:center;color:#4b3822;font-family:'f-YAFcfiBZ5y0',serif}
-.cd-row{display:flex;align-items:flex-start;gap:.15em;font-size:calc(var(--cd,238px)*.27);font-weight:700;line-height:1}
-.cd-u{display:flex;flex-direction:column;align-items:center;min-width:1.3em}.cd-u b{font-weight:700;font-variant-numeric:tabular-nums}
-.cd-u i{font-style:normal;font-size:.22em;letter-spacing:.1em;text-transform:uppercase;margin-top:.5em}.cd-row em{font-style:normal}
+.cd>svg{display:block;width:100%;height:100%;overflow:visible}
+.cd text{text-anchor:middle;font-family:'f-countdown',serif;font-weight:400;fill:#715449;text-rendering:geometricPrecision;user-select:none}
+.cd-d text{font-size:140px}.cd-l text{font-size:40px}
 .el.pl{animation:plo 1.11s ease-in-out infinite}.el.pl.pls{animation:plo 1.11s ease-in-out infinite,pls .9s ease-in-out infinite}
 @keyframes plo{0%,100%{opacity:var(--op,1)}50%{opacity:calc(var(--op,1)*.35)}}
 @keyframes pls{0%,100%{transform:rotate(var(--rot,0deg)) scale(.85)}50%{transform:rotate(var(--rot,0deg)) scale(1.14)}}

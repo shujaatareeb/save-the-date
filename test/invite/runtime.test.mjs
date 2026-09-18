@@ -185,16 +185,20 @@ test('plays a page\'s entrances again when you come back to it', async () => {
   await page.close();
 });
 
-test('the countdown ticks toward 10 October 2026 IST', async () => {
+// The widget on the live page counts down to 2026-10-10T21:00 with no zone —
+// nine in the evening wherever the guest is. Two digits per unit, each in its
+// own tspan so they sit where the widget puts them.
+test('the countdown ticks toward nine in the evening on 10 October 2026, local time', async () => {
   const { page } = await open(390, '#home');
   await page.waitForTimeout(1100);
-  const read = () => page.evaluate(() => ['d', 'h', 'm', 's'].map((u) => document.querySelector(`[data-cd="${u}"]`).textContent));
+  const read = () => page.evaluate(() => ['d', 'h', 'm', 's'].map((u) => [...document.querySelector(`[data-cd="${u}"]`).querySelectorAll('tspan')].map((t) => t.textContent).join('')));
   const a = await read();
   await page.waitForTimeout(1100);
   const b = await read();
   assert.notDeepEqual(a, b, 'seconds should change');
-  const expectedDays = Math.floor((Date.parse('2026-10-10T00:00:00+05:30') - Date.now()) / 86400000);
-  assert.ok(Math.abs(Number(a[0]) - expectedDays) <= 1, `days ${a[0]} vs ${expectedDays}`);
+  assert.ok(a.every((v) => /^\d{2}$/.test(v)), `two digits per unit: ${a}`);
+  const expected = await page.evaluate(() => Math.floor((new Date(2026, 9, 10, 21, 0, 0) - Date.now()) / 86400000));
+  assert.ok(Math.abs(Number(a[0]) - expected) <= 1, `days ${a[0]} vs ${expected}`);
   await page.close();
 });
 

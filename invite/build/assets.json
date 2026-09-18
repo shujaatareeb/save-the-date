@@ -754,6 +754,13 @@
    "src": "assets/fonts/5ee32612bf5a.woff",
    "weight": 400,
    "italic": false
+  },
+  "countdown-REGULAR": {
+   "fontId": "countdown",
+   "family": "Abril Fatface",
+   "src": "assets/fonts/30f68f703ef2.woff2",
+   "weight": 400,
+   "italic": false
   }
  }
 }

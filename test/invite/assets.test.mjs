@@ -158,3 +158,16 @@ test('matte videos ship a webm and an h264 mp4, and no poster', () => {
     assert.ok(fs.existsSync(new URL(`../../invite/${m.mp4}`, import.meta.url)), `${m.mp4} on disk`);
   }
 });
+
+// The countdown on the live page is a third-party widget set in Abril Fatface
+// (OFL), which it carries as a 2.5 KB subset inside its SVG. That subset is
+// checked in under invite/build and ships like any other face.
+test('ships the countdown widget\'s Abril Fatface subset as a face of its own', () => {
+  const face = manifest.fonts['countdown-REGULAR'];
+  assert.ok(face, 'countdown face in the manifest');
+  assert.equal(face.fontId, 'countdown');
+  assert.equal(face.family, 'Abril Fatface');
+  assert.match(face.src, /^assets\/fonts\/[0-9a-f]{12}\.woff2$/);
+  assert.ok(fs.existsSync(new URL(`../../invite/${face.src}`, import.meta.url)), `${face.src} on disk`);
+  assert.ok(pageBytes(model, manifest, 'home') > pageBytes({ ...model, pages: model.pages.filter((p) => p.slug === 'home').map((p) => ({ ...p, sections: p.sections.map((s) => ({ ...s, elements: s.elements.filter((e) => e.kind !== 'embed') })) })) }, manifest, 'home'), 'the home page budget counts it');
+});

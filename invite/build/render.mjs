@@ -20,7 +20,6 @@ function fontFormat(src) {
 
 const TITLE = 'Misbah &amp; Areeb — Wedding Invitation';
 const DESCRIPTION = 'Misbah &amp; Areeb invite you to celebrate their wedding. Mehfil-e-Mehendi 8 October, Nikah and Dawat-e-Khaas 10 October 2026, Mumbai.';
-const COUNTDOWN_FACE = 'YAFcfiBZ5y0'; // Fry's Baskerville, the closest face to the Canva widget
 
 export const escapeHtml = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 const attr = (v) => escapeHtml(v);
@@ -251,11 +250,7 @@ export function renderElement(el, ctx) {
     const text = el.text ? (() => { const t = renderTextBlock(el.text, []); return `<div class="stxt" style="${t.style}">${t.html}</div>`; })() : '';
     return `${open(el, 'shp', ctx)}<svg viewBox="0 0 ${r(W)} ${r(H)}" preserveAspectRatio="none">${defs ? `<defs>${defs}</defs>` : ''}${paths}</svg>${text}${close(el)}`;
   }
-  if (el.kind === 'embed') {
-    const unit = (u, label) => `<div class="cd-u"><b data-cd="${u}">00</b><i>${label}</i></div>`;
-    // --cd is the box height in design px; the stage's scale() does the rest.
-    return `${open(el, 'cd', ctx, `--cd:${px(el.height)};`)}<div class="cd-row">${unit('d', 'Days')}<em>:</em>${unit('h', 'Hours')}<em>:</em>${unit('m', 'Mins')}<em>:</em>${unit('s', 'Secs')}</div>${close(el)}`;
-  }
+  if (el.kind === 'embed') return `${open(el, 'cd', ctx)}${COUNTDOWN_SVG}${close(el)}`;
   throw new Error(`cannot render kind ${el.kind} (${el.id})`);
 }
 
@@ -278,6 +273,22 @@ const WRITE_ON_CSS = `.el.wr.in{opacity:var(--op,1);animation:none}
 .el.wr .ch{opacity:0}.el.wr.in .ch{animation:wr var(--dur,800ms) linear both;animation-delay:calc(var(--del,0ms) + var(--i)*var(--step,72ms))}
 @keyframes wr{from{opacity:0}to{opacity:1}}`;
 
+// The countdown on the live page is a third-party widget: an 800×400 SVG with
+// Abril Fatface digits 140 px tall on y 199.5 (the widget's odometer reels
+// declare them at 94.5 and translate the reel), two per unit centred 80
+// apart, colons between, 40 px labels on y 300, all #715449, under a
+// letterpress filter
+// (a lightened copy up-left, a darkened one down-right). This is that SVG,
+// drawn by hand; the runtime writes the digits.
+const COUNTDOWN_FILTER = (id, dx) => `<filter id="${id}" x="-50%" y="-100%" width="200%" height="300%"><feOffset in="SourceAlpha" dx="${-dx}" dy="${-dx}" result="topLeft"/><feComponentTransfer in="topLeft" result="lightShadow"><feFuncR type="linear" slope="1.5" intercept="0.2"/><feFuncG type="linear" slope="1.5" intercept="0.2"/><feFuncB type="linear" slope="1.5" intercept="0.2"/></feComponentTransfer><feOffset in="SourceAlpha" dx="${dx}" dy="${dx}" result="bottomRight"/><feComponentTransfer in="bottomRight" result="darkShadow"><feFuncR type="linear" slope="0.5" intercept="-0.2"/><feFuncG type="linear" slope="0.5" intercept="-0.2"/><feFuncB type="linear" slope="0.5" intercept="-0.2"/></feComponentTransfer><feMerge><feMergeNode in="lightShadow"/><feMergeNode in="darkShadow"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+const COUNTDOWN_SVG = (() => {
+  const units = [['d', 60, 140], ['h', 260, 340], ['m', 460, 540], ['s', 660, 740]];
+  const digits = units.map(([u, a, b]) => `<text data-cd="${u}" y="199.5" dominant-baseline="central" filter="url(#cd-fx-d)"><tspan x="${a}">0</tspan><tspan x="${b}">0</tspan></text>`);
+  const colons = [200, 400, 600].map((x) => `<text x="${x}" y="199.5" dominant-baseline="central" filter="url(#cd-fx-d)">:</text>`);
+  const labels = [[100, 'DAYS'], [300, 'HOURS'], [500, 'MINS'], [700, 'SECS']].map(([x, l]) => `<text x="${x}" y="300" dominant-baseline="central" filter="url(#cd-fx-l)">${l}</text>`);
+  return `<svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice"><defs>${COUNTDOWN_FILTER('cd-fx-d', 2)}${COUNTDOWN_FILTER('cd-fx-l', 0)}</defs><g class="cd-l">${labels.join('')}</g><g class="cd-d">${digits.join('')}${colons.join('')}</g></svg>`;
+})();
+
 const BASE_CSS = `
 html,body{margin:0;background:#f4efe8;overflow-x:hidden;-webkit-text-size-adjust:100%}
 main{position:relative;min-height:100vh}
@@ -293,10 +304,9 @@ a.el{display:block;text-decoration:none;color:inherit}
 .shp>svg{display:block;width:100%;height:100%;overflow:visible}.stxt{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;white-space:pre-wrap}
 .el.an{opacity:0;animation-fill-mode:both;animation-timing-function:linear;animation-duration:var(--dur,800ms);animation-delay:var(--del,0ms)}
 .el.mt:not(.in){opacity:0}.el.mt.mt-run>img{visibility:hidden}.el.mt>canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
-.cd{display:flex;align-items:center;justify-content:center;color:#4b3822;font-family:'f-${COUNTDOWN_FACE}',serif}
-.cd-row{display:flex;align-items:flex-start;gap:.15em;font-size:calc(var(--cd,238px)*.27);font-weight:700;line-height:1}
-.cd-u{display:flex;flex-direction:column;align-items:center;min-width:1.3em}.cd-u b{font-weight:700;font-variant-numeric:tabular-nums}
-.cd-u i{font-style:normal;font-size:.22em;letter-spacing:.1em;text-transform:uppercase;margin-top:.5em}.cd-row em{font-style:normal}
+.cd>svg{display:block;width:100%;height:100%;overflow:visible}
+.cd text{text-anchor:middle;font-family:'f-countdown',serif;font-weight:400;fill:#715449;text-rendering:geometricPrecision;user-select:none}
+.cd-d text{font-size:140px}.cd-l text{font-size:40px}
 `;
 
 const RESTING_FRAME = { t: 1, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null };
