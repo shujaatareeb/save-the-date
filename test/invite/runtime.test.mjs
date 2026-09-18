@@ -31,7 +31,7 @@ test('fits the content box to a phone with no horizontal scroll', async () => {
   const { page } = await open(390);
   const { k, secH, docW, vw } = await page.evaluate(() => {
     const sec = document.querySelector('#envelope .sec');
-    return { k: parseFloat(getComputedStyle(sec.querySelector('.stage')).transform.match(/matrix\(([^,]+),/)[1]), secH: sec.getBoundingClientRect().height, docW: document.documentElement.scrollWidth, vw: innerWidth };
+    return { k: parseFloat(getComputedStyle(sec.querySelector('.stage')).zoom), secH: sec.getBoundingClientRect().height, docW: document.documentElement.scrollWidth, vw: innerWidth };
   });
   assert.ok(k > 0.6 && k < 0.9, `k=${k}`);
   // the envelope is its page's only section, so it is at least the screen
@@ -45,7 +45,7 @@ const stageAt = async (width, slug = 'envelope') => {
   const r = await page.evaluate((slug) => {
     const sec = document.querySelector(`#${slug} .sec`);
     const st = sec.querySelector('.stage');
-    return { k: parseFloat(getComputedStyle(st).transform.match(/matrix\(([^,]+),/)[1]), left: st.getBoundingClientRect().left, cl: +sec.dataset.cl, cw: +sec.dataset.cw };
+    return { k: parseFloat(getComputedStyle(st).zoom), left: st.getBoundingClientRect().left, cl: +sec.dataset.cl, cw: +sec.dataset.cw };
   }, slug);
   await page.close();
   return r;
@@ -232,7 +232,7 @@ test('a page\'s only section fills a phone screen, background covering, card cen
   await page.waitForTimeout(500);
   const st = await page.evaluate(() => {
     const sec = document.querySelector('#nikah .sec'), stage = sec.querySelector('.stage'), bg = sec.querySelector('.el.bg');
-    const k = +getComputedStyle(stage).transform.match(/matrix\(([^,]+)/)[1];
+    const k = +getComputedStyle(stage).zoom;
     const sr = sec.getBoundingClientRect(), br = bg.getBoundingClientRect();
     return { secH: Math.round(sr.height), vh: innerHeight, contentH: Math.round(+sec.dataset.h * k), stageTop: Math.round(stage.getBoundingClientRect().top - sr.top), bgTop: Math.round(br.top - sr.top), bgBottom: Math.round(br.bottom - sr.top), bgLeft: Math.round(br.left), bgRight: Math.round(br.right), scale: getComputedStyle(bg).scale };
   });
@@ -249,12 +249,12 @@ test('a page with several sections, or one taller than the screen, is left alone
   const { page } = await open(390, '#home');
   await page.waitForTimeout(300);
   // (the sparse closing section covers its background by design; its height is still its own)
-  const home = await page.evaluate(() => [...document.querySelectorAll('#home .sec')].map((sec) => { const k = +getComputedStyle(sec.querySelector('.stage')).transform.match(/matrix\(([^,]+)/)[1]; return Math.abs(sec.getBoundingClientRect().height - +sec.dataset.h * k) < 1 && ('sparse' in sec.dataset || !sec.querySelector('.el.bg')?.style.scale); }));
+  const home = await page.evaluate(() => [...document.querySelectorAll('#home .sec')].map((sec) => { const k = +getComputedStyle(sec.querySelector('.stage')).zoom; return Math.abs(sec.getBoundingClientRect().height - +sec.dataset.h * k) < 1 && ('sparse' in sec.dataset || !sec.querySelector('.el.bg')?.style.scale); }));
   assert.ok(home.every(Boolean), 'home sections keep their content height');
   await page.close();
   const desk = await open(1366, '#nikah');
   await desk.page.waitForTimeout(300);
-  const d = await desk.page.evaluate(() => { const sec = document.querySelector('#nikah .sec'); const k = +getComputedStyle(sec.querySelector('.stage')).transform.match(/matrix\(([^,]+)/)[1]; return { h: Math.round(sec.getBoundingClientRect().height), own: Math.round(+sec.dataset.h * k), scale: sec.querySelector('.el.bg').style.scale }; });
+  const d = await desk.page.evaluate(() => { const sec = document.querySelector('#nikah .sec'); const k = +getComputedStyle(sec.querySelector('.stage')).zoom; return { h: Math.round(sec.getBoundingClientRect().height), own: Math.round(+sec.dataset.h * k), scale: sec.querySelector('.el.bg').style.scale }; });
   assert.equal(d.h, d.own, 'desktop: taller than the screen, so its own height');
   assert.equal(d.scale, '');
   await desk.page.close();
@@ -270,7 +270,7 @@ test('a sparse section is laid out at 0.8, centred, its frame stretched to the s
   await page.waitForTimeout(400);
   const st = await page.evaluate(() => {
     const sec = [...document.querySelectorAll('#home .sec')].at(-1);
-    const k = +getComputedStyle(sec.querySelector('.stage')).transform.match(/matrix\(([^,]+)/)[1];
+    const k = +getComputedStyle(sec.querySelector('.stage')).zoom;
     const box = (id) => document.querySelector(`[data-id="${id}"]`).getBoundingClientRect();
     const fr = sec.querySelector('.el.fr').getBoundingClientRect();
     const t = box('LBG0ByNsdmqksMcZ'), name = box('LBvMLJM7flpx9rsJ'), pill = box('LB6ZvJJYwv0DsNqG'), bg = sec.querySelector('.el.bg').getBoundingClientRect(), sr = sec.getBoundingClientRect();
@@ -297,7 +297,7 @@ test('a section with no content column is fitted to the screen\'s height, sides 
   await page.waitForTimeout(300);
   const st = await page.evaluate(() => {
     const sec = document.querySelector('#dress-code .sec'); const st = sec.querySelector('.stage');
-    return { k: +(+getComputedStyle(st).transform.match(/matrix\(([^,]+)/)[1]).toFixed(3), left: Math.round(st.getBoundingClientRect().left), h: Math.round(sec.getBoundingClientRect().height), vh: innerHeight, design: +sec.dataset.h, scrollW: document.documentElement.scrollWidth };
+    return { k: +(+getComputedStyle(st).zoom).toFixed(3), left: Math.round(st.getBoundingClientRect().left), h: Math.round(sec.getBoundingClientRect().height), vh: innerHeight, design: +sec.dataset.h, scrollW: document.documentElement.scrollWidth };
   });
   const want = +((st.vh - 12) / st.design).toFixed(3);
   assert.ok(Math.abs(st.k - want) < 0.002, `k ${st.k} vs ${want}`);
@@ -308,7 +308,7 @@ test('a section with no content column is fitted to the screen\'s height, sides 
   // on a desktop it is wider than tall: the width fit wins, as before
   const desk = await open(1366, '#dress-code');
   await desk.page.waitForTimeout(300);
-  const dk = await desk.page.evaluate(() => +getComputedStyle(document.querySelector('#dress-code .stage')).transform.match(/matrix\(([^,]+)/)[1]);
+  const dk = await desk.page.evaluate(() => +getComputedStyle(document.querySelector('#dress-code .stage')).zoom);
   assert.ok(dk > 0.98, `desktop k ${dk}`);
   await desk.page.close();
 });

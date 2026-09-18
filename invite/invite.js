@@ -2,10 +2,13 @@
 //
 // Everything visual is already in the HTML. This file only:
 //   · shows one page at a time by hash (#envelope, #home, #timeline, …)
-//   · scales each section so its content column fits the viewport (mobile first).
-//     With transform, not CSS zoom: on an iPhone, zoom left every font at its
-//     design size — iOS applies -webkit-text-size-adjust on top of zoom — while
-//     desktop WebKit zoomed them, so it passed here and broke there.
+//   · scales each section so its content column fits the viewport (mobile first),
+//     with CSS zoom rather than transform: WebKit rasterises a composited layer
+//     at its CSS size whatever transform scales it to, so a 1366 px stage
+//     scaled down to 0.27 on a phone drew every entering layer at design size
+//     times three, and iOS reloaded the page under it; with zoom the layout
+//     itself shrinks. (iOS keeps fonts at their specified size under zoom when
+//     -webkit-text-size-adjust is a percentage — the page leaves it alone.)
 //   · adds .in to animated elements as they scroll into view
 //   · draws an effect-30 picture in through its luma matte on a canvas
 //   · swaps data-src → src (and data-href → href) for the page being shown,
@@ -19,16 +22,8 @@
   const TARGET = new Date(2026, 9, 10, 21, 0, 0).getTime();
   const PAD = 8;
   const CANVAS = 1366; // design width; every section is laid out on it
-  // Experiment, opened with ?zoom on the address: scale the stage with CSS zoom
-  // instead of transform (WebKit then rasterises its layers at screen size,
-  // which may be what keeps an iPhone from reloading the page on scroll), with
-  // text-size-adjust left to the browser so iOS zooms the fonts as well.
-  const ZOOM = new URLSearchParams(location.search).has('zoom');
-  if (ZOOM) document.documentElement.style.webkitTextSizeAdjust = document.body.style.webkitTextSizeAdjust = 'auto';
-  const place = (stage, k, tx, ty) => {
-    if (ZOOM) { stage.style.transform = ''; stage.style.zoom = String(k); stage.style.left = `${tx / k}px`; stage.style.top = `${ty / k}px`; }
-    else stage.style.transform = `translate(${tx}px,${ty}px) scale(${k})`;
-  };
+  // (a zoomed element's own offsets are zoomed with it, so they are set in its own units)
+  const place = (stage, k, tx, ty) => { stage.style.zoom = String(k); stage.style.left = `${tx / k}px`; stage.style.top = `${ty / k}px`; };
   const pages = [...document.querySelectorAll('.page')];
   const bySlug = (slug) => pages.find((p) => p.dataset.page === slug);
 

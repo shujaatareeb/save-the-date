@@ -19,10 +19,10 @@ for (const width of WIDTHS) for (const slug of SLUGS) {
     await page.waitForTimeout(300);
     const m = await page.evaluate(() => {
       const secs = [...document.querySelectorAll('.page.active .sec')];
-      const ks = secs.map((s) => parseFloat(getComputedStyle(s.querySelector('.stage')).transform.match(/matrix\(([^,]+),/)[1]));
+      const ks = secs.map((s) => parseFloat(getComputedStyle(s.querySelector('.stage')).zoom));
       // a cover section (nothing but bleeds) is fitted to the screen's height and crops its sides by
       // design; a sparse one is re-laid-out element by element, so its column says nothing
-      const content = secs.filter((s) => !('cover' in s.dataset) && !('sparse' in s.dataset)).map((s) => { const k = parseFloat(getComputedStyle(s.querySelector('.stage')).transform.match(/matrix\(([^,]+),/)[1]); const st = s.querySelector('.stage').getBoundingClientRect(); return { left: st.left + (+s.dataset.cl) * k, right: st.left + (+s.dataset.cl + +s.dataset.cw) * k }; });
+      const content = secs.filter((s) => !('cover' in s.dataset) && !('sparse' in s.dataset)).map((s) => { const k = parseFloat(getComputedStyle(s.querySelector('.stage')).zoom); const st = s.querySelector('.stage').getBoundingClientRect(); return { left: st.left + (+s.dataset.cl) * k, right: st.left + (+s.dataset.cl + +s.dataset.cw) * k }; });
       return { scrollW: document.documentElement.scrollWidth, vw: document.documentElement.clientWidth, ks, content };
     });
     assert.equal(m.scrollW, m.vw, 'horizontal scroll');

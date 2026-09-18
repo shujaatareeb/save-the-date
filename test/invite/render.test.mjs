@@ -636,3 +636,11 @@ test('passes a cover section on to the runtime', () => {
   assert.match(dress, /<div class="sec" data-h="2386"[^>]*data-cover[^>]*>/);
   assert.equal((html.match(/data-cover/g) || []).length, 1);
 });
+
+// iOS keeps fonts at their specified size under CSS zoom whenever
+// -webkit-text-size-adjust is a percentage; with the property left alone the
+// fonts zoom with everything else (checked in the iOS simulator).
+test('leaves text-size-adjust alone so iOS zooms the fonts', () => {
+  const { css } = render(model, assets, anims);
+  assert.doesNotMatch(css, /text-size-adjust/);
+});
