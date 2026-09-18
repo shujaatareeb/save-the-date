@@ -2,11 +2,10 @@
 //
 // Everything visual is already in the HTML. This file only:
 //   · shows one page at a time by hash (#envelope, #home, #timeline, …)
-//   · scales each section so its content column fits the viewport (mobile first) —
-//     with CSS zoom, not transform: WebKit rasterises a composited layer at its
-//     CSS size whatever transform scales it to, so a 1366 px stage scaled down
-//     by 0.27 on a phone still drew every entering layer at 1366 px × 3, and
-//     iOS reloaded the page under the weight; zoom shrinks the layout itself
+//   · scales each section so its content column fits the viewport (mobile first).
+//     With transform, not CSS zoom: on an iPhone, zoom left every font at its
+//     design size — iOS applies -webkit-text-size-adjust on top of zoom — while
+//     desktop WebKit zoomed them, so it passed here and broke there.
 //   · adds .in to animated elements as they scroll into view
 //   · draws an effect-30 picture in through its luma matte on a canvas
 //   · swaps data-src → src (and data-href → href) for the page being shown,
@@ -35,7 +34,7 @@
   const SPARSE = 0.8, SPARSE_FRAME = 32, SPARSE_INNER = 76;
   function layoutSparse(sec, stage, vw) {
     const k = SPARSE;
-    stage.style.zoom = String(k); stage.style.left = '0px';
+    stage.style.transform = `translate(0px,0px) scale(${k})`;
     for (const el of stage.querySelectorAll(':scope > .el')) {
       if (!el.dataset.left) { el.dataset.left = el.style.left; el.dataset.width = el.style.width; }
       if (el.classList.contains('bg')) continue;
@@ -65,7 +64,7 @@
     if (sparse) {
       k = layoutSparse(sec, stage, vw);
       sec.style.height = `${h * k}px`;
-      coverBackground(sec, stage, k, 0, vw, h * k);
+      coverBackground(sec, stage, k, 0, 0, vw, h * k);
       return;
     }
     if ('sparse' in sec.dataset) unlaySparse(stage);
@@ -80,25 +79,27 @@
     // a tablet never crops it — and on a phone that column is what k fits.
     const tx = cover || (vw >= CANVAS * k && k === 1) ? (vw - CANVAS * k) / 2 : vw / 2 - (cl + cw / 2) * k;
     // A page's only section is at least the screen: Canva stretches it and
-    // keeps its background covering all of it, the content staying at the top.
+    // keeps its background covering all of it. Canva leaves the card at the
+    // top; ours sits in the middle of the screen — on a tall phone the card
+    // ended two thirds of the way down with a third of satin under it, and
+    // that read as wrong.
     const ch = h * k;
     const fill = sec.parentElement.querySelectorAll('.sec').length === 1 && ch < vh;
-    const secH = fill ? vh : ch, ty = 0;
+    const secH = fill ? vh : ch, ty = fill ? (vh - ch) / 2 : 0;
     sec.style.height = `${secH}px`;
-    // (a zoomed element's own left is zoomed with it, so it is set in its own units)
-    stage.style.zoom = String(k); stage.style.left = `${tx / k}px`;
+    stage.style.transform = `translate(${tx}px,${ty}px) scale(${k})`;
     const bg = sec.querySelector('.stage > .el.bg');
     if (!bg) return;
     if (!fill) { bg.style.scale = ''; bg.style.translate = ''; return; }
-    coverBackground(sec, stage, k, tx, vw, secH);
+    coverBackground(sec, stage, k, tx, ty, vw, secH);
   }
   // cover: scale the section's background about its centre until it spans the
   // section, then centre it on the section
-  function coverBackground(sec, stage, k, tx, vw, secH) {
+  function coverBackground(sec, stage, k, tx, ty, vw, secH) {
     const bg = sec.querySelector('.stage > .el.bg');
     if (!bg) return;
     const s = Math.max(1, vw / (bg.offsetWidth * k), secH / (bg.offsetHeight * k));
-    const cx = tx + (bg.offsetLeft + bg.offsetWidth / 2) * k, cy = (bg.offsetTop + bg.offsetHeight / 2) * k;
+    const cx = tx + (bg.offsetLeft + bg.offsetWidth / 2) * k, cy = ty + (bg.offsetTop + bg.offsetHeight / 2) * k;
     bg.style.scale = String(s);
     bg.style.translate = `${(vw / 2 - cx) / k}px ${(secH / 2 - cy) / k}px`;
   }

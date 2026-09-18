@@ -585,7 +585,8 @@ test('an effect-26 entrance wipes the content in rather than sliding it', () => 
   const pathBox = css.match(new RegExp(`@keyframes ${path}\\{([^]*?)\\}\\}`))[1];
   assert.match(pathBox, /^0%\{[^}]*translate\(0px,-116[67](\.\d+)?px\)/);
   for (const k of [line, path, heading]) assert.match(css, new RegExp(`\\.${k}\\.wp\\.in>\\*\\{animation:${k}w var\\(--dur\\) linear both;animation-delay:var\\(--del\\)\\}`));
-  assert.match(css, /\.el\.wp\{overflow:hidden\}/);
+  // clipped only while the wipe plays: a script heading's swash overhangs its box and was cut off for good
+  assert.match(css, /\.el\.wp\.in:not\(\.done\)\{overflow:hidden\}/);
   assert.match(css, /\.el\.an\.done:not\(\.hb\):not\(\.sp\):not\(\.wr\)>\*\{animation:none\}/);
   // an ordinary entrance gets no companion
   assert.doesNotMatch(html, /class="el img an k\d+ wp"[^>]*data-id="LBmGP6J3tmzZBvKq"/);

@@ -16,7 +16,7 @@ html,body{margin:0;background:#f4efe8;overflow-x:hidden;-webkit-text-size-adjust
 main{position:relative;min-height:100vh}
 .page{display:none}.page.active{display:block}
 .sec{position:relative;overflow:hidden;width:100%;height:var(--h)}
-.stage{position:absolute;left:0;top:0;width:1366px}
+.stage{position:absolute;left:0;top:0;width:1366px;transform-origin:0 0}
 .el{position:absolute;box-sizing:border-box;transform:rotate(var(--rot,0deg));opacity:var(--op,1)}
 .img{overflow:hidden}.img img{position:absolute;max-width:none;display:block}
 .txt{overflow-wrap:break-word}.txt a{color:inherit;text-decoration:inherit}.ln{display:block}
@@ -27,7 +27,7 @@ a.el{display:block;text-decoration:none;color:inherit}
 .el.an{opacity:0;animation-fill-mode:both;animation-timing-function:linear;animation-duration:var(--dur,800ms);animation-delay:var(--del,0ms)}
 .el.an.done:not(.hb):not(.sp):not(.wr){animation:none;opacity:var(--op,1);transform:rotate(var(--rot,0deg))}
 .el.an.done:not(.hb):not(.sp):not(.wr)>*{animation:none}
-.el.wp{overflow:hidden}
+.el.wp.in:not(.done){overflow:hidden}
 .el.mt:not(.in){opacity:0}.el.mt.mt-run img{visibility:hidden}.el.mt>canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
 .cd>svg{display:block;width:100%;height:100%;overflow:visible}
 .cd text{text-anchor:middle;font-family:'f-countdown',serif;font-weight:400;fill:#715449;text-rendering:geometricPrecision;user-select:none}
