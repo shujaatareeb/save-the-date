@@ -191,6 +191,10 @@ export function extractModel(canva) {
       section.content = contentBox(section);
       const frame = frameOf(section);
       if (frame) section.frame = frame.id;
+      // Nothing but bleeds — the dress-code page is one full-canvas picture
+      // over a background — leaves no column to fit; Canva fits such a section
+      // to the screen's height instead and lets the sides crop.
+      if (section.elements.length && section.elements.every((el) => { const b = bounds(el); return b.left <= 0 && b.right >= section.width; })) section.cover = true;
       page.sections.push(section);
     }
     return page;

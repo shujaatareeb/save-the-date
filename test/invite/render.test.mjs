@@ -647,3 +647,10 @@ test('a text line never wraps of its own accord', () => {
   assert.match(css, /\.txt>\.tin\{[^}]*white-space:pre\}/);
   assert.doesNotMatch(css, /pre-wrap/);
 });
+
+test('passes a cover section on to the runtime', () => {
+  const { html } = render(model, assets, anims);
+  const dress = html.match(/<section class="page" id="dress-code".*?<\/section>/s)[0];
+  assert.match(dress, /<div class="sec" data-h="2386"[^>]*data-cover[^>]*>/);
+  assert.equal((html.match(/data-cover/g) || []).length, 1);
+});

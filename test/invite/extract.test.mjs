@@ -180,3 +180,15 @@ test('keeps a path\'s stroke', () => {
   const stroked = []; model.pages.forEach((p) => p.sections.forEach((s) => s.elements.forEach((e) => { if (e.kind === 'shape' && e.paths.some((x) => x.stroke)) stroked.push(e.id); })));
   assert.equal(stroked.length, 2);
 });
+
+// A section with no content elements at all — the dress-code page is one
+// full-canvas picture over a background — has no column to fit. Canva fits
+// such a section to the screen's height instead and lets the sides crop.
+test('marks a section with nothing but bleeds as one to fit by height', () => {
+  const model = extractModel(canva);
+  const dress = model.pages.find((p) => p.slug === 'dress-code');
+  assert.equal(dress.sections[0].cover, true);
+  assert.equal(dress.sections[1].cover, undefined);
+  const covered = model.pages.flatMap((p) => p.sections.map((s, i) => s.cover ? `${p.slug}:${i}` : null).filter(Boolean));
+  assert.deepEqual(covered, ['dress-code:0']);
+});

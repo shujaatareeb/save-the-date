@@ -303,6 +303,28 @@ test('a sparse section reads big on a phone, its frame stretched to the screen',
   await desk.page.close();
 });
 
+test('a section with no content column is fitted to the screen\'s height, sides cropped', async () => {
+  const { page } = await open(390, '#dress-code');
+  await page.waitForTimeout(300);
+  const st = await page.evaluate(() => {
+    const sec = document.querySelector('#dress-code .sec'); const st = sec.querySelector('.stage');
+    const m = getComputedStyle(st).transform.match(/matrix\(([^)]+)\)/)[1].split(',').map(parseFloat);
+    return { k: +m[0].toFixed(3), left: Math.round(m[4]), h: Math.round(sec.getBoundingClientRect().height), vh: innerHeight, design: +sec.dataset.h, scrollW: document.documentElement.scrollWidth };
+  });
+  const want = +((st.vh - 12) / st.design).toFixed(3);
+  assert.ok(Math.abs(st.k - want) < 0.002, `k ${st.k} vs ${want}`);
+  assert.ok(Math.abs(st.h - (st.vh - 12)) <= 1, `section ${st.h} vs screen − 12`);
+  assert.ok(Math.abs(st.left - (390 - 1366 * st.k) / 2) <= 1, `canvas centred: ${st.left}`);
+  assert.equal(st.scrollW, 390, 'no horizontal scroll');
+  await page.close();
+  // on a desktop it is wider than tall: the width fit wins, as before
+  const desk = await open(1366, '#dress-code');
+  await desk.page.waitForTimeout(300);
+  const dk = await desk.page.evaluate(() => +getComputedStyle(document.querySelector('#dress-code .stage')).transform.match(/matrix\(([^,]+)/)[1]);
+  assert.ok(dk > 0.98, `desktop k ${dk}`);
+  await desk.page.close();
+});
+
 test('the countdown ticks toward nine in the evening on 10 October 2026, local time', async () => {
   const { page } = await open(390, '#home');
   await page.waitForTimeout(1100);
