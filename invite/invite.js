@@ -19,6 +19,16 @@
   const TARGET = new Date(2026, 9, 10, 21, 0, 0).getTime();
   const PAD = 8;
   const CANVAS = 1366; // design width; every section is laid out on it
+  // Experiment, opened with ?zoom on the address: scale the stage with CSS zoom
+  // instead of transform (WebKit then rasterises its layers at screen size,
+  // which may be what keeps an iPhone from reloading the page on scroll), with
+  // text-size-adjust left to the browser so iOS zooms the fonts as well.
+  const ZOOM = new URLSearchParams(location.search).has('zoom');
+  if (ZOOM) document.documentElement.style.webkitTextSizeAdjust = document.body.style.webkitTextSizeAdjust = 'auto';
+  const place = (stage, k, tx, ty) => {
+    if (ZOOM) { stage.style.transform = ''; stage.style.zoom = String(k); stage.style.left = `${tx / k}px`; stage.style.top = `${ty / k}px`; }
+    else stage.style.transform = `translate(${tx}px,${ty}px) scale(${k})`;
+  };
   const pages = [...document.querySelectorAll('.page')];
   const bySlug = (slug) => pages.find((p) => p.dataset.page === slug);
 
@@ -34,7 +44,7 @@
   const SPARSE = 0.8, SPARSE_FRAME = 32, SPARSE_INNER = 76;
   function layoutSparse(sec, stage, vw) {
     const k = SPARSE;
-    stage.style.transform = `translate(0px,0px) scale(${k})`;
+    place(stage, k, 0, 0);
     for (const el of stage.querySelectorAll(':scope > .el')) {
       if (!el.dataset.left) { el.dataset.left = el.style.left; el.dataset.width = el.style.width; }
       if (el.classList.contains('bg')) continue;
@@ -87,7 +97,7 @@
     const fill = sec.parentElement.querySelectorAll('.sec').length === 1 && ch < vh;
     const secH = fill ? vh : ch, ty = fill ? (vh - ch) / 2 : 0;
     sec.style.height = `${secH}px`;
-    stage.style.transform = `translate(${tx}px,${ty}px) scale(${k})`;
+    place(stage, k, tx, ty);
     const bg = sec.querySelector('.stage > .el.bg');
     if (!bg) return;
     if (!fill) { bg.style.scale = ''; bg.style.translate = ''; return; }
