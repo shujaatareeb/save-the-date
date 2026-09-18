@@ -77,8 +77,50 @@ test('reveals animated elements once they are in view and loads lazy images on a
   const lazy = await page.evaluate(() => ({ pending: document.querySelectorAll('#home img[data-src]').length, loaded: [...document.querySelectorAll('#home img')].filter((i) => i.currentSrc).length }));
   assert.equal(lazy.pending, 0);
   assert.ok(lazy.loaded > 5);
-  const untouched = await page.evaluate(() => document.querySelectorAll('#timeline img[data-src]').length);
-  assert.ok(untouched > 0, 'inactive pages stay lazy');
+  // Pages the active one does not lead to stay lazy (home links to the timeline, not to mehendi).
+  const untouched = await page.evaluate(() => document.querySelectorAll('#mehendi img[data-src]').length);
+  assert.ok(untouched > 0, 'unlinked pages stay lazy');
+  await page.close();
+});
+
+// A tap on the envelope must land on a home page that is already there. Canva
+// has the next page's pictures before you tap; we only started fetching them
+// on the tap, so a guest on a phone saw a blank cream screen and then a pop.
+test('warms the pages a page links to once its own pictures are in', async () => {
+  const { page } = await open(390);
+  await page.waitForFunction(() => document.querySelectorAll('#home img[data-src]').length === 0, null, { timeout: 5000 });
+  const state = await page.evaluate(() => ({
+    homeLoaded: [...document.querySelectorAll('#home img')].filter((i) => i.currentSrc).length,
+    homeMatte: document.querySelectorAll('#home canvas').length,
+    homeShown: document.querySelector('#home').classList.contains('active'),
+    mehendiPending: document.querySelectorAll('#mehendi img[data-src]').length,
+    hash: location.hash,
+  }));
+  assert.ok(state.homeLoaded > 5, `home pictures fetched: ${state.homeLoaded}`);
+  assert.equal(state.homeMatte, 0, 'warming fetches; it does not play anything');
+  assert.equal(state.homeShown, false);
+  assert.ok(state.mehendiPending > 0, 'only the linked pages are warmed');
+  await page.close();
+});
+
+// An entrance that plays over a picture that has not arrived is a pop, not an
+// entrance. Hold the reveal until the element's pictures are in.
+test('holds an element\'s entrance until its pictures have arrived', async () => {
+  // The delay has to be in place before anything loads — the envelope warms the home page's pictures.
+  const page = await browser.newPage({ viewport: { width: 1366, height: 844 }, deviceScaleFactor: 1 });
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(String(e)));
+  await page.route('**/assets/*.webp', async (r) => { await new Promise((res) => setTimeout(res, 1500)); await r.continue(); });
+  await page.goto(`${site.url}/invite/#home`, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => document.querySelector('.page.active')?.id === 'home');
+  await page.waitForTimeout(600);
+  // Only the WebP pictures are held up by the route; SVG ones arrive at once.
+  const webpIn = () => [...document.querySelectorAll('#home .el.img.an.in')].filter((e) => /\.webp$/.test(e.querySelector('img')?.getAttribute('src') || '')).length;
+  const early = await page.evaluate((fn) => ({ imgIn: eval(fn)(), txtIn: document.querySelectorAll('#home .el.txt.an.in').length }), webpIn.toString());
+  assert.equal(early.imgIn, 0, 'picture elements wait for their picture');
+  assert.ok(early.txtIn > 0, 'text needs no picture and enters at once');
+  await page.waitForFunction((fn) => eval(fn)() > 0, webpIn.toString(), { timeout: 4000 });
+  assert.deepEqual(errors, []);
   await page.close();
 });
 

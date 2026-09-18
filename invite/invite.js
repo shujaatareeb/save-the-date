@@ -5,7 +5,8 @@
 //   · scales each section so its content column fits the viewport (mobile first)
 //   · adds .in to animated elements as they scroll into view
 //   · draws an effect-30 picture in through its luma matte on a canvas
-//   · swaps data-src → src (and data-href → href) for the page being shown
+//   · swaps data-src → src (and data-href → href) for the page being shown,
+//     then for the pages it links to, so the next tap lands on a page that is there
 //   · ticks the countdown
 (() => {
   'use strict';
@@ -103,8 +104,23 @@
     frame();
   }
 
+  // Resolves once every picture under `scope` that has a src has loaded (or
+  // failed), or after `ms` — a picture that never comes must not hold anything.
+  function whenLoaded(scope, ms) {
+    const pending = [...scope.querySelectorAll('img[src]')].filter((i) => !i.complete);
+    if (!pending.length) return Promise.resolve();
+    const all = Promise.all(pending.map((i) => new Promise((res) => { i.addEventListener('load', res, { once: true }); i.addEventListener('error', res, { once: true }); })));
+    return Promise.race([all, new Promise((res) => setTimeout(res, ms))]);
+  }
+
   // --- reveal ---------------------------------------------------------------
-  const enter = (el) => { el.classList.add('in'); if (el.classList.contains('mt')) reveal(el); };
+  // An entrance over a picture that has not arrived is a pop, not an entrance:
+  // an element's reveal waits for its own pictures (briefly) before it starts.
+  const enter = (el) => {
+    if (el.dataset.entering) return;
+    el.dataset.entering = '1';
+    whenLoaded(el, 2500).then(() => { el.classList.add('in'); if (el.classList.contains('mt')) reveal(el); });
+  };
   const io = 'IntersectionObserver' in window
     ? new IntersectionObserver((entries) => {
         for (const e of entries) if (e.isIntersecting) { enter(e.target); io.unobserve(e.target); }
@@ -121,9 +137,20 @@
   }
 
   // --- lazy assets --------------------------------------------------------------
-  function activate(page) {
+  function activate(page, eager = false) {
     page.querySelectorAll('[data-src]').forEach((n) => { n.src = n.dataset.src; n.removeAttribute('data-src'); if (n.tagName === 'VIDEO') n.play?.().catch(() => {}); });
     page.querySelectorAll('[data-href]').forEach((n) => { n.setAttribute('href', n.dataset.href); n.removeAttribute('data-href'); });
+    // A lazy picture on a page that is not displayed never fetches; warming
+    // a hidden page has to ask for its pictures outright.
+    if (eager) page.querySelectorAll('img[loading="lazy"]').forEach((i) => { i.loading = 'eager'; });
+  }
+  // Once the shown page's own pictures are in, fetch those of every page it
+  // links to, so the tap that follows lands on a page that is already there
+  // rather than on a blank one that fills in. Fetching only: nothing plays.
+  function warm(page) {
+    const slugs = new Set([...page.querySelectorAll('a[href^="#"]')].map((a) => a.getAttribute('href').slice(1)));
+    const next = [...slugs].map(bySlug).filter((p) => p && p !== page);
+    whenLoaded(page, 4000).then(() => { if (page.classList.contains('active')) next.forEach((p) => activate(p, true)); });
   }
 
   // --- routing ----------------------------------------------------------------------
@@ -135,6 +162,7 @@
     scale();
     window.scrollTo(0, 0);
     watch(page);
+    warm(page);
   }
   const current = () => { try { return decodeURIComponent(location.hash.slice(1)) || DEFAULT; } catch { return DEFAULT; } };
 
