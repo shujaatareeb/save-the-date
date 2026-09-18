@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { BUILD, INVITE, isMain, round as r } from './lib.mjs';
-import { assetKey } from './assets.mjs';
+import { assetKey, planFonts } from './assets.mjs';
 
 const FONT_FORMATS = { '.woff2': 'woff2', '.woff': 'woff', '.ttf': 'truetype', '.otf': 'opentype' };
 // A wrong format() hint lets a browser skip the source outright, so an unknown
@@ -95,13 +95,25 @@ function open(el, cls, ctx, extraStyle = '', extraAttrs = '', animate = true) {
 }
 const close = (el) => (el.link ? '</a>' : '</div>');
 
+// A still that has a phone encoding is offered at both through srcset, with
+// a sizes formula that is the scaler's own rule for the section: the picture
+// is drawn `dw` design px wide (its crop, times any group scale), and the
+// section scales by (vw − 2·PAD) / cw until the column fits, then 1. The
+// browser then picks by real device pixels. Lazy pages carry the same as
+// data attributes for the runtime to swap in.
 function mediaTag(key, crop, ctx, extra = '') {
   const m = ctx.assets.media[key];
   if (!m) throw new Error(`no asset for media ${key}`);
   const style = `left:${px(crop.left)};top:${px(crop.top)};width:${px(crop.width)};height:${px(crop.height)};`;
   if (m.kind === 'video') throw new Error(`media ${key} is a video; only a matte may be one, and mattes go through matteAttrs`);
-  const src = ctx.eager ? `src="${m.src}"` : `data-src="${m.src}" loading="lazy"`;
-  return `<img ${src} width="${m.width}" height="${m.height}" alt="" decoding="async" style="${style}${extra}">`;
+  const at = ctx.eager ? '' : 'data-';
+  let srcs = `${at}src="${m.src}"`;
+  if (m.srcS && ctx.cw) {
+    const dw = crop.width * (ctx.k || 1);
+    srcs += ` ${at}srcset="${m.srcS} ${m.ws}w, ${m.src} ${m.w}w" ${at}sizes="(max-width: ${Math.round(ctx.cw + 15)}px) calc((100vw - 16px) * ${r(dw / ctx.cw, 4)}), ${r(dw)}px"`;
+  }
+  if (!ctx.eager) srcs += ' loading="lazy"';
+  return `<img ${srcs} width="${m.width}" height="${m.height}" alt="" decoding="async" style="${style}${extra}">`;
 }
 
 // #rrggbb -> [r,g,b]; also accepts the 3-digit shorthand.
@@ -242,7 +254,7 @@ export function renderElement(el, ctx) {
   }
   if (el.kind === 'group') {
     const sx = r(el.width / (el.nativeWidth || el.width), 4), sy = r(el.height / (el.nativeHeight || el.height), 4);
-    const inner = el.children.map((c) => renderElement(c, ctx)).join('');
+    const inner = el.children.map((c) => renderElement(c, { ...ctx, k: (ctx.k || 1) * sx })).join('');
     return `${open(el, 'grp', ctx)}<div class="gin" style="width:${px(el.nativeWidth)};height:${px(el.nativeHeight)};transform:scale(${sx},${sy})">${inner}</div>${close(el)}`;
   }
   if (el.kind === 'shape') {
@@ -489,9 +501,9 @@ export function render(model, assets, anims) {
       });
       walk(s.elements);
       const starts = Object.values(elementAnims).filter((a) => !a.borrowed).map((a) => a.startMs).filter((n) => n != null);
-      const ctx = { assets, anims: elementAnims, eager, groupFor, pulses, sectionStart: starts.length ? Math.min(...starts) : 0 };
-      const bg = s.background ? `background:${s.background};` : '';
       const c = s.content;
+      const ctx = { assets, anims: elementAnims, eager, groupFor, pulses, cw: c.width, sectionStart: starts.length ? Math.min(...starts) : 0 };
+      const bg = s.background ? `background:${s.background};` : '';
       const els = s.elements.map((e) => renderElement(e, ctx)).join('\n');
       return `<div class="sec" data-h="${r(s.height)}" data-cl="${r(c.left)}" data-cw="${r(c.width)}" style="--h:${px(s.height)};${bg}"><div class="stage">\n${els}\n</div></div>`;
     });
@@ -506,6 +518,9 @@ export function render(model, assets, anims) {
     return `${keyframeCss(g.name, g.entrance)}\n.${g.name}.in{animation-name:${g.name}}`;
   });
   const css = [...faces, BASE_CSS.trim(), ...(pulses.used ? [PULSE_CSS] : []), ...(pulses.writeOn ? [WRITE_ON_CSS] : []), ...animations, ...(pulses.heartbeat ? [HEARTBEAT_CSS] : []), ...(pulses.spin ? [SPIN_CSS] : [])].join('\n');
+  // The envelope's faces, a few KB each now, are worth asking for up front.
+  const envelope = model.pages.find((p) => p.slug === 'envelope');
+  const preloads = envelope ? [...new Set(planFonts({ ...model, pages: [envelope] }).map((f) => assets.fonts[f.key]?.src).filter(Boolean))].map((src) => `<link rel="preload" href="${src}" as="font" type="font/woff2" crossorigin>\n`).join('') : '';
   const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -524,7 +539,7 @@ export function render(model, assets, anims) {
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="invite.css">
+${preloads}<link rel="stylesheet" href="invite.css">
 </head>
 <body>
 <main>

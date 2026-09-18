@@ -140,7 +140,12 @@
 
   // --- lazy assets --------------------------------------------------------------
   function activate(page, eager = false) {
-    page.querySelectorAll('[data-src]').forEach((n) => { n.src = n.dataset.src; n.removeAttribute('data-src'); if (n.tagName === 'VIDEO') n.play?.().catch(() => {}); });
+    page.querySelectorAll('[data-src]').forEach((n) => {
+      // srcset/sizes first, so the browser never fetches the plain src before choosing
+      if (n.dataset.srcset) { n.sizes = n.dataset.sizes; n.srcset = n.dataset.srcset; n.removeAttribute('data-srcset'); n.removeAttribute('data-sizes'); }
+      n.src = n.dataset.src; n.removeAttribute('data-src');
+      if (n.tagName === 'VIDEO') n.play?.().catch(() => {});
+    });
     page.querySelectorAll('[data-href]').forEach((n) => { n.setAttribute('href', n.dataset.href); n.removeAttribute('data-href'); });
     // A lazy picture on a page that is not displayed never fetches; warming
     // a hidden page has to ask for its pictures outright.

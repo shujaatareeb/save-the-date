@@ -220,14 +220,24 @@ export function compositeCacheName(src, sprites, recolor) {
   return `${path.basename(src)}.${hash}.composite.png`;
 }
 
+// A still goes out at twice its drawn width (what a retina desktop needs)
+// and, when that is wider than the drawn width itself, at the drawn width
+// too — what a phone at k ≈ 0.3 and 3× needs, a third of the bytes. Returns
+// both paths with the width each was actually encoded at.
 async function encodeStill(src, maxWidth, naturalWidth, { nameFrom = src, recipe = '' } = {}) {
-  const out = path.join(ASSETS, hashName(nameFrom, '.webp', recipe));
-  if (!fs.existsSync(out)) {
-    const target = Math.min(naturalWidth, Math.ceil(maxWidth * 2));
-    const vf = target < naturalWidth ? ['-vf', `scale=${target}:-2`] : [];
-    await ffmpeg(['-i', src, ...vf, '-c:v', 'libwebp', '-quality', '80', '-compression_level', '6', out]);
-  }
-  return out;
+  const encode = async (target, suffix) => {
+    const out = path.join(ASSETS, hashName(nameFrom, '.webp', recipe + suffix));
+    if (!fs.existsSync(out)) {
+      const vf = target < naturalWidth ? ['-vf', `scale=${target}:-2`] : [];
+      await ffmpeg(['-i', src, ...vf, '-c:v', 'libwebp', '-quality', '80', '-compression_level', '6', out]);
+    }
+    return out;
+  };
+  const w = Math.min(naturalWidth, Math.ceil(maxWidth * 2));
+  const ws = Math.min(naturalWidth, Math.ceil(maxWidth));
+  const big = { out: await encode(w, ''), w };
+  if (ws >= w) return big;
+  return { ...big, outS: await encode(ws, '@1x'), ws };
 }
 
 async function encodeAnimated(src) {
@@ -251,7 +261,6 @@ async function encodeVideoMp4(src) {
   return out;
 }
 
-// Bytes a single page pulls: its media plus the font faces its text uses.
 // The countdown on the live page is a third-party widget set in Abril Fatface
 // (OFL), carried inside its SVG as a 2.5 KB subset of the digits, the colon and
 // the four labels. That subset is checked in next to the build scripts and
@@ -259,11 +268,13 @@ async function encodeVideoMp4(src) {
 export const COUNTDOWN_FONT = { key: 'countdown-REGULAR', fontId: 'countdown', family: 'Abril Fatface', file: path.join(BUILD, 'countdown-font.woff2'), weight: 400, italic: false };
 const hasEmbed = (model) => { let hit = false; for (const p of model.pages) for (const s of p.sections) walk(s.elements, (el) => { if (el.kind === 'embed') hit = true; }); return hit; };
 
-export function pageBytes(model, manifest, slug) {
+// Bytes a single page pulls: its media (the big encodings, or the phone
+// ones with `phone`) plus the font faces its text uses.
+export function pageBytes(model, manifest, slug, phone = false) {
   const page = model.pages.find((p) => p.slug === slug);
   const sub = { ...model, pages: [page] };
   const files = new Set();
-  for (const id of usedMedia(sub).keys()) { const m = manifest.media[id]; files.add(m.src); if (m.mp4) files.add(m.mp4); }
+  for (const id of usedMedia(sub).keys()) { const m = manifest.media[id]; files.add(phone && m.srcS ? m.srcS : m.src); if (m.mp4) files.add(m.mp4); }
   for (const face of planFonts(sub)) files.add(manifest.fonts[face.key].src);
   if (hasEmbed(sub)) files.add(manifest.fonts[COUNTDOWN_FONT.key].src);
   let total = 0;
@@ -285,23 +296,26 @@ export async function buildAssets(model) {
         throw new Error(`recolour on a plain raster ${key} is not supported`);
       }
       const src = await download(m.url);
-      let out, kind = 'image', mp4 = null;
+      let out, kind = 'image', mp4 = null, still = null;
       if (m.mime === 'image/svg+xml') out = use.recolor ? writeRecoloredSvg(src, use.recolor) : await copyThrough(src, '.svg');
       else if (m.type === 'raster' || m.type === 'vector') {
         if (m.sprites) {
           const flat = path.join(CACHE, compositeCacheName(src, m.sprites, use.recolor));
           if (!fs.existsSync(flat)) await compositeSheet(src, m.sprites, flat, use.recolor);
-          out = await encodeStill(flat, use.maxWidth, m.width, { nameFrom: src, recipe: JSON.stringify({ sprites: m.sprites, recolor: use.recolor || null }) });
+          still = await encodeStill(flat, use.maxWidth, m.width, { nameFrom: src, recipe: JSON.stringify({ sprites: m.sprites, recolor: use.recolor || null }) });
         } else {
-          out = await encodeStill(src, use.maxWidth, m.width);
+          still = await encodeStill(src, use.maxWidth, m.width);
         }
+        out = still.out;
       }
       else if (m.url.endsWith('.gif')) { out = await encodeAnimated(src); kind = 'anim'; }
       else {
         out = await encodeVideo(src); kind = 'video';
         mp4 = path.relative(INVITE, await encodeVideoMp4(src)).replace(/\\/g, '/');
       }
-      manifest.media[key] = { src: path.relative(INVITE, out).replace(/\\/g, '/'), width: m.width, height: m.height, kind, ...(mp4 && { mp4 }) };
+      const rel = (f) => path.relative(INVITE, f).replace(/\\/g, '/');
+      // width/height are the source's; w/ws are the encoded widths the page offers through srcset
+      manifest.media[key] = { src: rel(out), width: m.width, height: m.height, kind, ...(mp4 && { mp4 }), ...(still && { w: still.w }), ...(still?.outS && { srcS: rel(still.outS), ws: still.ws }) };
     }
     for (const face of planFonts(model)) {
       const src = await download(face.url);

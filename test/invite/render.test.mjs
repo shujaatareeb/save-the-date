@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { chromium } from 'playwright';
 import { render, renderElement, keyframeCss, escapeHtml, splitLoop, textEffects, trimLeadingHold, blockLeading } from '../../invite/build/render.mjs';
+import { planFonts } from '../../invite/build/assets.mjs';
 import { assetKey } from '../../invite/build/assets.mjs';
 import { serve } from './serve.mjs';
 
@@ -501,4 +502,40 @@ test('a recorded turn that settles is part of the entrance, not a spin', () => {
   assert.doesNotMatch(html, /\bsp\b/);
   assert.match(css, /0%\{opacity:calc\(var\(--op,1\)\*0\);transform:translate\(0px,0px\) rotate\(calc\(var\(--rot,0deg\) \+ -90deg\)\) scale\(1\)/);
   assert.match(css, /100%\{[^}]*rotate\(var\(--rot,0deg\)\)/);
+});
+
+// A still is offered at both encodings through srcset, with a sizes formula
+// that is the scaler's own rule for its section — the browser then picks by
+// real device pixels, and a phone at k ≈ 0.3 takes the small one.
+test('offers each still at both widths with the scaler\'s rule as its sizes', () => {
+  const { html } = render(model, assets, anims);
+  // envelope is eager: real attributes
+  const eager = html.match(/<section class="page active" id="envelope".*?<\/section>/s)[0];
+  const img = eager.match(/<img src="(assets\/[0-9a-f]{12}\.webp)" srcset="(assets\/[0-9a-f]{12}\.webp) (\d+)w, \1 (\d+)w" sizes="\(max-width: (\d+)px\) calc\(\(100vw - 16px\) \* ([\d.]+)\), ([\d.]+)px"/);
+  assert.ok(img, 'an eager still with srcset and sizes');
+  const [, big, small, ws, w, bp, ratio, dw] = img;
+  assert.ok(Number(ws) < Number(w));
+  // envelope section: content column 449.93 wide → breakpoint cw+15, ratio dw/cw
+  assert.equal(Number(bp), 465);
+  assert.ok(Math.abs(Number(ratio) - Number(dw) / 449.93) < 0.002, `${ratio} vs ${Number(dw) / 449.93}`);
+  // lazy pages carry the same as data attributes, and no src yet
+  const lazy = html.match(/<section class="page" id="home".*?<\/section>/s)[0];
+  assert.match(lazy, /<img data-src="assets\/[0-9a-f]{12}\.webp" data-srcset="assets\/[0-9a-f]{12}\.webp \d+w, assets\/[0-9a-f]{12}\.webp \d+w" data-sizes="\(max-width: \d+px\) calc\(\(100vw - 16px\) \* [\d.]+\), [\d.]+px" loading="lazy"/);
+  assert.doesNotMatch(lazy, /<img src=/);
+  // a picture inside a scaled group is drawn at crop width × group scale
+  const grp = html.match(/<div class="el grp[^>]*data-id="LBmCKPCDjhvZsK0K"[^>]*>.*?<\/div><\/div>/s);
+  assert.ok(grp);
+});
+
+// The envelope's script faces are the first thing a guest reads; with the
+// faces subset to a few KB each, preloading them costs nothing and spares the
+// swap from a fallback serif a second or two in.
+test('preloads the faces the envelope page sets', () => {
+  const { html } = render(model, assets, anims);
+  const head = html.match(/<head>.*?<\/head>/s)[0];
+  const preloads = [...head.matchAll(/<link rel="preload" href="(assets\/fonts\/[0-9a-f]{12}\.woff2)" as="font" type="font\/woff2" crossorigin>/g)].map((m) => m[1]);
+  const envelope = model.pages.find((p) => p.slug === 'envelope');
+  const wanted = planFonts({ ...model, pages: [envelope] }).map((f) => assets.fonts[f.key].src);
+  assert.deepEqual(preloads.sort(), [...new Set(wanted)].sort());
+  assert.ok(preloads.length >= 2 && preloads.length <= 5, `${preloads.length} faces`);
 });

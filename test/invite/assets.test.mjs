@@ -193,3 +193,24 @@ test('ships every face as a WOFF2 subset', () => {
   const total = Object.values(manifest.fonts).reduce((n, f) => n + fs.statSync(new URL(`../../invite/${f.src}`, import.meta.url)).size, 0);
   assert.ok(total < 400_000, `all faces together: ${total} bytes`);
 });
+
+// Every still went out at twice its drawn width, which a retina desktop
+// needs and a phone at k ≈ 0.3 does not: each still that is drawn smaller
+// than its source now also ships at its drawn width, and the manifest says
+// how wide each encoding really is so the page can offer both.
+test('encodes a phone-sized variant of every still drawn smaller than its source', () => {
+  let withSmall = 0, without = 0;
+  for (const [id, m] of Object.entries(manifest.media)) {
+    if (m.kind !== 'image' || m.src.endsWith('.svg')) continue;
+    assert.ok(Number.isInteger(m.w) && m.w > 0, `${id}: encoded width`);
+    if (m.srcS) {
+      withSmall++;
+      assert.match(m.srcS, /^assets\/[0-9a-f]{12}\.webp$/, id);
+      assert.ok(m.ws < m.w, `${id}: small ${m.ws} < big ${m.w}`);
+      assert.ok(fs.existsSync(new URL(`../../invite/${m.srcS}`, import.meta.url)), `${id}: ${m.srcS} on disk`);
+      assert.ok(fs.statSync(new URL(`../../invite/${m.srcS}`, import.meta.url)).size < fs.statSync(new URL(`../../invite/${m.src}`, import.meta.url)).size, `${id}: the small one is smaller`);
+    } else without++;
+  }
+  assert.ok(withSmall > 60, `${withSmall} stills with a phone variant`);
+  assert.ok(without >= 0);
+});

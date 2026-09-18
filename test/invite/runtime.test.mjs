@@ -188,6 +188,20 @@ test('plays a page\'s entrances again when you come back to it', async () => {
 // The widget on the live page counts down to 2026-10-10T21:00 with no zone —
 // nine in the evening wherever the guest is. Two digits per unit, each in its
 // own tspan so they sit where the widget puts them.
+test('a phone takes the small encoding of a still, a retina desktop the big one', async () => {
+  for (const [width, dpr, wantSmall] of [[390, 3, true], [1366, 2, false]]) {
+    const page = await browser.newPage({ viewport: { width, height: 844 }, deviceScaleFactor: dpr });
+    await page.goto(`${site.url}/invite/#home`, { waitUntil: 'networkidle' });
+    await page.waitForFunction(() => [...document.querySelectorAll('#home img[srcset]')].filter((i) => i.currentSrc).length > 10);
+    const picks = await page.evaluate(() => [...document.querySelectorAll('#home img[srcset]')].filter((i) => i.currentSrc).map((i) => { const [small, big] = i.srcset.split(', ').map((c) => c.split(' ')[0]); return i.currentSrc.endsWith(small) ? 'small' : i.currentSrc.endsWith(big) ? 'big' : '?'; }));
+    const small = picks.filter((p) => p === 'small').length, big = picks.filter((p) => p === 'big').length;
+    assert.ok(!picks.includes('?'), 'every pick is one of the two offered');
+    if (wantSmall) assert.ok(small > big, `${width}@${dpr}x: ${small} small vs ${big} big`);
+    else assert.ok(big > small, `${width}@${dpr}x: ${big} big vs ${small} small`);
+    await page.close();
+  }
+});
+
 test('the countdown ticks toward nine in the evening on 10 October 2026, local time', async () => {
   const { page } = await open(390, '#home');
   await page.waitForTimeout(1100);
