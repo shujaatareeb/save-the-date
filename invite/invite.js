@@ -153,10 +153,23 @@
     whenLoaded(page, 4000).then(() => { if (page.classList.contains('active')) next.forEach((p) => activate(p, true)); });
   }
 
+  // Canva mounts a page afresh each time you arrive, so its entrances play
+  // again when you come back. Leaving a page forgets what it revealed.
+  function reset(page) {
+    page.querySelectorAll('.el.in, .el[data-entering], .el[data-mt-done]').forEach((el) => {
+      el.classList.remove('in', 'mt-run');
+      delete el.dataset.entering;
+      delete el.dataset.mtDone;
+      el.querySelectorAll(':scope > canvas').forEach((c) => c.remove());
+    });
+    if (io) page.querySelectorAll('.el.an, .el.mt').forEach((el) => io.unobserve(el));
+  }
+
   // --- routing ----------------------------------------------------------------------
   function show(slug) {
     const page = bySlug(slug) || bySlug(DEFAULT);
     if (!page) return;
+    pages.forEach((p) => { if (p !== page && p.classList.contains('active')) reset(p); });
     pages.forEach((p) => p.classList.toggle('active', p === page));
     activate(page);
     scale();

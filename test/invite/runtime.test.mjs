@@ -160,6 +160,31 @@ test('shows an effect-30 picture outright when its matte cannot play', async () 
   await page.close();
 });
 
+// Canva mounts a page afresh each time you arrive, so its entrances play again
+// when you come back; a reveal that sticks makes the second visit a still.
+test('plays a page\'s entrances again when you come back to it', async () => {
+  const { page, errors } = await open(1366, '#home');
+  await page.waitForFunction(() => document.querySelectorAll('#home .el.an.in').length > 0);
+  await page.waitForTimeout(3500); // let the first visit's entrances finish
+  // Idle sways and pulses loop for ever; only one-shot entrances count here.
+  const entrancesRunning = () => [...document.querySelectorAll('#home .el.an.in')].filter((e) => e.getAnimations({ subtree: true }).some((a) => a.playState === 'running' && Number.isFinite(a.effect.getTiming().iterations))).length;
+  const settled = await page.evaluate((fn) => eval(fn)(), entrancesRunning.toString());
+  assert.equal(settled, 0, 'first visit has settled');
+  await page.evaluate(() => { location.hash = '#timeline'; });
+  await page.waitForFunction(() => document.querySelector('.page.active')?.id === 'timeline');
+  await page.waitForTimeout(300);
+  const homeWhileAway = await page.evaluate(() => document.querySelectorAll('#home .el.in, #home .el[data-entering]').length);
+  assert.equal(homeWhileAway, 0, 'leaving a page clears its reveals');
+  await page.goBack();
+  await page.waitForFunction(() => document.querySelector('.page.active')?.id === 'home');
+  await page.waitForTimeout(400);
+  const replaying = await page.evaluate((fn) => eval(fn)(), entrancesRunning.toString());
+  assert.ok(replaying > 0, `entrances running again on return: ${replaying}`);
+  assert.equal(await page.evaluate(() => window.scrollY), 0);
+  assert.deepEqual(errors, []);
+  await page.close();
+});
+
 test('the countdown ticks toward 10 October 2026 IST', async () => {
   const { page } = await open(390, '#home');
   await page.waitForTimeout(1100);
