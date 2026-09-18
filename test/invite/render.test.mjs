@@ -303,10 +303,14 @@ test('refuses a line height in a unit it cannot convert', () => {
 
 test('names each font format by its real extension', () => {
   const { css } = render(model, assets, {});
-  // This file is a bare sfnt; calling it woff lets a browser skip the source.
-  assert.match(css, /url\(assets\/fonts\/bc7c5d4e6abe\.otf\) format\('opentype'\)/);
-  assert.doesNotMatch(css, /\.otf\) format\('woff'\)/);
-  assert.match(css, /\.woff\) format\('woff'\)/);
+  // Every face ships as a WOFF2 subset now; the format hint must say so, or a browser skips the source.
+  assert.match(css, /url\(assets\/fonts\/[0-9a-f]{12}\.woff2\) format\('woff2'\)/);
+  assert.doesNotMatch(css, /\.woff2\) format\('(woff|opentype|truetype)'\)/);
+  // and the mapping still tells a bare sfnt from a woff, should one ever come through
+  const synth = { ...assets, fonts: { 'x-REGULAR': { fontId: 'x', family: 'X', src: 'assets/fonts/x.otf', weight: 400, italic: false }, 'y-REGULAR': { fontId: 'y', family: 'Y', src: 'assets/fonts/y.woff', weight: 400, italic: false } } };
+  const { css: css2 } = render(model, synth, {});
+  assert.match(css2, /x\.otf\) format\('opentype'\)/);
+  assert.match(css2, /y\.woff\) format\('woff'\)/);
 });
 
 // Expected values are what the live Canva page computes for these same

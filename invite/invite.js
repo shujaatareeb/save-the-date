@@ -152,7 +152,11 @@
   function warm(page) {
     const slugs = new Set([...page.querySelectorAll('a[href^="#"]')].map((a) => a.getAttribute('href').slice(1)));
     const next = [...slugs].map(bySlug).filter((p) => p && p !== page);
-    whenLoaded(page, 4000).then(() => { if (page.classList.contains('active')) next.forEach((p) => activate(p, true)); });
+    // Only once this page's own pictures are all in — on a slow link the
+    // warm-up must never compete with what the guest is looking at — and
+    // then in a quiet moment.
+    const idle = (fn) => ('requestIdleCallback' in window ? requestIdleCallback(fn, { timeout: 2000 }) : setTimeout(fn, 300));
+    whenLoaded(page, 30000).then(() => idle(() => { if (page.classList.contains('active')) next.forEach((p) => activate(p, true)); }));
   }
 
   // Canva mounts a page afresh each time you arrive, so its entrances play

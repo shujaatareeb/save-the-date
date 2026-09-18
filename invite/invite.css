@@ -1,16 +1,16 @@
-@font-face{font-family:'f-YAGL4FC9GCs';src:url(assets/fonts/b870a7038461.woff) format('woff');font-weight:700;font-style:normal;font-display:swap}
-@font-face{font-family:'f-YAFcf99lyzk';src:url(assets/fonts/4e16bd4a4727.woff) format('woff');font-weight:900;font-style:normal;font-display:swap}
-@font-face{font-family:'f-YAFcf5Qrkvs';src:url(assets/fonts/0c87c5fd3ee4.woff) format('woff');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:'f-YAF7Scfb7Ns';src:url(assets/fonts/6c71b0d76099.woff) format('woff');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:'f-YAGNIDZJMxo';src:url(assets/fonts/3f844cddbfb7.woff) format('woff');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:'f-YAGtVK-MPwY';src:url(assets/fonts/bc7c5d4e6abe.otf) format('opentype');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:'f-YAFcfiBZ5y0';src:url(assets/fonts/ebf5ba2036a8.woff) format('woff');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:'f-YAEtfuYOYZQ';src:url(assets/fonts/3bf56e83256e.woff) format('woff');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:'f-YAHNfXfrdOE';src:url(assets/fonts/6fc1d2758a11.woff) format('woff');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:'f-YAHQugL0Sy8';src:url(assets/fonts/9344fd38c8d0.woff) format('woff');font-weight:500;font-style:normal;font-display:swap}
-@font-face{font-family:'f-YAFcfknkruY';src:url(assets/fonts/43060ed27b27.woff) format('woff');font-weight:400;font-style:normal;font-display:swap}
-@font-face{font-family:'f-YAFdJhX-538';src:url(assets/fonts/11c54233a01f.woff) format('woff');font-weight:700;font-style:italic;font-display:swap}
-@font-face{font-family:'f-YAF3ubalrAg';src:url(assets/fonts/5ee32612bf5a.woff) format('woff');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'f-YAGL4FC9GCs';src:url(assets/fonts/3e4548b1e191.woff2) format('woff2');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'f-YAFcf99lyzk';src:url(assets/fonts/7f25b69676c3.woff2) format('woff2');font-weight:900;font-style:normal;font-display:swap}
+@font-face{font-family:'f-YAFcf5Qrkvs';src:url(assets/fonts/1da7299c5d0b.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'f-YAF7Scfb7Ns';src:url(assets/fonts/8c5c0f6eab19.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'f-YAGNIDZJMxo';src:url(assets/fonts/365b8d32821a.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'f-YAGtVK-MPwY';src:url(assets/fonts/11a7bdc624d0.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'f-YAFcfiBZ5y0';src:url(assets/fonts/305ed6f25af5.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'f-YAEtfuYOYZQ';src:url(assets/fonts/e93737e4a093.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'f-YAHNfXfrdOE';src:url(assets/fonts/4c95e6e2b4a5.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'f-YAHQugL0Sy8';src:url(assets/fonts/695d1003faa7.woff2) format('woff2');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'f-YAFcfknkruY';src:url(assets/fonts/0c0d877f437e.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'f-YAFdJhX-538';src:url(assets/fonts/bb91c661cc76.woff2) format('woff2');font-weight:700;font-style:italic;font-display:swap}
+@font-face{font-family:'f-YAF3ubalrAg';src:url(assets/fonts/481fecb05281.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
 @font-face{font-family:'f-countdown';src:url(assets/fonts/30f68f703ef2.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
 html,body{margin:0;background:#f4efe8;overflow-x:hidden;-webkit-text-size-adjust:100%}
 main{position:relative;min-height:100vh}

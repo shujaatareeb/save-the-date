@@ -171,3 +171,25 @@ test('ships the countdown widget\'s Abril Fatface subset as a face of its own', 
   assert.ok(fs.existsSync(new URL(`../../invite/${face.src}`, import.meta.url)), `${face.src} on disk`);
   assert.ok(pageBytes(model, manifest, 'home') > pageBytes({ ...model, pages: model.pages.filter((p) => p.slug === 'home').map((p) => ({ ...p, sections: p.sections.map((s) => ({ ...s, elements: s.elements.filter((e) => e.kind !== 'embed') })) })) }, manifest, 'home'), 'the home page budget counts it');
 });
+
+// The faces were shipped whole — 1.5 MB of WOFF for a few hundred glyphs.
+// Every face now goes out as a WOFF2 subset of the characters its runs set
+// (with the upper case of anything a run transforms to upper case, and the
+// space), which every page pulls before its text can show.
+test('plans each face with the characters its runs set', () => {
+  const face = planFonts(model).find((f) => f.fontId === 'YAGNIDZJMxo'); // Parfumerie Script: "For Details", "Save the Date"
+  assert.ok(face.text.includes('F') && face.text.includes('D') && face.text.includes(' '), face.text);
+  assert.ok(face.text.length < 40, `only what is set: ${face.text.length} characters`);
+  const upper = planFonts(model).find((f) => f.fontId === 'YAEtfuYOYZQ'); // The Youngest: "view details" shown in upper case
+  assert.ok(upper.text.includes('V') && upper.text.includes('v'), 'upper-cased runs keep both cases');
+});
+
+test('ships every face as a WOFF2 subset', () => {
+  for (const [key, f] of Object.entries(manifest.fonts)) {
+    assert.match(f.src, /^assets\/fonts\/[0-9a-f]{12}\.woff2$/, key);
+    const bytes = fs.statSync(new URL(`../../invite/${f.src}`, import.meta.url)).size;
+    assert.ok(bytes < 80_000, `${key}: ${bytes} bytes`);
+  }
+  const total = Object.values(manifest.fonts).reduce((n, f) => n + fs.statSync(new URL(`../../invite/${f.src}`, import.meta.url)).size, 0);
+  assert.ok(total < 400_000, `all faces together: ${total} bytes`);
+});

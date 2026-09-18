@@ -13,6 +13,7 @@ import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import ffmpegPath from 'ffmpeg-static';
 import { chromium } from 'playwright';
+import subsetFont from 'subset-font';
 import { BUILD, ASSETS, CACHE, INVITE, isMain } from './lib.mjs';
 import { SITE } from './fetch.mjs';
 
@@ -90,20 +91,24 @@ export function pickFace(styles, weight, italic) {
   return pool.reduce((best, f) => (Math.abs(f.weight - weight) < Math.abs(best.weight - weight) ? f : best)).style;
 }
 
+// Each face also carries `text`: every character its runs set (plus the
+// upper case of anything a run shows in upper case, and the space), which is
+// what the shipped subset of the face is cut to.
 export function planFonts(model) {
   const seen = new Map();
-  const add = (run) => {
+  const add = (run, text) => {
     const font = model.fonts[run.font];
     const style = pickFace(font.styles, run.weight || 400, run.italic);
     const key = `${run.font}-${style.style}`;
-    if (seen.has(key)) return;
-    seen.set(key, { key, fontId: run.font, style: style.style, url: style.url, family: font.family, ...styleToFace(style.style) });
+    if (!seen.has(key)) seen.set(key, { key, fontId: run.font, style: style.style, url: style.url, family: font.family, ...styleToFace(style.style), chars: new Set(' ') });
+    const piece = text.slice(run.start, run.end).replace(/\n/g, '');
+    for (const c of piece) { seen.get(key).chars.add(c); if (run.transform === 'uppercase') seen.get(key).chars.add(c.toUpperCase()); }
   };
   for (const p of model.pages) for (const s of p.sections) walk(s.elements, (el) => {
-    if (el.kind === 'text') el.runs.forEach(add);
-    if (el.kind === 'shape' && el.text) el.text.runs.forEach(add);
+    if (el.kind === 'text') el.runs.forEach((run) => add(run, el.text));
+    if (el.kind === 'shape' && el.text) el.text.runs.forEach((run) => add(run, el.text.text));
   });
-  return [...seen.values()];
+  return [...seen.values()].map(({ chars, ...face }) => ({ ...face, text: [...chars].sort().join('') }));
 }
 
 async function download(url) {
@@ -300,9 +305,11 @@ export async function buildAssets(model) {
     }
     for (const face of planFonts(model)) {
       const src = await download(face.url);
-      const out = path.join(ASSETS, 'fonts', hashName(src, path.extname(face.url).toLowerCase()));
+      // A WOFF2 subset of just the characters this face sets, named after the
+      // source and that character set.
+      const out = path.join(ASSETS, 'fonts', hashName(src, '.woff2', face.text));
       fs.mkdirSync(path.dirname(out), { recursive: true });
-      if (!fs.existsSync(out)) fs.copyFileSync(src, out);
+      if (!fs.existsSync(out)) fs.writeFileSync(out, await subsetFont(fs.readFileSync(src), face.text, { targetFormat: 'woff2' }));
       manifest.fonts[face.key] = { fontId: face.fontId, family: face.family, src: path.relative(INVITE, out).replace(/\\/g, '/'), weight: face.weight, italic: face.italic };
     }
     if (hasEmbed(model)) {
