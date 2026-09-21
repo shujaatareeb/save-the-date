@@ -223,7 +223,9 @@ test('hygiene sorts and de-duplicates frames and skips invisible entries', () =>
   // assertion actually exercises the "no an class" behaviour rather than looking
   // only after data-id (where an animated element's class token never appears).
   assert.doesNotMatch(out.html, new RegExp(`data-id="${el.id}"[^>]*\\ban\\b|class="[^"]*\\ban\\b[^"]*"[^>]*data-id="${el.id}"`));
-  assert.doesNotMatch(out.css, /@keyframes/);
+  // The countdown owns a permanent base animation; this fixture must not add
+  // a generated entrance keyframe for its otherwise-static element.
+  assert.doesNotMatch(out.css, /@keyframes k1/);
 });
 
 test('a borrowed startMs:0 does not drag the section delay baseline down', () => {
@@ -453,8 +455,9 @@ test('a text recorded in parts writes on character by character', () => {
   assert.doesNotMatch(html.match(/<div class="el txt[^>]*data-id="LBpx4R6Jb5dzwf96"[^>]*>.*?<\/div><\/div>/s)[0], /class="ch"/);
 });
 
-// The live countdown is an 800×400 SVG widget: Abril Fatface digits 140 px
-// tall centred at x 60/140 · 260/340 · 460/540 · 660/740 on y 94.5, colons at
+// The countdown is an 800×400 SVG widget: its 124 px-wide digit positions
+// leave room for the wide display face at x 50/150 · 250/350 · 450/550 · 650/750,
+// with colons at
 // 200/400/600, labels 40 px at x 100/300/500/700 on y 300, all #715449, with
 // a letterpress filter. Ours is that SVG, drawn by hand.
 test('the countdown is the widget\'s own SVG geometry', () => {
@@ -463,7 +466,7 @@ test('the countdown is the widget\'s own SVG geometry', () => {
   assert.ok(m, 'countdown wrapper holds an svg');
   const svg = m[1];
   assert.match(svg, /^<svg viewBox="0 0 800 400" preserveAspectRatio="xMidYMid slice">/);
-  for (const [u, x1, x2] of [['d', 60, 140], ['h', 260, 340], ['m', 460, 540], ['s', 660, 740]]) {
+  for (const [u, x1, x2] of [['d', 50, 150], ['h', 250, 350], ['m', 450, 550], ['s', 650, 750]]) {
     assert.match(svg, new RegExp(`<g class="cd-d">.*?<text data-cd="${u}" y="199.5"[^>]*><tspan x="${x1}">0</tspan><tspan x="${x2}">0</tspan></text>`, 's'), `unit ${u}`);
   }
   for (const x of [200, 400, 600]) assert.match(svg, new RegExp(`<text x="${x}" y="199.5"[^>]*>:</text>`));
@@ -475,13 +478,14 @@ test('the countdown is the widget\'s own SVG geometry', () => {
   // iOS reload the page.
   assert.doesNotMatch(svg, /<filter|filter=/);
   assert.match(svg, /<g class="cd-l cd-lo"><text[^>]*>DAYS<\/text>/, 'light copies of the labels');
-  assert.match(svg, /<g class="cd-d cd-lo"><text data-cd="d"[^>]*><tspan x="58">0<\/tspan><tspan x="138">0<\/tspan><\/text>/, 'light copy of the digits, 2px up-left');
-  assert.match(svg, /<g class="cd-d cd-dk"><text data-cd="d"[^>]*><tspan x="62">0<\/tspan><tspan x="142">0<\/tspan><\/text>/, 'dark copy, 2px down-right');
+  assert.match(svg, /<g class="cd-d cd-lo"><text data-cd="d"[^>]*><tspan x="48">0<\/tspan><tspan x="148">0<\/tspan><\/text>/, 'light copy of the digits, 2px up-left');
+  assert.match(svg, /<g class="cd-d cd-dk"><text data-cd="d"[^>]*><tspan x="52">0<\/tspan><tspan x="152">0<\/tspan><\/text>/, 'dark copy, 2px down-right');
   assert.match(css, /\.cd-lo text\{fill:rgba\(255,255,255,\.45\)\}\.cd-dk text\{fill:rgba\(0,0,0,\.2\)\}/);
   assert.equal((svg.match(/data-cd="s"/g) || []).length, 3, 'three copies of each unit, all updated by the runtime');
   assert.match(css, /@font-face\{font-family:'f-countdown';src:url\(assets\/fonts\/[0-9a-f]{12}\.woff2\) format\('woff2'\)/);
   assert.match(css, /\.cd text\{[^}]*font-family:'f-countdown'[^}]*fill:#715449/);
-  assert.match(css, /\.cd-d text\{font-size:140px\}\.cd-l text\{font-size:40px\}/);
+  assert.match(css, /\.cd-d text\{font-size:124px\}\.cd-l text\{font-size:40px\}/);
+  assert.match(css, /\.cd text\.cd-tick\{animation:cd-tick \.42s/);
   assert.doesNotMatch(html, /cd-row|cd-u/);
 });
 

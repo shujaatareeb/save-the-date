@@ -331,8 +331,8 @@ const WRITE_ON_CSS = `.el.wr.in{opacity:var(--op,1);animation:none}
 @keyframes wr{from{opacity:0}to{opacity:1}}`;
 
 // The countdown on the live page is a third-party widget: an 800×400 SVG with
-// Abril Fatface digits 140 px tall on y 199.5 (the widget's odometer reels
-// declare them at 94.5 and translate the reel), two per unit centred 80
+// Abril Fatface digits 124 px tall on y 199.5 (the widget's odometer reels
+// declare them at 94.5 and translate the reel), two per unit centred 100
 // apart, colons between, 40 px labels on y 300, all #715449, under a
 // letterpress: a lightened copy 2 px up-left, a darkened one 2 px down-right.
 // The widget does that with an SVG filter; ours is three plain copies of the
@@ -341,7 +341,10 @@ const WRITE_ON_CSS = `.el.wr.in{opacity:var(--op,1);animation:none}
 // that was enough to have iOS reload the page. The runtime writes the digits
 // into all three copies.
 const COUNTDOWN_SVG = (() => {
-  const units = [['d', 60, 140], ['h', 260, 340], ['m', 460, 540], ['s', 660, 740]];
+  // The original 80px character spacing lets the wide countdown face collide
+  // on iPhone. Keep each pair inside its 200px column but give the digits and
+  // neighbouring columns noticeably more breathing room.
+  const units = [['d', 50, 150], ['h', 250, 350], ['m', 450, 550], ['s', 650, 750]];
   const layer = (dx, dy) => {
     const digits = units.map(([u, a, b]) => `<text data-cd="${u}" y="${199.5 + dy}" dominant-baseline="central"><tspan x="${a + dx}">0</tspan><tspan x="${b + dx}">0</tspan></text>`);
     const colons = [200, 400, 600].map((x) => `<text x="${x + dx}" y="${199.5 + dy}" dominant-baseline="central">:</text>`);
@@ -372,8 +375,11 @@ a.el{display:block;text-decoration:none;color:inherit}
 .el.mt:not(.in){opacity:0}.el.mt.mt-run img{visibility:hidden}.el.mt>canvas{position:absolute;left:0;top:0;width:100%;height:100%;display:block;pointer-events:none}
 .cd>svg{display:block;width:100%;height:100%;overflow:visible}
 .cd text{text-anchor:middle;font-family:'f-countdown',serif;font-weight:400;fill:#715449;text-rendering:geometricPrecision;user-select:none}
-.cd-d text{font-size:140px}.cd-l text{font-size:40px}
+.cd-d text{font-size:124px}.cd-l text{font-size:40px}
 .cd-lo text{fill:rgba(255,255,255,.45)}.cd-dk text{fill:rgba(0,0,0,.2)}
+.cd text.cd-tick{animation:cd-tick .42s cubic-bezier(.2,.8,.2,1) both;transform-box:fill-box;transform-origin:center}
+@keyframes cd-tick{0%{opacity:.3;transform:translateY(-18px) scale(.82)}55%{opacity:1;transform:translateY(2px) scale(1.06)}100%{opacity:1;transform:translateY(0) scale(1)}}
+@media (prefers-reduced-motion:reduce){.cd text.cd-tick{animation:none}}
 `;
 
 const RESTING_FRAME = { t: 1, opacity: 1, dx: 0, dy: 0, scale: 1, blur: 0, clip: null }; // dr (rotation) absent = 0

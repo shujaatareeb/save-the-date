@@ -281,14 +281,23 @@
 
   // --- countdown ----------------------------------------------------------------------
   const slots = { d: document.querySelectorAll('[data-cd="d"]'), h: document.querySelectorAll('[data-cd="h"]'), m: document.querySelectorAll('[data-cd="m"]'), s: document.querySelectorAll('[data-cd="s"]') };
+  const shown = {};
+  function animateTick(nodes) {
+    nodes.forEach((n) => { n.classList.remove('cd-tick'); n.getBoundingClientRect(); n.classList.add('cd-tick'); });
+  }
   function tick() {
     const left = Math.max(0, TARGET - Date.now());
     const v = { d: Math.floor(left / 864e5), h: Math.floor(left / 36e5) % 24, m: Math.floor(left / 6e4) % 60, s: Math.floor(left / 1e3) % 60 };
-    for (const u in v) slots[u].forEach((n) => {
-      const [tens, ones] = String(v[u]).padStart(2, '0');
+    for (const u in v) {
+      const value = String(v[u]).padStart(2, '0');
+      const [tens, ones] = value;
+      slots[u].forEach((n) => {
       const t = n.querySelectorAll('tspan');
       if (t.length === 2) { t[0].textContent = tens; t[1].textContent = ones; } else n.textContent = tens + ones;
-    });
+      });
+      if (shown[u] != null && shown[u] !== value) animateTick(slots[u]);
+      shown[u] = value;
+    }
   }
   if (slots.s.length) { tick(); setInterval(tick, 1000); }
 
