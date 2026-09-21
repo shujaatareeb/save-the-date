@@ -12,7 +12,7 @@
 @font-face{font-family:'f-YAFdJhX-538';src:url(assets/fonts/bb91c661cc76.woff2) format('woff2');font-weight:700;font-style:italic;font-display:swap}
 @font-face{font-family:'f-YAF3ubalrAg';src:url(assets/fonts/481fecb05281.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
 @font-face{font-family:'f-countdown';src:url(assets/fonts/30f68f703ef2.woff2) format('woff2');font-weight:400;font-style:normal;font-display:swap}
-html,body{margin:0;background:#f4efe8;overflow-x:hidden}
+html,body{margin:0;background:#f4efe8;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 main{position:relative;min-height:100vh}
 .page{display:none}.page.active{display:block}
 .sec{position:relative;overflow:hidden;width:100%;height:var(--h)}

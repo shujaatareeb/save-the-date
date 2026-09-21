@@ -544,9 +544,12 @@ test('preloads the faces the envelope page sets', () => {
   const head = html.match(/<head>.*?<\/head>/s)[0];
   const preloads = [...head.matchAll(/<link rel="preload" href="(assets\/fonts\/[0-9a-f]{12}\.woff2)" as="font" type="font\/woff2" crossorigin>/g)].map((m) => m[1]);
   const envelope = model.pages.find((p) => p.slug === 'envelope');
-  const wanted = planFonts({ ...model, pages: [envelope] }).map((f) => assets.fonts[f.key].src);
+  const wanted = [
+    ...planFonts({ ...model, pages: [envelope] }).map((f) => assets.fonts[f.key].src),
+    ...Object.values(assets.fonts).filter((f) => ['YAEtfuYOYZQ', 'countdown'].includes(f.fontId)).map((f) => f.src),
+  ];
   assert.deepEqual(preloads.sort(), [...new Set(wanted)].sort());
-  assert.ok(preloads.length >= 2 && preloads.length <= 5, `${preloads.length} faces`);
+  assert.ok(preloads.length >= 4 && preloads.length <= 7, `${preloads.length} faces`);
 });
 
 // A `filter`, even blur(0px), keeps an element on its own compositing layer;
@@ -637,10 +640,9 @@ test('passes a cover section on to the runtime', () => {
   assert.equal((html.match(/data-cover/g) || []).length, 1);
 });
 
-// iOS keeps fonts at their specified size under CSS zoom whenever
-// -webkit-text-size-adjust is a percentage; with the property left alone the
-// fonts zoom with everything else (checked in the iOS simulator).
-test('leaves text-size-adjust alone so iOS zooms the fonts', () => {
+// iOS text autosizing must not change the metrics of text positioned over
+// fixed artwork, nor the timer's tightly spaced SVG digits.
+test('pins iOS text sizing to the authored metrics', () => {
   const { css } = render(model, assets, anims);
-  assert.doesNotMatch(css, /text-size-adjust/);
+  assert.match(css, /-webkit-text-size-adjust:100%;text-size-adjust:100%/);
 });

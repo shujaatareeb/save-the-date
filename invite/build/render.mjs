@@ -353,7 +353,7 @@ const COUNTDOWN_SVG = (() => {
 })();
 
 const BASE_CSS = `
-html,body{margin:0;background:#f4efe8;overflow-x:hidden}
+html,body{margin:0;background:#f4efe8;overflow-x:hidden;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 main{position:relative;min-height:100vh}
 .page{display:none}.page.active{display:block}
 .sec{position:relative;overflow:hidden;width:100%;height:var(--h)}
@@ -555,7 +555,14 @@ export function render(model, assets, anims) {
   const css = [...faces, BASE_CSS.trim(), ...(pulses.used ? [PULSE_CSS] : []), ...(pulses.writeOn ? [WRITE_ON_CSS] : []), ...animations, ...(pulses.heartbeat ? [HEARTBEAT_CSS] : []), ...(pulses.spin ? [SPIN_CSS] : [])].join('\n');
   // The envelope's faces, a few KB each now, are worth asking for up front.
   const envelope = model.pages.find((p) => p.slug === 'envelope');
-  const preloads = envelope ? [...new Set(planFonts({ ...model, pages: [envelope] }).map((f) => assets.fonts[f.key]?.src).filter(Boolean))].map((src) => `<link rel="preload" href="${src}" as="font" type="font/woff2" crossorigin>\n`).join('') : '';
+  // iOS otherwise initially lays out the home CTA and countdown with fallback
+  // metrics. Those metrics can overflow the CTA artwork and crowd the SVG timer.
+  const criticalFontIds = new Set(['YAEtfuYOYZQ', 'countdown']);
+  const preloadSources = [
+    ...(envelope ? planFonts({ ...model, pages: [envelope] }).map((f) => assets.fonts[f.key]?.src) : []),
+    ...Object.values(assets.fonts).filter((f) => criticalFontIds.has(f.fontId)).map((f) => f.src),
+  ].filter(Boolean);
+  const preloads = [...new Set(preloadSources)].map((src) => `<link rel="preload" href="${src}" as="font" type="font/woff2" crossorigin>\n`).join('');
   const html = `<!doctype html>
 <html lang="en">
 <head>
